@@ -1,0 +1,166 @@
+#!/bin/bash
+awk '
+	function clean_data_member_location(var)
+	{
+		return gensub(/.*: /,"", "1", 
+			attribute[var ".DW_AT_data_member_location:"]);
+	}
+	function clean_const_value(var)
+	{
+		return gensub(/.*: /,"", "1", 
+			attribute[var ".DW_AT_const_value"]);
+	}
+	function clean_byte_size(var)
+	{
+		return gensub(/.*: /,"", "1",attribute[var ".DW_AT_byte_size"]);
+	}
+	function clean_encoding(var, enc)
+	{
+		return gensub(/.*: /,"", "1",attribute[var ".DW_AT_encoding"]);
+	}
+	function clean_addr(var)
+	{
+		return gensub(/.*: (.*)\)/,"\\1",
+			"1",attribute[var ".DW_AT_location"]);
+	}
+	function clean_name(var)
+	{
+		return gensub(/.*: /,"","1",attribute[var ".DW_AT_name"]);
+	}
+	function clean_scope(var, a, x, result)
+	{
+		split(scope[var],a);
+		for(x in a)
+			result=result sprintf("%s:", clean_name(a[x]));
+		return result;
+	}
+	function clean_struct(var, result, b, i, c)
+	{ 
+		result="\"size\", " clean_byte_size(var)
+		if(object[var] ~ /DW_TAG_union_type/)
+			result=result ", \"union\", struct("
+		else
+			result=result ", \"structure\", struct("
+		split(branches[var],b)
+		for(i in b) {
+			if(i>1)
+				c=","
+			else
+				c=""
+			result=result sprintf("%s\n\t\"%s\", struct(%s)",
+				c,
+				clean_name(b[i]),
+				clean_type(b[i]));
+		}
+		return result ")"
+
+	}
+	function clean_array(var, type, b, i, result)
+	{
+		type=gensub(/.*<0x(.*)>/,"\\1","1",attribute[var".DW_AT_type"])
+		split(branches[var],b)
+		for(i in b) {
+			result=result clean_type(b[i]) ", "
+		}
+		return  result clean_type(type)
+	}
+	function clean_enumeration(var, result)
+	{
+		result="\"enum\", struct("
+		split(branches[var],b)
+		for(i in b) {
+			if(i>1)
+				c=","
+			else
+				c=""
+			result=result sprintf("%s\n\t\"%s\", %s",
+				c,
+				clean_name(b[i]),
+				clean_const_value(b[i]));
+		}
+		return result ")"
+
+	}
+	function clean_type(var, type)
+	{
+		type=gensub(/.*<0x(.*)>/,"\\1","1",attribute[var".DW_AT_type"])
+		switch(object[var]) {
+		case /DW_TAG_member/:
+			if(clean_data_member_location(var) == "")
+				return clean_type(type);
+			return sprintf("\"data_member_location\", %s, \"type\", struct(%s)",
+				clean_data_member_location(var),
+				clean_type(type));
+		case /DW_TAG_variable/:
+			return clean_type(type);
+		case /DW_TAG_union_type/:
+		case /DW_TAG_structure_type/: 
+			return clean_struct(var);
+		case /DW_TAG_subrange_type/:
+			return "\"upper_bound\", " \
+				attribute[var".DW_AT_upper_bound"]
+		case /DW_TAG_array_type/: 
+			return clean_array(var);
+		case /DW_TAG_pointer_type/:
+			return "\"size\", 4, \"pointer\", 0"
+		case /DW_TAG_volatile_type/:
+		case /DW_TAG_const_type/:
+		case /DW_TAG_typedef/:
+			return clean_type(type);
+		case /DW_TAG_base_type/:
+			return "\"size\"," clean_byte_size(var) \
+				", \"encoding\",\"" clean_encoding(var) \
+				"\""
+		case /DW_TAG_enumeration_type/:
+			return clean_type(type) ", " clean_enumeration(var);
+		default:
+			return object[var];
+		}
+	}
+
+	!/^....</ { next } # Not a DWARF line
+	/DW_AT_/ { 
+		attributes[$2]=1; # Make a list of known attributes
+		attribute[obj "." $2]=gensub(/^[^:]+: /,"","1",$0);
+	}
+	/DW_TAG_/ {
+		# New object
+		lev=gensub(/[^<]+<([^>]+).*/,"\\1","1",$0); # current level
+		obj=gensub(/^...><([^>]+).*/,"\\1","1",$0); # current object
+		path[lev]=obj; # The path name of the current object.
+		object[obj]=$0; # Store the line declaring this object.
+
+		# All type of objects are stored in tags, the value of
+		# tag[x] is a space seperated list of object numbers of
+		# type x.
+		tags[$NF]=tags[$NF] " " obj;
+
+		# Store the scope of each object
+		for(x=0;x<lev;x++)
+			scope[obj]=scope[obj] " " path[x];
+
+		# Make sure we can make a tree from the top
+		if(lev>0) 
+			branches[path[lev-1]]=branches[path[lev-1]] " " obj
+	}
+
+	END {
+		#for(x in attributes) print "# ATTR " x
+		# for(x in tags) print "# TAG " x
+		split(tags["(DW_TAG_variable)"], variables)
+		for(i in variables) {
+			var=variables[i]
+			if(attribute[var ".DW_AT_location"] ~ /DW_OP_addr/) {
+				printf("var.%s.address=0x%s;\n", 
+					clean_name(var),
+					clean_addr(var));
+				printf("var.%s.scope=\"%s\";\n", 
+					clean_name(var),
+					clean_scope(var));
+				printf("var.%s.type=struct(%s);\n", 
+					clean_name(var),
+					clean_type(var));
+			}
+		}
+	}
+' $*
