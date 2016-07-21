@@ -2,12 +2,12 @@
 awk '
 	function clean_data_member_location(var)
 	{
-		return gensub(/.*: /,"", "1", 
+		return gensub(/.*: ([0-9]+).*/,"\\1", "1",
 			attribute[var ".DW_AT_data_member_location:"]);
 	}
 	function clean_const_value(var)
 	{
-		return gensub(/.*: /,"", "1", 
+		return gensub(/.*: /,"", "1",
 			attribute[var ".DW_AT_const_value"]);
 	}
 	function clean_byte_size(var)
@@ -18,10 +18,14 @@ awk '
 	{
 		return gensub(/.*: /,"", "1",attribute[var ".DW_AT_encoding"]);
 	}
-	function clean_addr(var)
+	function clean_addr(var,loc)
 	{
-		return gensub(/.*: (.*)\)/,"\\1",
-			"1",attribute[var ".DW_AT_location"]);
+		loc=attribute[var ".DW_AT_location"]
+		if(loc ~ /DW_OP_addr/) {
+			print "# " loc
+			return gensub(/.*: (.*)\)/,"\\1", "1",loc);
+		}
+		return "";
 	}
 	function clean_name(var)
 	{
@@ -35,7 +39,7 @@ awk '
 		return result;
 	}
 	function clean_struct(var, result, b, i, c)
-	{ 
+	{
 		result="\"size\", " clean_byte_size(var)
 		if(object[var] ~ /DW_TAG_union_type/)
 			result=result ", \"union\", struct("
@@ -94,12 +98,12 @@ awk '
 		case /DW_TAG_variable/:
 			return clean_type(type);
 		case /DW_TAG_union_type/:
-		case /DW_TAG_structure_type/: 
+		case /DW_TAG_structure_type/:
 			return clean_struct(var);
 		case /DW_TAG_subrange_type/:
 			return "\"upper_bound\", " \
-				attribute[var".DW_AT_upper_bound"]
-		case /DW_TAG_array_type/: 
+				attribute[var".DW_AT_upper_bound"]+0
+		case /DW_TAG_array_type/:
 			return clean_array(var);
 		case /DW_TAG_pointer_type/:
 			return "\"size\", 4, \"pointer\", 0"
@@ -118,8 +122,12 @@ awk '
 		}
 	}
 
+	/^ *[0-9]+:/ && $4=="NOTYPE" && $7=="ABS" { # Known addresses
+		attribute[$NF ".DW_AT_location"]="(DW_OP_addr: " $2 ")"
+	}
 	!/^....</ { next } # Not a DWARF line
-	/DW_AT_/ { 
+	{ $0=gensub(/[ \t]*$/,"","1",$0)} # Remove trailing whitespaces
+	/DW_AT_/ {
 		attributes[$2]=1; # Make a list of known attributes
 		attribute[obj "." $2]=gensub(/^[^:]+: /,"","1",$0);
 	}
@@ -140,7 +148,7 @@ awk '
 			scope[obj]=scope[obj] " " path[x];
 
 		# Make sure we can make a tree from the top
-		if(lev>0) 
+		if(lev>0)
 			branches[path[lev-1]]=branches[path[lev-1]] " " obj
 	}
 
@@ -150,16 +158,20 @@ awk '
 		split(tags["(DW_TAG_variable)"], variables)
 		for(i in variables) {
 			var=variables[i]
-			if(attribute[var ".DW_AT_location"] ~ /DW_OP_addr/) {
-				printf("var.%s.address=0x%s;\n", 
-					clean_name(var),
-					clean_addr(var));
-				printf("var.%s.scope=\"%s\";\n", 
+			addr=clean_addr(var);
+			if(addr == "")
+				addr=clean_addr(clean_name(var));
+			if(addr!="") {
+				printf("var.%s.address=0x%s;\n",
+					clean_name(var), addr);
+				printf("var.%s.scope=\"%s\";\n",
 					clean_name(var),
 					clean_scope(var));
-				printf("var.%s.type=struct(%s);\n", 
+				printf("var.%s.type=struct(%s);\n",
 					clean_name(var),
 					clean_type(var));
+			} else {
+				print "# Ignored " clean_name(var) " no address"
 			}
 		}
 	}

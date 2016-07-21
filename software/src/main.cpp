@@ -11,6 +11,23 @@ float counter;
     2.8Mb/s
 */
 
+/*
+class GPIO {
+    GPIO_TypeDef *p;
+    int num;
+public:
+    GPIO(GPIO_TypeDef *ip, int inum) { p=ip; num=inum; }
+    int operator=(int i) { p->BSRR=1<<(num+(i? 0:16)); }
+
+};
+
+GPIO LED0(GPIOA,6);
+GPIO LED1(GPIOA,7);
+GPIO LED2(GPIOB,0);
+GPIO LED3(GPIOB,1);
+
+*/
+
 __attribute__((noinline)) void usleep(uint32_t t)
 {
     for(float f=t*6.2301F;f>0;f-=1.0F)
@@ -45,66 +62,8 @@ extern "C" void HRTIM1_TIMA_IRQHandler(void)
     static float output;
 
     HRTIM1->HRTIM_TIMERx[0].TIMxICR=HRTIM_TIMICR_REPC;
-    GPIOB->BSRR=GPIO_BSRR_BS_7;
-	USART2->TDR=0x1a;
-    current=3.8948e-04F*(ADC1->JDR1);
-    voltage=0.0063730F*(ADC1->JDR2);
+    USART2->TDR=0x1a;
 
-    pid.Vout=output/0x10000*voltage;
-    pid.Vemk=pid.Vout-current*pid.Rmotor;
-    
-    switch(state) {
-    case OFF: output=0; break;
-    case UP: output=-up_speed; break;
-    case DOWN: output=down_speed; break;
-    case MANUAL: break;
-    case FEED:
-	if(current<0.3)
-	    pid.Vemk=0;
-	pid.Verror=pid.Vset-pid.Vemk;
-	pid.output=pid.P*pid.Verror+pid.integrator;
-	pid.integrator+=pid.I*pid.Verror;
-	if(pid.output>pid.ulimit) {
-	    pid.output=pid.ulimit;
-	} else if(pid.output<pid.llimit) {
-	    pid.output=pid.llimit;
-	}
-	if(pid.integrator>pid.ulimit)
-	    pid.integrator=pid.ulimit;
-	else if(pid.integrator<-pid.ulimit)
-	    pid.integrator=-pid.ulimit;
-	output=pid.output;
-	break;
-    }
-
-    if(output>2*DEAD_TIME) {
-	    HRTIM1->HRTIM_TIMERx[0].CMP1xR=output;
-	    HRTIM1->HRTIM_TIMERx[1].CMP1xR=0xffff;
-	    HRTIM1->HRTIM_TIMERx[0].CMP2xR=output/2+adc_time;
-    } else if(output<-2*DEAD_TIME) {
-	    HRTIM1->HRTIM_TIMERx[0].CMP1xR=0xffff;
-	    HRTIM1->HRTIM_TIMERx[1].CMP1xR=-output;
-	    HRTIM1->HRTIM_TIMERx[0].CMP2xR=-output/2+adc_time;
-    } else {
-	HRTIM1->HRTIM_TIMERx[0].CMP1xR=0xffff;
-	HRTIM1->HRTIM_TIMERx[1].CMP1xR=0xffff;
-	HRTIM1->HRTIM_TIMERx[0].CMP2xR=2*DEAD_TIME+adc_time;
-    }
-
-    if(subsample_ctr>0)
-	subsample_ctr--;
-    else {
-	subsample_ctr=subsample;
-	if(putp<sizeof(store)/sizeof(store[0])) {
-	    switch(trace) {
-	    case 0: store[putp]=output; break;
-	    case 1: store[putp]=pid.Vemk*1000; break;
-	    default: store[putp]=ADC1->JDR1;
-	    }
-	    putp++;
-	}
-    }
-    DAC1->DHR12R1=current*2000;
     GPIOB->BSRR=GPIO_BSRR_BR_7;
 }
 
@@ -255,10 +214,7 @@ int main()
 	DMA_CCR_CIRC |
 	DMA_CCR_EN;
 
-    pid.P=6500;
-    pid.I=40;
-    pid.ulimit=40000;
-    pid.Rmotor=3.26;
+    GPIOA->BSRR=((1<<6) | (1<<7))<<16;
 
     for(int x=0;;x++) {
     }

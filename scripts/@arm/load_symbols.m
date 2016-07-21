@@ -1,5 +1,5 @@
 function load_symbols(result)
-	[output,text]=system("arm-none-eabi-readelf --debug-dump ../software/main.elf |@arm/reparse >@arm/symbols");
+	[output,text]=system("arm-none-eabi-readelf --debug-dump -s ../software/main.elf |@arm/reparse >@arm/symbols");
 
 	source "@arm/symbols"
 
