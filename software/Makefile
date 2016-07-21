@@ -20,7 +20,7 @@ CPPFLAGS += -DSTM32F334x8
 CPU = -g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 CFLAGS   += $(CPU)
-CXXFLAGS += $(CPU)
+CXXFLAGS += $(CPU) -O3 -std=c++11
 ASFLAGS  += $(CPU)
 LDFLAGS  += $(CPU)
 
@@ -36,8 +36,11 @@ LDFLAGS  += $(CPU)
 %.elf: stm32f334.ld 
 	$(CC) $(LDFLAGS) -T $+ -o $@
 
+%.pre: %.cpp
+	$(CPP) $(CPPFLAGS) $< > $@
+
 main.elf: $(OBJS)
-	$(CC) $(LDFLAGS) -T stm32f334.ld $+ -o $@
+	$(CXX) $(LDFLAGS) -T stm32f334.ld $+ -o $@
 
 ifneq ($(MAKECMDGOALS),clean)
 include $(OBJS:%.o=.%.d)

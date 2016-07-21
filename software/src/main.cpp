@@ -1,6 +1,14 @@
 #include "stm32f30x.h"
 #include "stm32f30x_rcc.h"
 
+struct mapping {
+    int port;
+    int pin;
+    int function;
+};
+
+const mapping TIM1_BKIN[]={{1,12,6},{1,8,12},{0,14,6},{0,6,6}};
+
 #define DEAD_TIME 20
 #define PRESCALE 2
 
