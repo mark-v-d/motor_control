@@ -66,7 +66,6 @@ public:
 	    afr>>=4;	afr|=uint64_t(t->function>>4)<<60;
 	    ospeedr>>=2;ospeedr|=t->speed<<30;
 	    pupdr>>=2;	pupdr|=t->pupdr<<30;
-
 	}
 	p->MODER=moder;
 	p->OTYPER=otyper;
@@ -86,11 +85,11 @@ public:
     int operator=(int i) const { p->BSRR=(1<<(pin+(i? 0:16))); return i; }
 };
 
-const gpio LED0(GPIOA,6);
-const gpio LED1(GPIOA,7);
-const gpio LED2(GPIOB,1);
-const gpio LED3(GPIOB,0);
-const gpio HBEN(GPIOA,11);
+static const gpio LED0(GPIOA,6);
+static const gpio LED1(GPIOA,7);
+static const gpio LED2(GPIOB,1);
+static const gpio LED3(GPIOB,0);
+static const gpio HBEN(GPIOA,11);
 
 
 #endif

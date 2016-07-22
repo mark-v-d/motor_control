@@ -2,39 +2,12 @@
 #include "stm32f30x_rcc.h"
 #include "gpio_init.h"
 
-struct mapping {
-    int port;
-    int pin;
-    int function;
-};
-
-const mapping TIM1_BKIN[]={{1,12,6},{1,8,12},{0,14,6},{0,6,6}};
-
 #define DEAD_TIME 20
 #define PRESCALE 2
-
-float counter;
 
 /* encoder 5000Hz,
     0 0101 1000 --> 0x1a
     2.8Mb/s
-*/
-
-/*
-class GPIO {
-    GPIO_TypeDef *p;
-    int num;
-public:
-    GPIO(GPIO_TypeDef *ip, int inum) { p=ip; num=inum; }
-    int operator=(int i) { p->BSRR=1<<(num+(i? 0:16)); }
-
-};
-
-GPIO LED0(GPIOA,6);
-GPIO LED1(GPIOA,7);
-GPIO LED2(GPIOB,0);
-GPIO LED3(GPIOB,1);
-
 */
 
 __attribute__((noinline)) void usleep(uint32_t t)
@@ -43,37 +16,20 @@ __attribute__((noinline)) void usleep(uint32_t t)
 	asm("nop");
 }
 
-static enum {
-    OFF=0,
-    UP,
-    DOWN,
-    FEED,
-    MANUAL
-} state=OFF;
-float current, voltage;
-float up_speed=40000, down_speed=20000;
-
-int16_t store[3000], trace, putp, subsample_ctr, subsample=10;
-
-static struct {
-    float P, I; // Gains
-    float llimit, ulimit;
-    float integrator;
-    float output;
-
-    float Vout, Vemk, Vset, Verror;
-    float Rmotor;
-} pid;
-float adc_time;
 
 extern "C" void HRTIM1_TIMA_IRQHandler(void)
 {
-    static float output;
+    static int counter=0;
 
     HRTIM1->HRTIM_TIMERx[0].TIMxICR=HRTIM_TIMICR_REPC;
     USART2->TDR=0x1a;
 
-    GPIOB->BSRR=GPIO_BSRR_BR_7;
+    switch(counter) {
+    case 0: counter=2000; LED0=1; break;
+    case 1000: LED0=0;
+    default:
+	counter--;
+    }
 }
 
 
@@ -82,7 +38,7 @@ volatile char rx_buffer[8];
 
 int main()
 {
-
+    /* First initalize clocks */
     SystemCoreClockUpdate();
     RCC->AHBENR|=
 	RCC_AHBENR_DMA1EN |
@@ -90,14 +46,13 @@ int main()
 	RCC_AHBENR_GPIOBEN |
 	RCC_AHBENR_GPIOAEN;
     RCC->APB1ENR|=
-	RCC_APB1ENR_USART2EN |
-	RCC_APB1ENR_DAC1EN;
+	RCC_APB1ENR_USART2EN;
     RCC->APB2ENR|=
 	RCC_APB2ENR_HRTIM1;
-    RCC->CFGR2|=RCC_CFGR2_ADCPRE12_DIV1;
+    RCC->CFGR2|=
+	RCC_CFGR2_ADCPRE12_DIV1;
     RCC->CFGR3|=
 	RCC_CFGR3_HRTIM1SW;	// PLL clock 64MHz
-
     RCC_GetClocksFreq(&clock_info);
 
     /* Initialize pins */
@@ -139,7 +94,6 @@ int main()
 	{PP, NONE, SLOW, INP},	// PB14, nc
 	{PP, NONE, SLOW, INP}}	// PB15, nc
     );
-
 
     // Initialise ADC1
     ADC1->CR&=~ADC_CR_ADVREGEN;
