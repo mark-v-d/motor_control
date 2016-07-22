@@ -11,7 +11,7 @@ VPATH+=CMSIS-3.2.0/Device/ST/STM32F30x/Source
 VPATH+=STM32F30x_StdPeriph_Driver-V1.2.1/src
 
 
-CPPFLAGS+=-I CMSIS-3.2.0/Device/ST/STM32F30x/Include/
+CPPFLAGS+=-I CMSIS-3.2.0/Device/ST/STM32F30x/Include/ 
 CPPFLAGS+=-I STM32F30x_StdPeriph_Driver-V1.2.1/inc
 CPPFLAGS+=-I src
 CPPFLAGS+=-I CMSIS-3.2.0/Include/
@@ -28,7 +28,7 @@ LDFLAGS  += $(CPU)
 	$(CC) $(CPPFLAGS) -MM $<|sed -e "s/:/ $@:/" > $@ || (rm $@; false)
 
 .%.d: %.cpp Makefile
-	$(CXX) $(CPPFLAGS) -MM $<|sed -e "s/:/ $@:/" > $@ || (rm $@; false)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MM $<|sed -e "s/:/ $@:/" > $@ || (rm $@; false)
 
 .%.d: %.s
 	touch $@ 

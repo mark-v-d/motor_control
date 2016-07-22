@@ -1,5 +1,6 @@
 #include "stm32f30x.h"
 #include "stm32f30x_rcc.h"
+#include "gpio_init.h"
 
 struct mapping {
     int port;
@@ -81,6 +82,7 @@ volatile char rx_buffer[8];
 
 int main()
 {
+
     SystemCoreClockUpdate();
     RCC->AHBENR|=
 	RCC_AHBENR_DMA1EN |
@@ -98,32 +100,46 @@ int main()
 
     RCC_GetClocksFreq(&clock_info);
 
-    // Put PA8, PA9, PA10 and PA11 in HRTIM1_CHxx mode
-    GPIOA->AFR[1]&=0xffff0000;
-    GPIOA->AFR[1]|=0x0000dddd; // Alternate function 13
-    GPIOA->OSPEEDR|=
-	GPIO_OSPEEDER_OSPEEDR11 | GPIO_OSPEEDER_OSPEEDR10 |
-	GPIO_OSPEEDER_OSPEEDR9 | GPIO_OSPEEDER_OSPEEDR8;
-    GPIOA->MODER&=~(
-	GPIO_MODER_MODER5 | GPIO_MODER_MODER6 |	// FIXME debug only
-	GPIO_MODER_MODER8 | GPIO_MODER_MODER9 |
-	GPIO_MODER_MODER10 | GPIO_MODER_MODER11);
-    GPIOA->MODER|=
-	GPIO_MODER_MODER0 | 				// Isense input
-	GPIO_MODER_MODER4 |				// Analog output
-	GPIO_MODER_MODER5_0 | GPIO_MODER_MODER6_0 |	// FIXME debug only
-	GPIO_MODER_MODER8_1 | GPIO_MODER_MODER9_1 |	// H-bridge
-	GPIO_MODER_MODER10_1 | GPIO_MODER_MODER11_1;	// H-bridge
-    GPIOB->AFR[0]&=0xfff00fff;
-    GPIOB->AFR[0]|=0x00077000;				// PB3==USART2
-    GPIOB->MODER&=~(
-	GPIO_MODER_MODER7 |				// Interrupt scope
-	GPIO_MODER_MODER4 | GPIO_MODER_MODER3);		// USART2
-    GPIOB->MODER|=(
-	GPIO_MODER_MODER7_0 |				// Interrupt scope
-	GPIO_MODER_MODER4_1 | GPIO_MODER_MODER3_1);	// USART2 
+    /* Initialize pins */
+    LED3=LED2=LED1=LED0=1;
+    HBEN=0;
+    gpio_init(GPIOA,{
+	{PP, NONE, SLOW, AF1},	// PA0, TIM2_CH1
+	{PP, NONE, SLOW, AF1},	// PA1, TIM2_CH2
+	{PP, NONE, SLOW, AF1},	// PA2, TIM2_CH3
+	{PP, NONE, SLOW, ANA},	// PA3, ADC1_IN4
+	{PP, NONE, SLOW, ANA},	// PA4, ADC2_IN1
+	{PP, NONE, SLOW, ANA},	// PA5, ADC2_IN2
+	{PP, NONE, SLOW, OUT},	// PA6, LED0
+	{PP, NONE, SLOW, OUT},	// PA7, LED1
+	{PP, NONE, FAST, AF13},	// PA8, HRTIM1_CHA1
+	{PP, NONE, FAST, AF13},	// PA9, HRTIM1_CHA2
+	{PP, NONE, FAST, AF13},	// PA10, HRTIM1_CHB1
+	{PP, NONE, SLOW, OUT},	// PA11, HBEN
+	{PP, NONE, SLOW, AF7},  // PA12, USART1_RTS_DE
+	{PP, PULU, FAST, AF0},	// PA13, SWDAT
+	{PP, PULD, FAST, AF0},	// PA14, SWCLK
+	{PP, PULU, MEDI, AF7}}	// PA15, USART2_RXD
+    );
+    gpio_init(GPIOB,{
+	{PP, NONE, SLOW, OUT},	// PB0, LED2
+	{PP, NONE, SLOW, OUT},	// PB1, LED3
+	{PP, NONE, SLOW, INP},	// PB2, nc
+	{PP, NONE, FAST, AF7},	// PB3, USART2_TXD
+	{PP, PULU, SLOW, AF0},	// PB4, NJTRST (not used)
+	{PP, NONE, SLOW, INP},	// PB5, unused, connected to DXD
+	{PP, NONE, SLOW, AF7},	// PB6, USART1_TX
+	{PP, NONE, SLOW, AF7},	// PB7, USART1_RX
+	{PP, NONE, SLOW, INP},	// PB8, nc
+	{PP, NONE, SLOW, INP},	// PB9, nc
+	{PP, NONE, SLOW, INP},	// PB10, nc
+	{PP, NONE, SLOW, INP},	// PB11, nc
+	{PP, NONE, SLOW, INP},	// PB12, nc
+	{PP, NONE, SLOW, INP},	// PB13, nc
+	{PP, NONE, SLOW, INP},	// PB14, nc
+	{PP, NONE, SLOW, INP}}	// PB15, nc
+    );
 
-    DAC1->CR=DAC_CR_EN1 | DAC_CR_BOFF1;
 
     // Initialise ADC1
     ADC1->CR&=~ADC_CR_ADVREGEN;
@@ -222,14 +238,13 @@ int main()
 	DMA_CCR_CIRC |
 	DMA_CCR_EN;
 
-    GPIOA->BSRR=((1<<6) | (1<<7))<<16;
 
     for(int x=0;;x++) {
+	LED1=1;
+	usleep(200000);
+	LED1=0;
+	usleep(200000);
     }
-}
-
-void test(int x)
-{
 }
 
 extern "C" {
