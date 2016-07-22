@@ -9,6 +9,24 @@
     0 0101 1000 --> 0x1a
     2.8Mb/s
 */
+char tx_buffer[1]={ 0x1a };
+volatile char rx_buffer[9];
+struct position_t {
+    uint8_t start;
+    uint8_t state;
+    uint32_t angle;
+    uint32_t rotation;
+    uint8_t crc;
+
+    position_t(void) {}
+    position_t(volatile char *p) {
+	start=p[0];
+	state=p[1];
+	angle=p[2]+256*p[3]+65536*p[4];
+	rotation=p[5]+0x100*p[6]+0x10000*p[7];
+	crc=p[8];
+    }
+} position;
 
 __attribute__((noinline)) void usleep(uint32_t t)
 {
@@ -22,7 +40,7 @@ extern "C" void HRTIM1_TIMA_IRQHandler(void)
     static int counter=0;
 
     HRTIM1->HRTIM_TIMERx[0].TIMxICR=HRTIM_TIMICR_REPC;
-    USART2->TDR=0x1a;
+    position=rx_buffer;
 
     switch(counter) {
     case 0: counter=2000; LED0=1; break;
@@ -34,7 +52,6 @@ extern "C" void HRTIM1_TIMA_IRQHandler(void)
 
 
 RCC_ClocksTypeDef clock_info;
-volatile char rx_buffer[8];
 
 int main()
 {
@@ -133,6 +150,17 @@ int main()
     */
 
 
+    // Channel used by HRTIM1A (transmit encoder trigger)
+    DMA1_Channel3->CCR=0;	// Disable channel
+    DMA1_Channel3->CNDTR=1;
+    DMA1_Channel3->CPAR=(__IO uint32_t)&(USART2->TDR);
+    DMA1_Channel3->CMAR=(__IO uint32_t)tx_buffer;
+    DMA1_Channel3->CCR=
+	DMA_CCR_MINC |
+	DMA_CCR_CIRC |
+	DMA_CCR_DIR |
+	DMA_CCR_EN;
+
     // HRTIM1 PLL VCO 128MHz and recalibrate every 14us
     HRTIM1->HRTIM_COMMON.DLLCR=HRTIM_DLLCR_CAL;
     while(!(HRTIM1->HRTIM_COMMON.ISR & HRTIM_ISR_DLLRDY))
@@ -165,7 +193,10 @@ int main()
 	    HRTIM_TIMCR_TREPU |
 	    PRESCALE*HRTIM_TIMCR_CK_PSC_0;
     }
-    HRTIM1->HRTIM_TIMERx[0].TIMxDIER=HRTIM_TIMDIER_REPIE;	
+    HRTIM1->HRTIM_TIMERx[0].TIMxDIER=
+	HRTIM_TIMDIER_REPIE |
+	HRTIM_TIMDIER_REPDE;
+
     HRTIM1->HRTIM_TIMERx[0].CMP2xR=0;
     HRTIM1->HRTIM_COMMON.ADC2R=HRTIM_ADC2R_AD2TAC2;
 
@@ -177,21 +208,22 @@ int main()
 
     NVIC_EnableIRQ(HRTIM1_TIMA_IRQn);
 
+    /* Usart2 is used for the encoder also using DMA1-channel6 */
     USART2->CR1=0;
     USART2->CR2=0;
-    USART2->CR3=0;
-    USART2->BRR=0x1a;
+    USART2->CR3=USART_CR3_DMAR;
+    USART2->BRR=0x19;
     USART2->CR1=USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
 
+    // Channel used by USART2 (receive encoder data)
     DMA1_Channel6->CCR=0;	// Disable channel
-    DMA1_Channel6->CNDTR=4;
+    DMA1_Channel6->CNDTR=sizeof(rx_buffer);
     DMA1_Channel6->CPAR=(__IO uint32_t)&(USART2->RDR);
     DMA1_Channel6->CMAR=(__IO uint32_t)rx_buffer;
     DMA1_Channel6->CCR=
 	DMA_CCR_MINC |
 	DMA_CCR_CIRC |
 	DMA_CCR_EN;
-
 
     for(int x=0;;x++) {
 	LED1=1;
