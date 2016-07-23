@@ -5,7 +5,8 @@ function result=program(a)
 		error("Compilation failed");
 	end
 
-	do_and_wait(a,"program main.elf\n",1);
+	sprintf("program %s/../software/main.elf\n",pwd)
+	do_and_wait(a,sprintf("program %s/../software/main.elf\n",pwd),1);
 	do_and_wait(a,"reset\n",1);
 	puts("done\n");
 
