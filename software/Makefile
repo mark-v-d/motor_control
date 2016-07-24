@@ -1,5 +1,5 @@
 OBJS=main.o system_stm32f30x.o startup_stm32f334x8.o
-OBJS+=stm32f30x_rcc.o
+OBJS+=stm32f30x_rcc.o adc.o
 
 CROSS=arm-none-eabi-
 CC=$(CROSS)gcc
@@ -20,7 +20,7 @@ CPPFLAGS += -DSTM32F334x8
 CPU = -g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 CFLAGS   += $(CPU)
-CXXFLAGS += $(CPU) -O3 -std=c++11
+CXXFLAGS += $(CPU) -std=c++11
 ASFLAGS  += $(CPU)
 LDFLAGS  += $(CPU)
 
