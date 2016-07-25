@@ -2606,4 +2606,6 @@ Wire Wire Line
 Wire Wire Line
 	7000 1200 7050 1200
 Connection ~ 7000 950 
+Text Notes 5250 4500 0    60   ~ 0
+FIXME:\n\n1. Debugging pins\n2. Allow encoder power to be turned off.\n3. Don't use picoblade connectors.\n4. Enable LT1764.\n5. Measure servo voltage.\n6. Pulldown on HBEN.\n7. Remove OKR_T3 (too much noise) \n    5V board 150mA\n    5V Encoder 100mA\n8. Isolate RS485 to computer.\n9. Isolate debug interface (JTAG)
 $EndSCHEMATC

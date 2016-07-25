@@ -8,11 +8,12 @@
 #define PRESCALE 2
 #define FULL_SCALE 0xde00
 
-float output[3];
-float current[3];
+volatile float current[3];
+
 float Istator[2];
 float Irotor[2];
-float Vout[2];
+float Vstator[2];
+float Vrotor[2];
 position_t position;
 
 float buffer[1000];
@@ -33,41 +34,42 @@ extern "C" void HRTIM1_TIMB_IRQHandler(void)
     HRTIM1->HRTIM_TIMERx[1].TIMxICR=HRTIM_TIMICR_RST2C;
     position=rx_buffer;
 
-    for(int i=0;i<3;i++)
-	output[i]=max(0.0F,min(0.95F*FULL_SCALE,output[i]));
-
     current[0]=0.0013966F*(ADC1->JDR1-2082.6F);
     current[1]=0.0013024F*(ADC2->JDR1-2059.9F);
     current[2]=-current[0]-current[1];
-    Istator[0]=0.5F*current[0]-current[1];
-    Istator[1]=-SQRT3_2*current[0];
+    Istator[0]=float(3.0/2)*current[0];
+    Istator[1]=float(sqrt(3))*current[1]+float(sqrt(3)/2)*current[0];
     Irotor[0]= cosf(position.angle)*Istator[0]+sinf(position.angle)*Istator[1];
     Irotor[1]=-sinf(position.angle)*Istator[0]+cosf(position.angle)*Istator[1];
 
-    if(	(output[0]=float(sqrt(3)/3)*Vout[1]+Vout[0])>=0 &&
-	(output[1]=float(2/sqrt(3))*Vout[1])>=0
+    Vstator[0]= cosf(position.angle)*Vrotor[0]-sinf(position.angle)*Vrotor[1];
+    Vstator[1]= sinf(position.angle)*Vrotor[0]+cosf(position.angle)*Vrotor[1];
+
+    float output[3];
+    if(	(output[0]=float(sqrt(3)/3)*Vstator[1]+Vstator[0])>=0 &&
+	(output[1]=float(2/sqrt(3))*Vstator[1])>=0
     ) {
 	output[2]=0;
     } else if(
-	(output[1]=-Vout[0]+float(sqrt(3)/3)*Vout[1])>=0 &&
-	(output[2]=-float(sqrt(3)/3)*Vout[1]-Vout[0])>=0
+	(output[1]=-Vstator[0]+float(sqrt(3)/3)*Vstator[1])>=0 &&
+	(output[2]=-float(sqrt(3)/3)*Vstator[1]-Vstator[0])>=0
     ) {
 	output[0]=0;
     } else {
-	output[0]=Vout[0]-float(sqrt(3)/3)*Vout[1];
+	output[0]=Vstator[0]-float(sqrt(3)/3)*Vstator[1];
 	output[1]=0;
-	output[2]=-float(2/sqrt(3))*Vout[1];
+	output[2]=-float(2/sqrt(3))*Vstator[1];
     }
 
     if(putp<1000)
 	buffer[putp++]=current[0];
 
-    HRTIM1->HRTIM_TIMERx[0].CMP1xR=FULL_SCALE*(0.5F-output[0]);
-    HRTIM1->HRTIM_TIMERx[0].CMP2xR=FULL_SCALE*(0.5F+output[0]);
-    HRTIM1->HRTIM_TIMERx[0].CMP3xR=FULL_SCALE*(0.5F-output[1]);
-    HRTIM1->HRTIM_TIMERx[0].CMP4xR=FULL_SCALE*(0.5F+output[1]);
-    HRTIM1->HRTIM_TIMERx[1].CMP1xR=FULL_SCALE*(0.5F-output[2]);
-    HRTIM1->HRTIM_TIMERx[1].CMP2xR=FULL_SCALE*(0.5F+output[2]);
+    HRTIM1->HRTIM_TIMERx[0].CMP1xR=FULL_SCALE*(0.5F-0.5F*output[0]);
+    HRTIM1->HRTIM_TIMERx[0].CMP2xR=FULL_SCALE*(0.5F+0.5F*output[0]);
+    HRTIM1->HRTIM_TIMERx[0].CMP3xR=FULL_SCALE*(0.5F-0.5F*output[1]);
+    HRTIM1->HRTIM_TIMERx[0].CMP4xR=FULL_SCALE*(0.5F+0.5F*output[1]);
+    HRTIM1->HRTIM_TIMERx[1].CMP1xR=FULL_SCALE*(0.5F-0.5F*output[2]);
+    HRTIM1->HRTIM_TIMERx[1].CMP2xR=FULL_SCALE*(0.5F+0.5F*output[2]);
 
     switch(counter) {
     case 0: counter=2000; LED0=1; break;

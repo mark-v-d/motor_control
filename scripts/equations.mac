@@ -1,0 +1,32 @@
+/* Measured currents to orthogonal currents */
+I: makelist( adc[n+1]*%e^(%i*n*2*%pi/3),n,0,2);
+Istator: I[1]+I[2]+ev(I[3],adc[3]=-adc[1]-adc[2]); 
+Istator_re: ratsimp(realpart(Istator));
+Istator_im: ratsimp(imagpart(Istator));
+
+/*******************************************************************************
+	Space vector mapping.
+
+	There are three solutions to map Vstator. Only one of these solutions
+	gives only positive times. This one is the correct mapping.
+*******************************************************************************/
+V: makelist( %e^(%i*n*2*%pi/3),n,0,2);
+P: ident(3);
+
+S1: ev(a*P[1]+b*P[2], solve([	
+	realpart(a*V[1]+b*V[2])=Vstator[0], 
+	imagpart(a*V[1]+b*V[2])=Vstator[1]
+],[a,b]));
+
+
+S2: ev(a*P[2]+b*P[3], solve([	
+	realpart(a*V[2]+b*V[3])=Vstator[0], 
+	imagpart(a*V[2]+b*V[3])=Vstator[1]
+],[a,b]));
+
+S3: ev(a*P[3]+b*P[1], solve([	
+	realpart(a*V[3]+b*V[1])=Vstator[0], 
+	imagpart(a*V[3]+b*V[1])=Vstator[1]
+],[a,b]));
+
+Sall: [S1, S2, S3];
