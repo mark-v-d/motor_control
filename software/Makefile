@@ -20,7 +20,7 @@ CPPFLAGS += -DSTM32F334x8
 CPU = -g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 CFLAGS   += $(CPU)
-CXXFLAGS += $(CPU) -std=c++11
+CXXFLAGS += $(CPU) -O -std=c++11
 ASFLAGS  += $(CPU)
 LDFLAGS  += $(CPU)
 

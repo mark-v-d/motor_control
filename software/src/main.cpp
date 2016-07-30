@@ -15,6 +15,10 @@ float Irotor[2];
 float Vstator[2];
 float Vrotor[2];
 position_t position;
+float lim=0.2;
+
+float kP[2], kI[2], I[2];
+volatile float Iset[2];
 
 float buffer[1000];
 volatile int putp;
@@ -42,6 +46,20 @@ extern "C" void HRTIM1_TIMB_IRQHandler(void)
     Irotor[0]= cosf(position.angle)*Istator[0]+sinf(position.angle)*Istator[1];
     Irotor[1]=-sinf(position.angle)*Istator[0]+cosf(position.angle)*Istator[1];
 
+    for(int i=0;i<2;i++) {
+	float err=Iset[i]-Irotor[i];
+	I[i]+=kI[i]*err;
+	Vrotor[i]=err*kP[i]+I[i];
+    }
+
+    float sq_len=Vrotor[0]*Vrotor[0]+Vrotor[1]*Vrotor[1];
+    if(sq_len>float(lim*lim)) {
+	Vrotor[0]*=lim/sqrtf(sq_len);
+	Vrotor[1]*=lim/sqrtf(sq_len);
+	I[0]*=lim/sqrtf(sq_len);
+	I[1]*=lim/sqrtf(sq_len);
+    }
+
     Vstator[0]= cosf(position.angle)*Vrotor[0]-sinf(position.angle)*Vrotor[1];
     Vstator[1]= sinf(position.angle)*Vrotor[0]+cosf(position.angle)*Vrotor[1];
 
@@ -61,8 +79,10 @@ extern "C" void HRTIM1_TIMB_IRQHandler(void)
 	output[2]=-float(2/sqrt(3))*Vstator[1];
     }
 
-    if(putp<1000)
-	buffer[putp++]=current[0];
+    if(putp<998) {
+	buffer[putp++]=Irotor[0];
+	buffer[putp++]=Irotor[1];
+    }
 
     HRTIM1->HRTIM_TIMERx[0].CMP1xR=FULL_SCALE*(0.5F-0.5F*output[0]);
     HRTIM1->HRTIM_TIMERx[0].CMP2xR=FULL_SCALE*(0.5F+0.5F*output[0]);
@@ -155,6 +175,16 @@ int main()
 	DMA_CCR_DIR |
 	DMA_CCR_EN;
 
+    // Channel used by USART2 (receive encoder data)
+    DMA1_Channel6->CCR=0;	// Disable channel
+    DMA1_Channel6->CNDTR=sizeof(rx_buffer);
+    DMA1_Channel6->CPAR=(__IO uint32_t)&(USART2->RDR);
+    DMA1_Channel6->CMAR=(__IO uint32_t)rx_buffer;
+    DMA1_Channel6->CCR=
+	DMA_CCR_MINC |
+	DMA_CCR_CIRC |
+	DMA_CCR_EN;
+
     // HRTIM1 PLL VCO 128MHz and recalibrate every 14us
     HRTIM1->HRTIM_COMMON.DLLCR=HRTIM_DLLCR_CAL;
     while(!(HRTIM1->HRTIM_COMMON.ISR & HRTIM_ISR_DLLRDY))
@@ -184,6 +214,7 @@ int main()
     HRTIM1->HRTIM_TIMERx[1].TIMxDIER=
 	HRTIM_TIMDIER_RST2IE;
 
+    // Using ugly interrupt hack, add master timer.
     HRTIM1->HRTIM_TIMERx[0].CMP1xR=FULL_SCALE/2;
     HRTIM1->HRTIM_TIMERx[0].CMP2xR=FULL_SCALE/2;
     HRTIM1->HRTIM_TIMERx[0].CMP3xR=FULL_SCALE/2;
@@ -197,7 +228,6 @@ int main()
     HRTIM1->HRTIM_TIMERx[0].RSTx2R=HRTIM_RST2R_CMP4;
     HRTIM1->HRTIM_TIMERx[1].SETx1R=HRTIM_SET1R_CMP1;
     HRTIM1->HRTIM_TIMERx[1].RSTx1R=HRTIM_RST1R_CMP2;
-    //HRTIM1->HRTIM_TIMERx[1].SETx2R=HRTIM_SET2R_PER; setting occurs in timerA repetition interrupt
     HRTIM1->HRTIM_TIMERx[1].RSTx2R=HRTIM_RST2R_CMP3;
     HRTIM1->HRTIM_COMMON.ADC2R=HRTIM_ADC2R_AD2TAPER;
 
@@ -216,16 +246,6 @@ int main()
     USART2->CR3=USART_CR3_DMAR;
     USART2->BRR=0x19;
     USART2->CR1=USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
-
-    // Channel used by USART2 (receive encoder data)
-    DMA1_Channel6->CCR=0;	// Disable channel
-    DMA1_Channel6->CNDTR=sizeof(rx_buffer);
-    DMA1_Channel6->CPAR=(__IO uint32_t)&(USART2->RDR);
-    DMA1_Channel6->CMAR=(__IO uint32_t)rx_buffer;
-    DMA1_Channel6->CCR=
-	DMA_CCR_MINC |
-	DMA_CCR_CIRC |
-	DMA_CCR_EN;
 
     HBEN=1;
     for(int x=0;;x++) {
