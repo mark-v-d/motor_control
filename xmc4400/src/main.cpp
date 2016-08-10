@@ -4,10 +4,12 @@
 #include "XMC4500.h"
 #include "system_XMC4500.h"
 
+extern "C" {
 static void prvSetupHardware( void );
+extern void SystemCoreClockUpdate( void );
+}
 extern void main_blinky( void );
 extern void main_full( void );
-extern void SystemCoreClockUpdate( void );
 
 int main( void )
 {
@@ -18,6 +20,7 @@ int main( void )
 }
 /*-----------------------------------------------------------*/
 
+extern "C" {
 static void prvSetupHardware( void )
 {
 
@@ -129,3 +132,4 @@ long lHigherPriorityTaskWoken = pdFALSE;
 }
 
 #endif /* JUST_AN_EXAMPLE_ISR */
+}

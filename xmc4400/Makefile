@@ -1,8 +1,31 @@
 OBJS=main.o startup_XMC4500.o System_XMC4500.o
+
+#
+# FreeRTOS
+#
 OBJS+=port.o
-OBJS+=heap_2.o
+OBJS+=heap_4.o
 OBJS+=main_blinky.o exit.o
 OBJS+=tasks.o queue.o list.o timers.o
+VPATH+=FreeRTOS/
+VPATH+=FreeRTOS/portable/MemMang
+VPATH+=FreeRTOS/portable/GCC/ARM_CM4F
+CPPFLAGS+=-I FreeRTOS/include/
+CPPFLAGS+=-I FreeRTOS/portable/GCC/ARM_CM4F
+
+#
+# TCP
+#
+
+CPPFLAGS+=-I FreeRTOS-Plus-TCP/include
+CPPFLAGS+=-I FreeRTOS-Plus-TCP/portable/Compiler/GCC/
+VPATH+=FreeRTOS-Plus-TCP
+OBJS+=FreeRTOS_IP.o FreeRTOS_ARP.o FreeRTOS_DHCP.o FreeRTOS_DNS.o
+OBJS+=FreeRTOS_Sockets.o FreeRTOS_TCP_IP.o FreeRTOS_UDP_IP.o FreeRTOS_TCP_WIN.o
+OBJS+=FreeRTOS_Stream_Buffer.o
+VPATH+=FreeRTOS-Plus-TCP/portable/BufferManagement/
+OBJS+=BufferAllocation_2.o
+
 
 LDSCRIPT=./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/XMC4500_series/Source/GCC/XMC4500x1024.ld
 
@@ -11,18 +34,13 @@ CC=$(CROSS)gcc
 AS=$(CROSS)as
 CXX=$(CROSS)g++
 
-VPATH=src
+VPATH+=src
 VPATH+=XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/XMC4500_series/Source/GCC/
-VPATH+=FreeRTOS/
-VPATH+=FreeRTOS/portable/MemMang
-VPATH+=FreeRTOS/portable/GCC/ARM_CM4F
 
 CPPFLAGS+=-I ./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/XMC4500_series/Include/
 CPPFLAGS+=-I ./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Include/
 CPPFLAGS+=-I src
 CPPFLAGS+=-DCLOCK_CRYSTAL_FREQUENCY=12000000
-CPPFLAGS+=-I FreeRTOS/include/
-CPPFLAGS+=-I FreeRTOS/portable/GCC/ARM_CM4F
 
 CPU = -g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16
 

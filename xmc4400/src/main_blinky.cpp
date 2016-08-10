@@ -28,8 +28,7 @@ functionality. */
 #define mainQUEUE_RECEIVE_PARAMETER ( 0x22UL )
 
 /* To toggle the single LED */
-#define mainTOGGLE_LED() ( PORT3->OMR = 0x02000200 )
-
+#define mainTOGGLE_LED() ( PORT1->OMR =	0x00020002 )
 /*-----------------------------------------------------------*/
 
 /*
