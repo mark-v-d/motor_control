@@ -807,13 +807,13 @@ Text Label 11850 4550 0    60   ~ 0
 LED2
 Text Label 11850 4250 0    60   ~ 0
 LED3
-Text Label 2100 11750 0    60   ~ 0
+Text Label 2100 11350 0    60   ~ 0
 LED0
-Text Label 2100 10750 0    60   ~ 0
+Text Label 2100 11450 0    60   ~ 0
 LED1
-Text Label 2000 4500 0    60   ~ 0
+Text Label 2100 11750 0    60   ~ 0
 LED2
-Text Label 2000 4600 0    60   ~ 0
+Text Label 2100 11950 0    60   ~ 0
 LED3
 $Comp
 L +12V #PWR6
@@ -1416,7 +1416,7 @@ F 3 "" H 3500 9100 60  0000 C CNN
 	1    3500 9100
 	0    1    1    0   
 $EndComp
-Text Label 2050 4300 0    60   ~ 0
+Text Label 2000 4300 0    60   ~ 0
 ETH_CRS_DVA
 Text Label 2050 8600 0    60   ~ 0
 ETH0_MDC
@@ -1698,7 +1698,7 @@ F 3 "" H 10350 12900 50  0000 C CNN
 $EndComp
 Text Label 8750 10250 0    60   ~ 0
 ENC_12V
-Text Label 2100 11450 0    60   ~ 0
+Text Label 2100 11250 0    60   ~ 0
 ENC_5V
 Text Label 2100 10850 0    60   ~ 0
 ENC_12V
@@ -2429,7 +2429,7 @@ Text Label 5750 6900 0    60   ~ 0
 ETH0_CLK_RMIIA
 Text Label 5750 6150 0    60   ~ 0
 ETH0_~RST
-Text Label 2100 11350 0    60   ~ 0
+Text Label 2100 10750 0    60   ~ 0
 ETH0_~RST
 $Comp
 L R R35
@@ -2554,7 +2554,7 @@ F 3 "" H 10000 7900 60  0000 C CNN
 $EndComp
 Text Label 10000 8450 1    60   ~ 0
 LED4
-Text Label 2100 11950 0    60   ~ 0
+Text Label 2000 4600 0    60   ~ 0
 LED4
 $Comp
 L +3.3V #PWR37
@@ -5113,7 +5113,7 @@ Text Label 12350 5600 0    60   ~ 0
 HB2
 Wire Wire Line
 	11900 5700 12850 5700
-Text Label 2100 11250 0    60   ~ 0
+Text Label 2000 4500 0    60   ~ 0
 HBEN
 Wire Wire Line
 	1650 11250 2600 11250
@@ -5141,7 +5141,7 @@ F 3 "" H 12600 3100 50  0000 C CNN
 $EndComp
 Wire Wire Line
 	12600 2850 12600 3100
-Text Notes 3000 11500 0    60   ~ 0
+Text Notes 3350 11500 0    60   ~ 0
 P0.3 HRPWM0_OUT01/CCU80_OUT01\nP0.5 HRPWM0_OUT00/CCU80_OUT00\nP0.6 HRPWM0_OUT30 (sync?)\nP1.8 DSD_MCLK 1A 0D 2D 3D\nP1.1 POSIF0_IN2A (ENC_Z)\nP1.2 POSIF0_IN1A (ENC_B)\nP1.3 POSIF0_IN0A (ENC_A)
 Text Notes 4800 9700 0    60   ~ 0
 P2.1 ETH0_CLKRMIIA\nP2.0 ETH0_MDO MDIB\nP2.7 ETH0_MDC\nP2.6 DSD_IN1B\nP1.5 U0C0_DOUT0\nP1.4 U0C0_DX0B
@@ -5168,4 +5168,8 @@ Wire Wire Line
 	18100 2650 17650 2650
 Wire Wire Line
 	17650 2950 18050 2950
+Text Label 2600 9500 0    60   ~ 0
+SWDIO
+Text Label 2600 9600 0    60   ~ 0
+SWCLK
 $EndSCHEMATC
