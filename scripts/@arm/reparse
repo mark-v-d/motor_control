@@ -112,6 +112,7 @@ awk '
 			return "\"size\", 4, \"pointer\", 0"
 		case /DW_TAG_volatile_type/:
 		case /DW_TAG_const_type/:
+		case /DW_TAG_reference_type/:
 		case /DW_TAG_typedef/:
 			return clean_type(type);
 		case /DW_TAG_base_type/:
