@@ -15,8 +15,9 @@ extern "C"
 #endif
 void SysTick_Handler(void)
 {
-    tickflag = 1;
     systick_count++;
+    if(!(systick_count % 500 ))
+	tickflag = 1;
 }
 
 void initSysTick()
@@ -31,19 +32,29 @@ void initSysTick()
 }
 
 
+#if 0
 iopin<0> &LED0=*reinterpret_cast<iopin<0>*>(XMC_GPIO_PORT1);
 iopin<1> &LED1=*reinterpret_cast<iopin<1>*>(XMC_GPIO_PORT1);
 iopin<14> &BUTTON1=*reinterpret_cast<iopin<14>*>(XMC_GPIO_PORT1);
+#else
+iopin<1,0> LED0;
+iopin<1,1> LED1;
+iopin<1,14> BUTTON1;
+iopin<2,2> RXD0;
+#endif
 
 int main()
 {
     LED0.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     LED1.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    RXD0.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     initSysTick();
+
+    ftest(LED0);
 
     while (1) {
         /* Flash leds faster when BTN1 is pressed */
-        if (tickflag && ((systick_count % (500 + 1500 * BUTTON1)) == 0)) {
+        if (tickflag) {
             tickflag = 0;
             /* Toggle leds */
             LED0^=1;

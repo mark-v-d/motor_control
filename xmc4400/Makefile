@@ -37,14 +37,14 @@ LDFLAGS  += $(CPU)
 .%.d: %.S
 	touch $@ 
 
-%.elf: $(LDSCRIPT)
-	$(CC) $(LDFLAGS) -T $(LDSCRIPT) -o $@
+%.elf: $(LDSCRIPT) symbols.ld
+	$(CC) $(LDFLAGS) -T $(LDSCRIPT) -T symbols.ld -o $@
 
 %.pre: %.cpp
 	$(CPP) $(CPPFLAGS) $< > $@
 
-main.elf: $(OBJS)
-	$(CXX) $(LDFLAGS) -T $(LDSCRIPT) $+ -o $@
+main.elf: $(OBJS) symbols.ld
+	$(CXX) $(LDFLAGS) -T $(LDSCRIPT) -T symbols.ld $+ -o $@
 
 ifneq ($(MAKECMDGOALS),clean)
 include $(OBJS:%.o=.%.d)
