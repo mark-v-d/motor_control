@@ -1,0 +1,61 @@
+#!/bin/bash
+awk '
+{ $0=gensub(/\r/,"","g",$0); } # Still using DOS ?
+/UC_DEVICE/ && /UC_PACKAGE/ { ignore=1; }
+/UC_DEVICE == XMC4500/ && /UC_PACKAGE == LQFP100/ { ignore=0; }
+ignore { next }
+
+/[0-9]_AF_/ || /[0-9]_HWCTRL_/ { 
+	split($2,field,"_");
+	fun=field[5];
+	for(x=6;x<=length(field);x++)
+		fun=fun "_" field[x];
+
+	class[field[4] "_" fun]=1;
+	if($0 ~ /_AF_/)
+		af[field[1], field[2], field[4], fun]=$3;
+	else
+		hwctrl[field[1], field[2], field[4], fun]=$3;
+	if(!length(field[1]))
+		print
+}
+END {
+	# Print invalid conversions
+	for(n in class) {
+		printf("template <int port, int pin>\n");
+		printf("class %s:public output<port,pin>\n",n);
+		printf("{\npublic:\n");
+		printf("    %s(void) { static_assert(port<0,"\
+			"\"Illegal pin\");}\n", n);
+		printf("};\n\n");
+	} 
+
+	for(x in af) {
+		split(x,field,SUBSEP);
+		if(!(field[1] ~ /^P/))
+			continue;
+
+		print "template<>"
+		printf("inline %s_%s<%d,%d>::%s_%s(void)\n",
+			field[3], field[4],
+			substr(field[1],2), field[2], field[3], field[4]);
+		printf("{\n    set(XMC_GPIO_MODE_t("\
+			"XMC_GPIO_MODE_OUTPUT_PUSH_PULL|%s_%d_AF_%s_%s));\n}\n",
+			field[1],field[2],field[3],field[4]);
+	}
+
+	for(x in hwctrl) {
+		split(x,field,SUBSEP);
+		if(!(field[1] ~ /^P/))
+			continue;
+		if(x in af)
+			continue;
+
+		print "template<>"
+		printf("inline %s_%s<%d,%d>::%s_%s(void)\n",
+			field[3], field[4],
+			substr(field[1],2), field[2], field[3], field[4]);
+		printf("{\n    set(%s);\n}\n", hwctrl[x]);
+	}
+}
+' $*

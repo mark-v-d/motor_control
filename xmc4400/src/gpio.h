@@ -10,13 +10,15 @@ struct XMC_GPIO_PORT_padded:public XMC_GPIO_PORT
 };
 extern XMC_GPIO_PORT_padded gpio_port[15];
 
+namespace iopin {
+
 template <int port, int pin>
-class iopin
+class pinBase
 {
 public:
-    int operator=(int i) { gpio_port[port].OMR=(i? 1:0x10000)<<pin; return i; }
-    void operator^=(int i) { if(i) gpio_port[port].OMR=0x10001<<pin; }
-    operator int(void) { return (gpio_port[port].IN>>pin)&1; }
+    pinBase() { static_assert(port>=0 && port<=15,
+	"Illegal port, should be 0..15");
+    }
 
     void set(XMC_GPIO_MODE m) { 
 	// Isn't this byte adressable?
@@ -39,40 +41,92 @@ public:
 	else
 	    gpio_port[port].PPS&=~(1<<pin);
     }
-    void hwsel(int i) {
+    void set(XMC_GPIO_HWCTRL i) {
 	gpio_port[port].HWSEL&=~(3<<2*pin);
 	gpio_port[port].HWSEL|=(i&3)<<2*pin;
     }
+
+    // Ethernet inputs
     operator XMC_ETH_MAC_PORT_CTRL_RXD0() {
-	static_assert(port==2 && pin==2,
-	    "Cannot use this pin as RXD0 for ETH0");
+	static_assert(port==-1, "Cannot use this pin as RXD0 for ETH0");
+    } 
+    operator XMC_ETH_MAC_PORT_CTRL_RXD1() {
+	static_assert(port==-1, "Cannot use this pin as RXD1 for ETH0");
+    } 
+    operator XMC_ETH_MAC_PORT_CTRL_CLK_RMII() {
+	static_assert(port==-1, "Cannot use this pin as CLK_RMII for ETH0");
+    } 
+    operator XMC_ETH_MAC_PORT_CTRL_CRS_DV() {
+	static_assert(port==-1, "Cannot use this pin as CRS_DV for ETH0");
+    } 
+    operator XMC_ETH_MAC_PORT_CTRL_RXER() {
+	static_assert(port==-1, "Cannot use this pin as RXER for ETH0");
+    } 
+    operator XMC_ETH_MAC_PORT_CTRL_MDIO() {
+	static_assert(port==-1, "Cannot use this pin as MDIO for ETH0");
+    } 
+};
+
+template <int port, int pin>
+class output:public pinBase<port,pin>
+{
+public:
+    output(void) {
+	static_assert(port<14,
+	    "Ports 14 and 15 are input only"
+	);
     }
+    int operator=(int i) { gpio_port[port].OMR=(i? 1:0x10000)<<pin; return i; }
+    void operator^=(int i) { if(i) gpio_port[port].OMR=0x10001<<pin; }
 };
 
-template <>
-iopin<2,2>::operator XMC_ETH_MAC_PORT_CTRL_RXD0()
+template <int port, int pin>
+class input:public pinBase<port,pin>
 {
-    return XMC_ETH_MAC_PORT_CTRL_RXD0_P2_2;
+public:
+    operator int(void) { return (gpio_port[port].IN>>pin)&1; }
 };
 
-template <>
-iopin<0,2>::operator XMC_ETH_MAC_PORT_CTRL_RXD0()
-{
-    return XMC_ETH_MAC_PORT_CTRL_RXD0_P0_2;
-};
+// ETH0 Ports //////////////////////////////////////////////////////////////////
+#define type_conversion(type,pin,port) \
+template <> \
+inline iopin::pinBase<pin,port>::operator type() \
+{ \
+    set(XMC_GPIO_MODE_INPUT_TRISTATE); \
+    return type##_P##pin##_##port; \
+}
 
-template <>
-iopin<14,8>::operator XMC_ETH_MAC_PORT_CTRL_RXD0()
-{
-    return XMC_ETH_MAC_PORT_CTRL_RXD0_P14_8;
-};
+type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD0,2,2);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD0,0,2);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD0,14,8);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD0,5,0);
 
-template <>
-iopin<5,0>::operator XMC_ETH_MAC_PORT_CTRL_RXD0()
-{
-    return XMC_ETH_MAC_PORT_CTRL_RXD0_P5_0;
-};
+type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD1,2,3); 
+type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD1,0,3); 
+type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD1,14,9);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD1,5,1);
 
+type_conversion(XMC_ETH_MAC_PORT_CTRL_CLK_RMII,2,1);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_CLK_RMII,0,0);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_CLK_RMII,15,8);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_CLK_RMII,6,5);
 
-void ftest(XMC_ETH_MAC_PORT_CTRL_RXD0);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_CRS_DV,2,5);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_CRS_DV,0,1);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_CRS_DV,15,9);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_CRS_DV,5,2);
+
+type_conversion(XMC_ETH_MAC_PORT_CTRL_RXER,2,4);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_RXER,0,11);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_RXER,5,3);
+
+type_conversion(XMC_ETH_MAC_PORT_CTRL_MDIO,0,9);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_MDIO,2,0);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_MDIO,1,11);
+
+#undef type_conversion
+
+#include "gpio_output_conversions"
+
+}
 #endif

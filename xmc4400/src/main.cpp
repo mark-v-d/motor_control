@@ -1,5 +1,6 @@
 #include "XMC4500.h"
 #include "gpio.h"
+#include "ethernet.h"
 
 /****************************************************
  * 
@@ -20,40 +21,47 @@ void SysTick_Handler(void)
 	tickflag = 1;
 }
 
-void initSysTick()
+void initSysTick(void)
 {
     // Use processor clock, enable interrupt request and enable counter
     PPB->SYST_CSR |= 0x7;
     // Set the reload register (timebase in effect)
-    PPB->SYST_RVR = SystemCoreClock / 1000 - 1; //generate 1 millisecond time base
+    // generate 1 millisecond time base
+    PPB->SYST_RVR = SystemCoreClock / 1000 - 1; 
     PPB->SYST_CVR = 5;          // Start the counter at a value close to zero
     __enable_irq();
     PORT1->OUT = 1;
 }
 
 
-#if 0
-iopin<0> &LED0=*reinterpret_cast<iopin<0>*>(XMC_GPIO_PORT1);
-iopin<1> &LED1=*reinterpret_cast<iopin<1>*>(XMC_GPIO_PORT1);
-iopin<14> &BUTTON1=*reinterpret_cast<iopin<14>*>(XMC_GPIO_PORT1);
-#else
-iopin<1,0> LED0;
-iopin<1,1> LED1;
-iopin<1,14> BUTTON1;
-iopin<2,2> RXD0;
-#endif
+iopin::input<1,14> BUTTON1;
+iopin::output<1,0> LED0;
+iopin::output<1,1> LED1;
+
+iopin::input<15,8> CLK_RMII;
+iopin::input<15,9> CRS_DV;
+iopin::input<2,2> RXD0;
+iopin::input<2,3> RXD1;
+iopin::input<2,4> RXER;
+iopin::ETH0_MDC<2,7> MDC;
+iopin::ETH0_MDO<2,0> MDIO;
+iopin::ETH0_TXD0<2,8> TXD0;
+iopin::ETH0_TXD1<2,9> TXD1;
+iopin::ETH0_TX_EN<2,5> TX_EN;
+
+Ethernet eth0(RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO);
 
 int main()
 {
     LED0.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     LED1.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
-    RXD0.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     initSysTick();
-
-    ftest(LED0);
 
     while (1) {
         /* Flash leds faster when BTN1 is pressed */
+        uint8_t buffer[XMC_ETH_MAC_BUF_SIZE];
+        eth0.Receive(buffer,sizeof(buffer));
+
         if (tickflag) {
             tickflag = 0;
             /* Toggle leds */
@@ -66,4 +74,9 @@ int main()
     return 0;
 }
 
-extern "C" void _exit(int) {}
+extern "C" {
+    void _exit(int) {}
+    void _kill(int) {}
+    int _getpid() {}
+    void _sbrk() {}
+}
