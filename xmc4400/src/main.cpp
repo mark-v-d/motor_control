@@ -37,7 +37,6 @@ void initSysTick(void)
 iopin::input<1,14> BUTTON1;
 iopin::output<1,0> LED0;
 iopin::output<1,1> LED1;
-
 iopin::input<15,8> CLK_RMII;
 iopin::input<15,9> CRS_DV;
 iopin::input<2,2> RXD0;
