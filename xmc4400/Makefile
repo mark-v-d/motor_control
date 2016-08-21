@@ -24,7 +24,7 @@ CPPFLAGS+=-D XMC4500_F100x1024
 CPU = -g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 CFLAGS   += $(CPU)
-CXXFLAGS += $(CPU) -O -std=c++11
+CXXFLAGS += $(CPU) -std=c++11
 ASFLAGS  += $(CPU)
 LDFLAGS  += $(CPU)
 

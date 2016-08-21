@@ -83,6 +83,8 @@ void Ethernet::FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control)
 
     XMC_ETH_MAC_EnableTx(&eth_mac);
     XMC_ETH_MAC_EnableRx(&eth_mac);
+
+    received=0;
 }
 
 extern "C" void ETH0_0_IRQHandler(void)

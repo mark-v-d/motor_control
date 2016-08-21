@@ -1,6 +1,7 @@
 #include "XMC4500.h"
 #include "gpio.h"
 #include "ethernet.h"
+#include "icmp.h"
 
 /****************************************************
  * 
@@ -50,6 +51,8 @@ iopin::ETH0_TX_EN<2,5> TX_EN;
 
 Ethernet eth0(RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO);
 
+uint8_t buffer[XMC_ETH_MAC_BUF_SIZE];
+
 int main()
 {
     LED0.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
@@ -58,8 +61,15 @@ int main()
 
     while (1) {
         /* Flash leds faster when BTN1 is pressed */
-        uint8_t buffer[XMC_ETH_MAC_BUF_SIZE];
-        eth0.Receive(buffer,sizeof(buffer));
+        int len=eth0.Receive(buffer,sizeof(buffer));
+	packet::icmp *p=reinterpret_cast<packet::icmp *>(buffer);
+        if(len>0) {
+	    if(p->isEchoRequest()) {
+		p->type=0;
+		p->swap();
+		eth0.Transmit(buffer,len);
+	    }
+	}
 
         if (tickflag) {
             tickflag = 0;

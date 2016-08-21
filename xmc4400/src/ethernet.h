@@ -5,8 +5,8 @@
 
 
 class Ethernet {
-
     void FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control);
+    int received;
 public:
     static XMC_ETH_MAC_t eth_mac;
     static std::atomic<int> rx_pending;
@@ -71,6 +71,8 @@ inline int Ethernet::Receive(uint8_t *buffer,int buflen)
     if(!rx_pending)
 	return 0;
     uint32_t len=XMC_ETH_MAC_GetRxFrameSize(&eth_mac);
+
+    rx_pending--;
 
     if ((len>0) && (len<XMC_ETH_MAC_BUF_SIZE) && len<=buflen) {
 	XMC_ETH_MAC_ReadFrame(&eth_mac, buffer, len);
