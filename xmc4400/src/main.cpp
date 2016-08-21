@@ -66,6 +66,7 @@ int main()
         if(len>0) {
 	    if(p->isEchoRequest()) {
 		p->type=0;
+		p->checksum=0;
 		p->swap();
 		eth0.Transmit(buffer,len);
 	    }
