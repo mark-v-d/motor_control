@@ -87,7 +87,8 @@ public:
     input(void) { 
 	pinBase<port,pin>::set(XMC_GPIO_MODE_INPUT_TRISTATE); 
 	pinBase<port,pin>::set(XMC_GPIO_HWCTRL_DISABLED);
-	pinBase<port,pin>::pdisc(0);
+	if(port>=14)
+	    pinBase<port,pin>::pdisc(0);
     }
     operator int(void) { return (gpio_port[port].IN>>pin)&1; }
 };

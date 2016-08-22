@@ -2,38 +2,14 @@
 #include "gpio.h"
 #include "ethernet.h"
 #include "icmp.h"
+#include <atomic>
 
-/****************************************************
- * 
- * System Timer
- * 
- * **************************************************/
+std::atomic<int> counter(0);
 
-volatile uint32_t tickflag;
-volatile uint32_t systick_count;
-
-#ifdef __cplusplus
-extern "C"
-#endif
-void SysTick_Handler(void)
+extern "C" void SysTick_Handler(void)
 {
-    systick_count++;
-    if(!(systick_count % 500 ))
-	tickflag = 1;
+    counter++;
 }
-
-void initSysTick(void)
-{
-    // Use processor clock, enable interrupt request and enable counter
-    PPB->SYST_CSR |= 0x7;
-    // Set the reload register (timebase in effect)
-    // generate 1 millisecond time base
-    PPB->SYST_RVR = SystemCoreClock / 1000 - 1; 
-    PPB->SYST_CVR = 5;          // Start the counter at a value close to zero
-    __enable_irq();
-    PORT1->OUT = 1;
-}
-
 
 iopin::input<1,14> BUTTON1;
 iopin::output<1,0> LED0;
@@ -51,31 +27,29 @@ iopin::ETH0_TX_EN<2,5> TX_EN;
 
 Ethernet eth0(RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO);
 
-uint8_t buffer[XMC_ETH_MAC_BUF_SIZE];
-
 int main()
 {
     LED0.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     LED1.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
-    initSysTick();
+
+    SysTick_Config(SystemCoreClock/1000);
 
     while (1) {
-        /* Flash leds faster when BTN1 is pressed */
+	uint8_t buffer[XMC_ETH_MAC_BUF_SIZE];
         int len=eth0.Receive(buffer,sizeof(buffer));
-	packet::icmp *p=reinterpret_cast<packet::icmp *>(buffer);
         if(len>0) {
+	    packet::icmp *p=reinterpret_cast<packet::icmp *>(buffer);
 	    if(p->isEchoRequest()) {
 		p->type=0;
 		p->checksum=0;
 		p->swap();
 		eth0.Transmit(buffer,len);
+		LED0^=1;
 	    }
 	}
 
-        if (tickflag) {
-            tickflag = 0;
-            /* Toggle leds */
-            LED0^=1;
+        if(counter>500) {
+            counter-=500;
             LED1^=1;
         };
 

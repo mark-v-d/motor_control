@@ -1,4 +1,4 @@
-OBJS=main.o startup_XMC4500.o system_XMC4500.o ethernet.o xmc_eth_mac.o xmc_eth_phy_ksz8031rnl.o xmc4_scu.o xmc4_gpio.o
+OBJS=main.o startup_XMC4500.o system_XMC4500.o ethernet.o xmc_eth_mac.o xmc_eth_phy_ksz8031rnl.o xmc4_scu.o
 
 LDSCRIPT=./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/XMC4500_series/Source/GCC/XMC4500x1024.ld
 
@@ -61,7 +61,7 @@ clean:
 	rm -f *.o *.elf .*.d
 
 tags:
-	ctags $$(find . -name *.h -o -name *.cpp -o -name *.c -a -not -name xmc1*)
+	ctags $$(find . \( -name *.h -o -name *.cpp -o -name *.c \) -not -name xmc1* -not -name *_cm[0-35-9]*)
 
 src/gpio_output_conversions: ./XMC_Peripheral_Library_v2.1.6p1/XMCLib/inc/xmc4_gpio_map.h 
 	./convert_output $< > $@
