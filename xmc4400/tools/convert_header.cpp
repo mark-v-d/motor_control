@@ -19,8 +19,11 @@ void print_output(ostream &s, string const &n)
 void print_output(ostream &s, string const &n, string const &i, string const &p)
 {
     s   << "template <>\n"
-	<< "inline " << n << '<' << i << ">::" << n
-	<< "(void)\n{\n    set(" << p << ");\n}\n";
+	<< "inline " << n << '<' << i << ">::" << n;
+    if(regex_search(p, regex("HWCTRL")))
+	s << "(void)\n{\n    set(" << p << ");\n}\n";
+    else
+	s << "(void)\n{\n    set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL | " << p << "));\n}\n";
 }
 
 void flush_output_pin(void)

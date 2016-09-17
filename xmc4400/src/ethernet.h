@@ -5,9 +5,9 @@
 #include "packet.h"
 
 #include <atomic>
-#include <system_error>
+// #include <system_error>
 #include <array>
-#include <unordered_map>
+// #include <unordered_map>
 
 namespace Ethernet {
 
@@ -90,8 +90,6 @@ public:
     virtual void Received(descriptor*)=0;
 };
 
-
-
 class Ethernet {
     std::array<descriptor,4> rxd, txd;
     std::array<packet,4> rxp, txp;
@@ -101,7 +99,7 @@ class Ethernet {
     std::atomic<uint32_t> tx_pending;
 
     EthernetReceiver *icmp;
-    std::unordered_map<int,EthernetReceiver*> udp;
+    // std::unordered_map<int,EthernetReceiver*> udp;
 
     uint8_t phy_addr;
 public:

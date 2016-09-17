@@ -1,6 +1,5 @@
 #include "ethernet.h"
 
-
 namespace Ethernet {
 
 void Ethernet::MAC_SetManagmentClockDivider(void)
@@ -19,8 +18,6 @@ void Ethernet::MAC_SetManagmentClockDivider(void)
 	ETH0->GMII_ADDRESS=4;
     else if (eth_mac_clk <= 300000000U)
 	ETH0->GMII_ADDRESS=4;
-    else
-	throw 1;
 }
 
 void Ethernet::Descriptor_Init(void)
@@ -53,8 +50,7 @@ void Ethernet::MAC_Init(MacAddress const &addr)
 #endif
     XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_ETH0);
 
-    ETH0->BUS_MODE |= 
-	ETH_BUS_MODE_SWR_Msk;	// reset
+    ETH0->BUS_MODE |= ETH_BUS_MODE_SWR_Msk;	// reset
     while(ETH0->BUS_MODE & ETH_BUS_MODE_SWR_Msk)
 	;
 
@@ -85,14 +81,14 @@ void Ethernet::MAC_Init(MacAddress const &addr)
 
 void Ethernet::PHY_Init(void)
 {
-    if(	ReadPhy(REG_PHYIDR1)!=PHY_ID1
-	// || mac->ReadPhy(REG_PHYIDR2)&0xfff0!=PHY_ID2
-    )
-	throw 1;
+
+    uint16_t id=ReadPhy(REG_PHYIDR1);
+    uint16_t id2=ReadPhy(REG_PHYIDR2)&0xfff0;
+    // if(	id!=PHY_ID1 || id!=PHY_ID2) throw 1;
     WritePhy(REG_BMCR, BMCR_RESET);
     WritePhy(REG_BMCR, BMCR_DUPLEX | BMCR_ANEG_EN);
 
-    while(0 || !(ReadPhy(REG_BMSR) & BMSR_LINK_STAT))
+    while(!(ReadPhy(REG_BMSR) & BMSR_LINK_STAT))
 	;
 }
 
@@ -162,24 +158,6 @@ void Ethernet::WritePhy(uint8_t reg_addr, uint16_t data)
     // throw(std::system_error);
 }
 
-#if 0
-void Ethernet::receiveIRQ(void)
-{
-    switch(rxd[rx_get].packetType()) {
-    case UDP:
-	auto handler=udp.find(rx_desc->packet.udp.dst_port);
-	if(handler!=udp.end())
-	    handler->ReceivePacket(rx_desc);
-	rx_desc.push_back();
-	break;
-    case ICMP:
-	if(icmpHandler)
-	    icmpHandler->ReceivePacker(rx_desc);
-	break;
-    }
-    rx_get++
-}
-#else
 void Ethernet::receiveIRQ(void)
 {
     rx_pending++;
@@ -197,7 +175,7 @@ void Ethernet::receive(
 ) {
     switch(protocol) {
     case ICMP: icmp=rcv; break;
-    case UDP: udp[port]=rcv; break;
+    // case UDP: udp[port]=rcv; break;
     }
 }
 
@@ -212,8 +190,5 @@ void Ethernet::send(
     txd[tx_put++].status=DESC_OWN;
     tx_pending++;
 }
-
-#endif
-
 
 }

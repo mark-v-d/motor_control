@@ -26,23 +26,24 @@ Ethernet::Ethernet eth0(
     mac, 0,
     RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO);
 
-extern "C" void SysTick_Handler(void)
-{
-    counter++;
-}
-
 extern "C" void ETH0_0_IRQHandler(void)
 {
     uint32_t status=ETH0->STATUS;
+    ETH0->STATUS=status;
+
     if(status&ETH_STATUS_NIS_Msk) {
 	if(status&ETH_STATUS_TI_Msk)
 	    eth0.transmitIRQ();
 	if(status&ETH_STATUS_RI_Msk)
 	    eth0.receiveIRQ();
-
     }
-    ETH0->STATUS=status;
 }
+
+extern "C" void SysTick_Handler(void)
+{
+    counter++;
+}
+
 
 int main()
 {
