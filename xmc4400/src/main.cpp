@@ -1,15 +1,10 @@
 #include "XMC4500.h"
 #include "gpio.h"
 #include "ethernet.h"
-#include "icmp.h"
 #include <atomic>
 
 std::atomic<int> counter(0);
 
-extern "C" void SysTick_Handler(void)
-{
-    counter++;
-}
 
 iopin::input<1,14> BUTTON1;
 iopin::output<1,0> LED0;
@@ -25,7 +20,29 @@ iopin::ETH0_TXD0<2,8> TXD0;
 iopin::ETH0_TXD1<2,9> TXD1;
 iopin::ETH0_TX_EN<2,5> TX_EN;
 
-Ethernet eth0(RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO);
+Ethernet::MacAddress mac={1,2,3,4,5,6};
+
+Ethernet::Ethernet eth0(
+    mac, 0,
+    RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO);
+
+extern "C" void SysTick_Handler(void)
+{
+    counter++;
+}
+
+extern "C" void ETH0_0_IRQHandler(void)
+{
+    uint32_t status=ETH0->STATUS;
+    if(status&ETH_STATUS_NIS_Msk) {
+	if(status&ETH_STATUS_TI_Msk)
+	    eth0.transmitIRQ();
+	if(status&ETH_STATUS_RI_Msk)
+	    eth0.receiveIRQ();
+
+    }
+    ETH0->STATUS=status;
+}
 
 int main()
 {
@@ -35,24 +52,10 @@ int main()
     SysTick_Config(SystemCoreClock/1000);
 
     while (1) {
-	uint8_t buffer[XMC_ETH_MAC_BUF_SIZE];
-        int len=eth0.Receive(buffer,sizeof(buffer));
-        if(len>0) {
-	    packet::icmp *p=reinterpret_cast<packet::icmp *>(buffer);
-	    if(p->isEchoRequest()) {
-		p->type=0;
-		p->checksum=0;
-		p->swap();
-		eth0.Transmit(buffer,len);
-		LED0^=1;
-	    }
-	}
-
         if(counter>500) {
             counter-=500;
             LED1^=1;
         };
-
     };
 
     return 0;
@@ -63,4 +66,11 @@ extern "C" {
     void _kill(int) {}
     int _getpid() {}
     void _sbrk() {}
+    void _read() {}
+    void _close() {}
+    void _fstat() {}
+    void _lseek() {}
+    void _isatty() {}
+    void _write() {}
+    void _open() {}
 }
