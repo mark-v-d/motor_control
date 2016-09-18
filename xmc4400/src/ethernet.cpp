@@ -155,7 +155,7 @@ void Ethernet::FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control)
     // Receive buffers and descriptors
     for(int i=0; i<rxp.size(); i++) {
 	rxd[i].status=descriptor::OWN;
-	rxd[i].length=sizeof(packet);
+	rxd[i].length=descriptor::CHAINED | sizeof(packet);
 	rxd[i].buffer=&rxp[i];
 	rxd[i].next=&rxd[(i+1)%rxd.size()];
     }
@@ -242,11 +242,9 @@ void Ethernet::transmitIRQ(void)
 inline void ETH0_0_IRQHandler(uint32_t event)
 {
     if(event&XMC_ETH_MAC_EVENT_RECEIVE) {
-	ETH0->STATUS=XMC_ETH_MAC_EVENT_RECEIVE;
 	Ethernet::instance->receiveIRQ();
     }
     if(event&XMC_ETH_MAC_EVENT_TRANSMIT) {
-	ETH0->STATUS=XMC_ETH_MAC_EVENT_TRANSMIT;
 	Ethernet::instance->transmitIRQ();
     }
 }
@@ -254,4 +252,5 @@ inline void ETH0_0_IRQHandler(uint32_t event)
 extern "C" void ETH0_0_IRQHandler(void)
 {
     ETH0_0_IRQHandler(ETH0->STATUS);
+    ETH0->STATUS = 0xFFFFFFFFUL;
 }

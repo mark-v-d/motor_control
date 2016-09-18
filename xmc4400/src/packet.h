@@ -16,7 +16,7 @@ struct __attribute__ ((__packed__)) ipv4_t:public ethernet_t {
     uint16_t flags_fragment_offset; 
     uint8_t ttl;
     uint8_t protocol;
-    uint16_t checksum;
+    uint16_t ipv4_checksum;
     uint8_t src_ip[4];
     uint8_t dst_ip[4];
 };
@@ -24,7 +24,7 @@ struct __attribute__ ((__packed__)) ipv4_t:public ethernet_t {
 struct __attribute__ ((__packed__)) icmp_t:public ipv4_t {
     uint8_t type;
     uint8_t code;
-    uint16_t checksum;
+    uint16_t icmp_checksum;
     uint16_t id;
     uint16_t seq;
 };

@@ -76,6 +76,11 @@ public:
 	    UF    =(0x00000002U), /**< Underflow error */
 	    DB    =(0x00000001U) /**< Deferred bit */
 	};
+	enum rx_length {
+	    LENGTH_MASK = 0x1fff,
+	    CHAINED = 0x4000
+	};
+
 	enum ext_status_t {
 	    PTP_version 	=0x2000, // 0=v1, 1=v2 (when msg_type!=0)
 	    PTP_udp		=0x1000, // PTP over 0=raw, 1=UDP

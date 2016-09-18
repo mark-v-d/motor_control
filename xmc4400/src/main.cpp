@@ -29,7 +29,8 @@ extern "C" void SysTick_Handler(void)
 icmpProcessing icmp;
 Ethernet eth0(
     0x000319450000ULL, 0, 
-    RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO
+    RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO,
+    &icmp
 );
 
 int main()
@@ -48,3 +49,5 @@ int main()
 
     return 0;
 }
+
+

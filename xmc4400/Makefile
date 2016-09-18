@@ -1,5 +1,6 @@
-OBJS=main.o startup_XMC4500.o system_XMC4500.o xmc4_scu.o ethernet.o icmp.o system.o
-# xmc_eth_mac.o xmc_eth_phy_ksz8031rnl.o
+OBJS=main.o startup_XMC4500.o system_XMC4500.o xmc4_scu.o ethernet.o icmp.o system.o 
+# xmc_eth_mac.o 
+# xmc_eth_phy_ksz8031rnl.o
 
 LDSCRIPT=./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/XMC4500_series/Source/GCC/XMC4500x1024.ld
 
