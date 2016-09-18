@@ -1,10 +1,10 @@
 #include "XMC4500.h"
 #include "gpio.h"
 #include "ethernet.h"
+#include "icmp.h"
 #include <atomic>
 
 std::atomic<int> counter(0);
-
 
 iopin::input<1,14> BUTTON1;
 iopin::output<1,0> LED0;
@@ -20,30 +20,17 @@ iopin::ETH0_TXD0<2,8> TXD0;
 iopin::ETH0_TXD1<2,9> TXD1;
 iopin::ETH0_TX_EN<2,5> TX_EN;
 
-Ethernet::MacAddress mac={1,2,3,4,5,6};
-
-Ethernet::Ethernet eth0(
-    mac, 0,
-    RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO);
-
-extern "C" void ETH0_0_IRQHandler(void)
-{
-    uint32_t status=ETH0->STATUS;
-    ETH0->STATUS=status;
-
-    if(status&ETH_STATUS_NIS_Msk) {
-	if(status&ETH_STATUS_TI_Msk)
-	    eth0.transmitIRQ();
-	if(status&ETH_STATUS_RI_Msk)
-	    eth0.receiveIRQ();
-    }
-}
-
 extern "C" void SysTick_Handler(void)
 {
     counter++;
 }
 
+icmpProcessing icmp;
+Ethernet eth0(
+    0x000319450000ULL, 0, 
+    RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO,
+    &icmp
+);
 
 int main()
 {
@@ -51,6 +38,7 @@ int main()
     LED1.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
 
     SysTick_Config(SystemCoreClock/1000);
+
 
     while (1) {
         if(counter>500) {

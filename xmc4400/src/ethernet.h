@@ -1,112 +1,140 @@
-#include "XMC4500.h"
-#include "xmc_eth_mac_map.h"
-#include "xmc_scu.h"
+#ifndef ETHERNET_H
+#define ETHERNET_H
+
+#include <array>
+#include <atomic>
 #include "gpio.h"
 #include "packet.h"
-
-#include <atomic>
-// #include <system_error>
-#include <array>
-// #include <unordered_map>
-
-namespace Ethernet {
-
-typedef uint8_t MacAddress[6];
-
-enum PHY_stuff {
-    PHY_ID1=0x0022,
-    PHY_ID2=0x1550,
-
-    REG_BMCR=0x00,
-    REG_BMSR=0x01,
-    REG_PHYIDR1=0x02,
-    REG_PHYIDR2=0x03,
-    REG_ANAR=0x04,
-    REG_ANLPAR=0x05,
-    REG_ANER=0x06,
-    REG_ANNPTR=0x07,
-
-    REG_PHYCTRL1=0x1e,
-
-    BMCR_RESET=0x8000,
-    BMCR_LOOPBACK=0x4000,
-    BMCR_SPEED_SEL=0x2000,
-    BMCR_ANEG_EN=0x1000,
-    BMCR_POWER_DOWN=0x0800,
-    BMCR_ISOLATE=0x0400,
-    BMCR_REST_ANEG=0x0200,
-    BMCR_DUPLEX=0x0100,
-    BMCR_COL_TEST=0x0080,
-
-    BMSR_100B_T4=0x8000,
-    BMSR_100B_TX_FD=0x4000,
-    BMSR_100B_TX_HD=0x2000,
-    BMSR_10B_T_FD=0x1000,
-    BMSR_10B_T_HD=0x0800,
-    BMSR_MF_PRE_SUP=0x0040,
-    BMSR_ANEG_COMPL=0x0020,
-    BMSR_REM_FAULT=0x0010,
-    BMSR_ANEG_ABIL=0x0008,
-    BMSR_LINK_STAT=0x0004,
-    BMSR_JABBER_DET=0x0002,
-    BMSR_EXT_CAPAB=0x0001,
-
-    PHYCTRL1_OPMODE_SPEED=0x0003,
-    PHYCTRL1_OPMODE_DUPLEX=0x0004
-};
-
-enum protocol_t {
-    RAW,
-    ICMP,
-    UDP,
-    TCP
-};
-
-enum DESCRIPTOR_STATUS {
-    DESC_OWN
-};
-
-class EthernetTransmitter;
-
-struct descriptor {
-    uint32_t status;
-    uint32_t length;
-    packet *buffer;
-    descriptor *next;
-    uint32_t ext_status;
-    uint32_t reserved;
-    uint32_t seconds;     
-    uint32_t nanoseconds;
-    EthernetTransmitter *txp;
-};
-
-class EthernetTransmitter {
-public:
-    virtual void Transmitted(descriptor*)=0;
-};
-
-class EthernetReceiver {
-public:
-    virtual void Received(descriptor*)=0;
-};
+#include "atomic_wrapping_counter.h"
 
 class Ethernet {
-    std::array<descriptor,4> rxd, txd;
-    std::array<packet,4> rxp, txp;
-    int rx_put, rx_get, tx_put, tx_get;
+public:
+    class Transmitter;
 
-    std::atomic<uint32_t> rx_pending;
-    std::atomic<uint32_t> tx_pending;
+    struct descriptor {
+	std::atomic<uint32_t> status;
+	uint32_t length;
+	packet *buffer;
+	descriptor *next;
+	uint32_t ext_status;
+	uint32_t reserved;
+	uint32_t seconds;     
+	uint32_t nanoseconds;
+	Transmitter *txp;
+    public: // types
+	enum protocol_t {
+	    UNKNOWN=0,
+	    UDP=1,
+	    TCP=2,
+	    ICMP=3
+	};
+	enum rx_status_t {
+	    OWN   =(0x80000000U), /**< Own bit 1=DMA, 0=CPU */
+	    AFM   =(0x40000000U), /**< Destination address filter fail*/
+	    FL    =(0x3FFF0000U), /**< Frame length mask */
+	    ES    =(0x00008000U), /**< Error summary */
+	    DE    =(0x00004000U), /**< Descriptor error */
+	    SAF   =(0x00002000U), /**< Source address filter fail */
+	    LE    =(0x00001000U), /**< Length error */
+	    OE    =(0x00000800U), /**< Overflow error */
+	    VLAN  =(0x00000400U), /**< VLAN tag */
+	    RX_FS =(0x00000200U), /**< First descriptor */
+	    RX_LS =(0x00000100U), /**< Last descriptor */
+	    TSA   =(0x00000080U), /**< Timestamp available */
+	    RX_LC =(0x00000040U), /**< Late collision */
+	    FT    =(0x00000020U), /**< Frame type */
+	    RWT   =(0x00000010U), /**< Receive watchdog timeout */
+	    RE    =(0x00000008U), /**< Receive error */
+	    DBE   =(0x00000004U), /**< Dribble bit error */
+	    CE    =(0x00000002U), /**< CRC error */
+	    ESA   =(0x00000001U)  /**< Extended Status/Rx MAC address */
+	};
+	enum tx_status_t {
+	    //OWN =(0x80000000U), /**< Own bit 1=DMA, 0=CPU */
+	    IC    =(0x40000000U), /**< Interrupt on competition */
+	    TX_LS =(0x20000000U), /**< Last segment */
+	    TX_FS =(0x10000000U), /**< First segment */
+	    DC    =(0x08000000U), /**< Disable CRC */
+	    DP    =(0x04000000U), /**< Disable pad */
+	    TTSE  =(0x02000000U), /**< Transmit time stamp enable */
+	    CIC   =(0x00C00000U), /**< Checksum insertion control */
+	    TER   =(0x00200000U), /**< Transmit end of ring */
+	    TCH   =(0x00100000U), /**< Second address chained */
+	    TTSS  =(0x00020000U), /**< Transmit time stamp status */
+	    IHE   =(0x00010000U), /**< IP header error */
+	    //ES  =(0x00008000U), /**< Error summary */
+	    JT    =(0x00004000U), /**< Jabber timeout */
+	    FF    =(0x00002000U), /**< Frame flushed */
+	    IPE   =(0x00001000U), /**< IP payload error */
+	    LOC   =(0x00000800U), /**< Loss of carrier */
+	    NC    =(0x00000400U), /**< No carrier */
+	    TX_LC =(0x00000200U), /**< Late collision */
+	    EC    =(0x00000100U), /**< Excessive collision */
+	    VF    =(0x00000080U), /**< VLAN frame */
+	    CC    =(0x00000078U), /**< Collision count */
+	    ED    =(0x00000004U), /**< Excessive deferral */
+	    UF    =(0x00000002U), /**< Underflow error */
+	    DB    =(0x00000001U) /**< Deferred bit */
+	};
+	enum ext_status_t {
+	    PTP_version 	=0x2000, // 0=v1, 1=v2 (when msg_type!=0)
+	    PTP_udp		=0x1000, // PTP over 0=raw, 1=UDP
+	    PTP_msg		=0x0f00, // PTP message_type
+	    PTP_msg_noptp	=0,	 // not a PTP message
+	    PTP_msg_SYNC	=0x0100,
+	    PTP_msg_Follow_Up	=0x0200,
+	    PTP_msg_Delay_Req	=0x0300,
+	    PTP_msg_Delay_Resp	=0x0400,
+	    PTP_msg_Pdelay_Req	=0x0500,
+	    PTP_msg_Pdelay_Resp	=0x0600,
+	    PTP_msg_Pdelay_Resp_Follow_Up=0x0700,
+	    PTP_msg_Announce	=0x0800,
+	    PTP_msg_Management	=0x0900,
+	    PTP_msg_Signaling	=0x0a00,
+	    IPv6		=0x0080,
+	    IPv4		=0x0040,
+	    IP_cksum_bypassed	=0x0020,
+	    IP_payload_error	=0x0010,
+	    IP_header_error	=0x0008,
+	    IP_payload_type	=0x0007
+	};
+    public: // functions
+	int packetType(void) { return ext_status&IP_payload_type; }
+    };
 
-    EthernetReceiver *icmp;
-    // std::unordered_map<int,EthernetReceiver*> udp;
+    class Transmitter {
+    public:
+	virtual void Transmitted(Ethernet*,descriptor const&)=0;
+    };
 
+    class Receiver {
+    public:
+	virtual void Received(Ethernet*,descriptor const&)=0;
+    }; 
+
+private:
+
+    static Ethernet *instance;
+    friend void ETH0_0_IRQHandler(uint32_t event);
+
+    uint64_t mac_addr;
     uint8_t phy_addr;
+
+    enum { tx_buffer_count=4 };
+    std::array<descriptor,tx_buffer_count> txd;
+    atomic_wrapping_counter<int,tx_buffer_count> tx_put;
+
+    enum { rx_buffer_count=4 };
+    std::array<descriptor,rx_buffer_count> rxd;
+    std::array<packet,rx_buffer_count> rxp;
+    int rx_get;
+
+    Receiver *icmpHandler;
 public:
     template <int a,int b,int c,int d,int e,int f,int g,int h,int i, int j>
     Ethernet(
-	MacAddress const &mac_a,
-	uint16_t phy_a,
+	uint64_t ma,
+	uint8_t pa,
 	XMC_ETH_MAC_PORT_CTRL_RXD0 RXD0, 
 	XMC_ETH_MAC_PORT_CTRL_RXD1 RXD1,
 	XMC_ETH_MAC_PORT_CTRL_CLK_RMII CLK_RMII,
@@ -117,33 +145,29 @@ public:
 	iopin::ETH0_TXD1<c,d> TXD1,
 	iopin::ETH0_TX_EN<e,f> TX_EN,
 	iopin::ETH0_MDC<g,h> MDC,
-	iopin::ETH0_MDO<i,j> MDO
+	iopin::ETH0_MDO<i,j> MDO,
+	Receiver *icmp=NULL
     );
 
-    void receive(protocol_t protocol, uint16_t port, EthernetReceiver *rcv);
-    void send(packet * const data,int length, EthernetTransmitter *txf=0);
-
-    void receiveIRQ(void);
-    void transmitIRQ(void);
+    int transmit(Transmitter *tx,void *data,size_t size);
 
 private:
-    void FinishInit(MacAddress const &address, 
-	XMC_ETH_MAC_PORT_CTRL_t const &port_control);
-    void MAC_SetManagmentClockDivider(void);
-    void MAC_Init(MacAddress const &addr);
-    void PHY_Init(void);
-    void Descriptor_Init(void);
+    void FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control);
+    void SetManagmentClockDivider(void);
+    void SetAddress(uint64_t addr);
 
+    void PHY_Init(void);
     void WritePhy(uint8_t reg_addr, uint16_t data);
     uint16_t ReadPhy(uint8_t reg_addr);
 
+    void receiveIRQ(void);
+    void transmitIRQ(void);
 };
 
 template <int a,int b,int c,int d,int e,int f,int g,int h,int i, int j>
 Ethernet::Ethernet(
-    MacAddress const &mac_a,
-    uint16_t phy_a,
-
+    uint64_t ma,
+    uint8_t pa,
     XMC_ETH_MAC_PORT_CTRL_RXD0 RXD0, 
     XMC_ETH_MAC_PORT_CTRL_RXD1 RXD1,
     XMC_ETH_MAC_PORT_CTRL_CLK_RMII CLK_RMII,
@@ -154,8 +178,10 @@ Ethernet::Ethernet(
     iopin::ETH0_TXD1<c,d> TXD1,
     iopin::ETH0_TX_EN<e,f> TX_EN,
     iopin::ETH0_MDC<g,h> MDC,
-    iopin::ETH0_MDO<i,j> MDO	// HWCTRL
-):phy_addr(phy_a), icmp(0)
+    iopin::ETH0_MDO<i,j> MDO,
+
+    Receiver *icmp
+):mac_addr(ma), phy_addr(pa), rx_get(0), icmpHandler(icmp), tx_put(0)
 {
     TXD0.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
     TXD1.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
@@ -172,7 +198,7 @@ Ethernet::Ethernet(
     port_control.rxer = RXER;
     port_control.mdio = XMC_ETH_MAC_PORT_CTRL_MDIO(MDO);
 
-    FinishInit(mac_a, port_control);
+    FinishInit(port_control);
 }
 
-}
+#endif

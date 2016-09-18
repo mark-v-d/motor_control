@@ -1,9 +1,5 @@
 #include <algorithm>
 
-// namespace packet {
-
-
-
 struct __attribute__ ((__packed__)) ethernet_t {
     uint8_t dst_mac[6];
     uint8_t src_mac[6];
@@ -21,8 +17,8 @@ struct __attribute__ ((__packed__)) ipv4_t:public ethernet_t {
     uint8_t ttl;
     uint8_t protocol;
     uint16_t checksum;
-    uint32_t src_ip;
-    uint32_t dst_ip;
+    uint8_t src_ip[4];
+    uint8_t dst_ip[4];
 };
 
 struct __attribute__ ((__packed__)) icmp_t:public ipv4_t {
@@ -31,6 +27,10 @@ struct __attribute__ ((__packed__)) icmp_t:public ipv4_t {
     uint16_t checksum;
     uint16_t id;
     uint16_t seq;
+};
+
+struct __attribute__ ((__packed__)) icmp_echo_t:public icmp_t {
+    uint8_t payload[56];
 };
 
 struct __attribute__ ((__packed__)) udp_t:public ipv4_t {
@@ -66,13 +66,18 @@ struct __attribute__ ((__packed__)) ptp_v2_t:public udp_t {
     uint8_t	timeSource;
 };
 
+struct __attribute__ ((__packed__)) udp_payload_t:public udp_t {
+    uint8_t data[1500];
+};
+
+
 union packet {
     ethernet_t ethernet;
     ipv4_t ipv4;
     icmp_t icmp;
+    icmp_echo_t icmp_echo;
     udp_t udp;
     // tcp_t tcp;
     ptp_v2_t ptp_v2;
+    udp_payload_t udp_payload;
 };
-
-// }
