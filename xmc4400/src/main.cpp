@@ -3,6 +3,7 @@
 #include "ethernet.h"
 #include "icmp.h"
 #include <atomic>
+#include <cerrno>
 
 std::atomic<int> counter(0);
 
@@ -28,8 +29,7 @@ extern "C" void SysTick_Handler(void)
 icmpProcessing icmp;
 Ethernet eth0(
     0x000319450000ULL, 0, 
-    RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO,
-    &icmp
+    RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO
 );
 
 int main()
@@ -39,7 +39,6 @@ int main()
 
     SysTick_Config(SystemCoreClock/1000);
 
-
     while (1) {
         if(counter>500) {
             counter-=500;
@@ -48,18 +47,4 @@ int main()
     };
 
     return 0;
-}
-
-extern "C" {
-    void _exit(int) {}
-    void _kill(int) {}
-    int _getpid() {}
-    void _sbrk() {}
-    void _read() {}
-    void _close() {}
-    void _fstat() {}
-    void _lseek() {}
-    void _isatty() {}
-    void _write() {}
-    void _open() {}
 }

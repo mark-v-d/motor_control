@@ -104,12 +104,12 @@ public:
 
     class Transmitter {
     public:
-	virtual void Transmitted(Ethernet*,descriptor const&)=0;
+	virtual void Transmitted(Ethernet*,descriptor const&) noexcept=0;
     };
 
     class Receiver {
     public:
-	virtual void Received(Ethernet*,descriptor const&)=0;
+	virtual void Received(Ethernet*,descriptor const&) noexcept=0;
     }; 
 
 private:
