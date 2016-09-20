@@ -1,8 +1,12 @@
-OBJS=main.o startup_XMC4500.o system_XMC4500.o xmc4_scu.o ethernet.o icmp.o system.o 
+DEVICE=XMC4400
+PACKAGE=F64
+MEMORY=512
+
+OBJS=main.o startup_$(DEVICE).o system_$(DEVICE).o xmc4_scu.o ethernet.o icmp.o system.o 
 # xmc_eth_mac.o 
 # xmc_eth_phy_ksz8031rnl.o
 
-LDSCRIPT=./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/XMC4500_series/Source/GCC/XMC4500x1024.ld
+LDSCRIPT=./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/$(DEVICE)_series/Source/GCC/$(DEVICE)x$(MEMORY).ld
 
 CROSS=arm-none-eabi-
 CC=$(CROSS)gcc
@@ -10,17 +14,17 @@ AS=$(CROSS)as
 CXX=$(CROSS)g++
 
 VPATH=src
-VPATH+=XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/XMC4500_series/Source/GCC/
-VPATH+=XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/XMC4500_series/Source/
+VPATH+=XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/$(DEVICE)_series/Source/GCC/
+VPATH+=XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/$(DEVICE)_series/Source/
 VPATH+=XMC_Peripheral_Library_v2.1.6p1/XMCLib/src/
 
 
-CPPFLAGS+=-I ./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/XMC4500_series/Include/
+CPPFLAGS+=-I ./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/$(DEVICE)_series/Include/
 CPPFLAGS+=-I ./XMC_Peripheral_Library_v2.1.6p1/XMCLib/inc/
 CPPFLAGS+=-I ./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Include/
 CPPFLAGS+=-I src
 CPPFLAGS+=-DCLOCK_CRYSTAL_FREQUENCY=12000000
-CPPFLAGS+=-D XMC4500_F100x1024
+CPPFLAGS+=-D $(DEVICE)_$(PACKAGE)x$(MEMORY)
 #CPPFLAGS+=-D UC_ID -D OSCHP_FREQUENCY=12000000
 
 CPU = -g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16

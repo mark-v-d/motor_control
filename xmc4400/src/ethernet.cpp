@@ -6,7 +6,7 @@ Ethernet *Ethernet::instance=0;
 
 enum PHY_stuff {
     PHY_ID1=0x0022,
-    PHY_ID2=0x1550,
+    PHY_ID2=0x1561,
 
     REG_BMCR=0x00,
     REG_BMSR=0x01,
@@ -112,7 +112,9 @@ void Ethernet::WritePhy(uint8_t reg_addr, uint16_t data)
 
 void Ethernet::PHY_Init(void)
 {
-    if(ReadPhy(REG_PHYIDR1)!=PHY_ID1 && ReadPhy(REG_PHYIDR2)&0xfff0==PHY_ID2) {
+    int id1=ReadPhy(REG_PHYIDR1);
+    int id2=ReadPhy(REG_PHYIDR2);
+    if(id1!=PHY_ID1 && id2&0xfff0==PHY_ID2) {
 	WritePhy(REG_BMCR, BMCR_RESET);
 	WritePhy(REG_BMCR, BMCR_DUPLEX | BMCR_ANEG_EN);
 
@@ -241,16 +243,15 @@ void Ethernet::transmitIRQ(void)
 
 inline void ETH0_0_IRQHandler(uint32_t event)
 {
-    if(event&XMC_ETH_MAC_EVENT_RECEIVE) {
+    if(event&XMC_ETH_MAC_EVENT_RECEIVE)
 	Ethernet::instance->receiveIRQ();
-    }
-    if(event&XMC_ETH_MAC_EVENT_TRANSMIT) {
+    if(event&XMC_ETH_MAC_EVENT_TRANSMIT)
 	Ethernet::instance->transmitIRQ();
-    }
 }
 
 extern "C" void ETH0_0_IRQHandler(void)
 {
-    ETH0_0_IRQHandler(ETH0->STATUS);
-    ETH0->STATUS = 0xFFFFFFFFUL;
+    uint32_t event=ETH0->STATUS;
+    ETH0_0_IRQHandler(event);
+    ETH0->STATUS = event;
 }

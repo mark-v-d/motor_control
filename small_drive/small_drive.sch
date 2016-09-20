@@ -4712,5 +4712,5 @@ SWDIO
 Text Label 2600 9600 0    60   ~ 0
 SWCLK
 Text Notes 4950 14000 0    60   ~ 0
-MAX3096 package too big.\nUpdate ethernet jack
+MAX3096 package too big.\nUpdate ethernet jack\nAdd pullup to ETH0_MDIO
 $EndSCHEMATC
