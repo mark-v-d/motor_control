@@ -91,6 +91,7 @@ public:
 	    pinBase<port,pin>::pdisc(0);
     }
     operator int(void) { return (gpio_port[port].IN>>pin)&1; }
+    operator bool(void) { return (gpio_port[port].IN>>pin)&1; }
 };
 
 // ETH0 Ports //////////////////////////////////////////////////////////////////

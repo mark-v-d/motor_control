@@ -57,9 +57,6 @@ int main()
 {
     LED0.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     LED1.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
-    LED2.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
-    LED3.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
-    LED4.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
 
     SysTick_Config(SystemCoreClock/1000);
 
@@ -67,6 +64,8 @@ int main()
         if(counter>500) {
             counter-=500;
             LED1^=1;
+	    if(!BUTTON1)
+		throw 3;
         };
     };
 
@@ -74,16 +73,15 @@ int main()
 }
 
 
-#if 1
-void std::terminate(void)
-//void __gnu_cxx::__verbose_terminate_handler(void)
+/* This removes a lot of code from the binary
+*/
+void __gnu_cxx::__verbose_terminate_handler(void)
 {
     LED1=1;
     while (1) {
         if(counter>500) {
             counter-=500;
-            LED2^=1;
+            LED0^=1;
         };
     };
 }
-#endif
