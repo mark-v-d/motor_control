@@ -1,6 +1,11 @@
 DEVICE=XMC4400
-PACKAGE=F64
-MEMORY=512
+ifeq ($(DEVICE),XMC4400)
+	PACKAGE=F64
+	MEMORY=512
+else
+	PACKAGE=F100
+	MEMORY=1024
+endif
 
 OBJS=main.o startup_$(DEVICE).o system_$(DEVICE).o xmc4_scu.o ethernet.o icmp.o system.o 
 # xmc_eth_mac.o 
