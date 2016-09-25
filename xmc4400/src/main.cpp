@@ -3,7 +3,6 @@
 #include "ethernet.h"
 #include "icmp.h"
 #include <atomic>
-#include <cerrno>
 
 std::atomic<int> counter(0);
 
@@ -75,3 +74,16 @@ int main()
 }
 
 
+#if 1
+void std::terminate(void)
+//void __gnu_cxx::__verbose_terminate_handler(void)
+{
+    LED1=1;
+    while (1) {
+        if(counter>500) {
+            counter-=500;
+            LED2^=1;
+        };
+    };
+}
+#endif
