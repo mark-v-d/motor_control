@@ -66,10 +66,6 @@ int main()
 
     SysTick_Config(SystemCoreClock/1000);
 
-    icmp_echo_t echo;
-    eth0.transmit(NULL,&echo,sizeof(echo));
-
-
     while (1) {
         if(counter>500) {
             counter-=500;
