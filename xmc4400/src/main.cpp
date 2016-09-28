@@ -6,10 +6,12 @@
 
 std::atomic<int> counter(0);
 
-#if UC_DEVICE == XMC4500
+#if (UC_DEVICE == XMC4500)
 iopin::input<1,14> BUTTON1;
 iopin::output<1,0> LED0;
 iopin::output<1,1> LED1;
+iopin::output<1,2> LED2;
+iopin::output<1,3> LED3;
 iopin::input<15,8> CLK_RMII;
 iopin::input<15,9> CRS_DV;
 iopin::input<2,2> RXD0;
@@ -53,19 +55,26 @@ Ethernet eth0(
 
 
 
+extern ETH_GLOBAL_TypeDef eth_debug;
 int main()
 {
     LED0.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     LED1.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    LED2.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    LED3.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    LED0=1; LED2=1; LED3=1;
 
     SysTick_Config(SystemCoreClock/1000);
+
+    icmp_echo_t echo;
+    eth0.transmit(NULL,&echo,sizeof(echo));
+
 
     while (1) {
         if(counter>500) {
             counter-=500;
             LED1^=1;
-	    if(!BUTTON1)
-		throw 3;
+	    LED3=eth_debug.RX_FRAMES_COUNT_GOOD_BAD&1;
         };
     };
 
@@ -77,11 +86,13 @@ int main()
 */
 void __gnu_cxx::__verbose_terminate_handler(void)
 {
-    LED1=1;
-    while (1) {
-        if(counter>500) {
-            counter-=500;
-            LED0^=1;
-        };
-    };
+    LED0.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    LED1.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    LED2.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    LED3.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    for(;;) {
+	LED0^=1;
+	LED1^=1;
+	LED2^=1;
+    }
 }

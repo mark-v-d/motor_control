@@ -2,6 +2,7 @@
 #include <algorithm>
 
 using namespace std;
+icmp_echo_t icmpProcessing::pkt __attribute__((section ("ETH_RAM")));
 
 void icmpProcessing::Received(
     Ethernet *eth,

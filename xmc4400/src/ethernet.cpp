@@ -3,10 +3,17 @@
 
 Ethernet *Ethernet::instance=0;
 
+enum { tx_buffer_count=4 };
+std::array<Ethernet::descriptor,tx_buffer_count> Ethernet::txd __attribute__((section ("ETH_RAM")));
+
+enum { rx_buffer_count=4 };
+std::array<Ethernet::descriptor,rx_buffer_count> Ethernet::rxd __attribute__((section ("ETH_RAM")));
+std::array<packet,rx_buffer_count> Ethernet::rxp __attribute__((section ("ETH_RAM")));
+
 
 enum PHY_stuff {
     PHY_ID1=0x0022,
-    PHY_ID2=0x1561,
+    PHY_ID2_KSZ8081RNA=0x1560,
 
     REG_BMCR=0x00,
     REG_BMSR=0x01,
@@ -112,14 +119,16 @@ void Ethernet::WritePhy(uint8_t reg_addr, uint16_t data)
 
 void Ethernet::PHY_Init(void)
 {
-    int id1=ReadPhy(REG_PHYIDR1);
-    int id2=ReadPhy(REG_PHYIDR2);
-    if(id1!=PHY_ID1 && id2&0xfff0==PHY_ID2) {
+    uint16_t id1=ReadPhy(REG_PHYIDR1);
+    uint16_t id2=ReadPhy(REG_PHYIDR2);
+    if(id1==PHY_ID1 && (id2&0xfff0)==PHY_ID2_KSZ8081RNA) {
 	WritePhy(REG_BMCR, BMCR_RESET);
 	WritePhy(REG_BMCR, BMCR_DUPLEX | BMCR_ANEG_EN);
 
-	while(0 || !(ReadPhy(REG_BMSR) & BMSR_LINK_STAT))
-	    ;
+	uint16_t status;
+	do {
+	    status=ReadPhy(REG_BMSR);
+	} while(!(status&BMSR_LINK_STAT));
     } // else hope for the best
 }
 
@@ -128,6 +137,7 @@ void Ethernet::FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control)
     ETH0_CON->CON = (uint32_t)port_control.raw;
     instance=this;
 
+    XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_ETH0);
     XMC_SCU_CLOCK_EnableClock(XMC_SCU_CLOCK_ETH);
 #if UC_DEVICE != XMC4500
     XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_ETH0);
@@ -243,15 +253,16 @@ void Ethernet::transmitIRQ(void)
 
 inline void ETH0_0_IRQHandler(uint32_t event)
 {
-    if(event&XMC_ETH_MAC_EVENT_RECEIVE)
+    if(event&XMC_ETH_MAC_EVENT_RECEIVE) {
 	Ethernet::instance->receiveIRQ();
-    if(event&XMC_ETH_MAC_EVENT_TRANSMIT)
+    }
+    if(event&XMC_ETH_MAC_EVENT_TRANSMIT) {
 	Ethernet::instance->transmitIRQ();
+    }
 }
 
 extern "C" void ETH0_0_IRQHandler(void)
 {
-    uint32_t event=ETH0->STATUS;
-    ETH0_0_IRQHandler(event);
-    ETH0->STATUS = event;
+    ETH0_0_IRQHandler(ETH0->STATUS);
+    ETH0->STATUS = 0xFFFFFFFFUL;
 }

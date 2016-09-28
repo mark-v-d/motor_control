@@ -126,12 +126,12 @@ private:
     uint8_t phy_addr;
 
     enum { tx_buffer_count=4 };
-    std::array<descriptor,tx_buffer_count> txd;
+    static std::array<descriptor,tx_buffer_count> txd;
     atomic_wrapping_counter<int,tx_buffer_count> tx_put;
 
     enum { rx_buffer_count=4 };
-    std::array<descriptor,rx_buffer_count> rxd;
-    std::array<packet,rx_buffer_count> rxp;
+    static std::array<descriptor,rx_buffer_count> rxd;
+    static std::array<packet,rx_buffer_count> rxp;
     int rx_get;
 
     Receiver *icmpHandler;
@@ -195,6 +195,7 @@ Ethernet::Ethernet(
     MDO.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
 
     XMC_ETH_MAC_PORT_CTRL_t port_control;
+    port_control.raw=0;
     port_control.mode = XMC_ETH_MAC_PORT_CTRL_MODE_RMII;
     port_control.rxd0 = RXD0;
     port_control.rxd1 = RXD1;

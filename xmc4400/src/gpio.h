@@ -75,6 +75,7 @@ public:
 	static_assert(port<14,
 	    "Ports 14 and 15 are input only"
 	);
+	pinBase<port,pin>::set(XMC_GPIO_HWCTRL_DISABLED);
     }
     int operator=(int i) { gpio_port[port].OMR=(i? 1:0x10000)<<pin; return i; }
     void operator^=(int i) { if(i) gpio_port[port].OMR=0x10001<<pin; }
@@ -102,6 +103,7 @@ inline iopin::pinBase<pin,port>::operator type() \
     set(XMC_GPIO_MODE_INPUT_TRISTATE); \
     return type##_P##pin##_##port; \
 }
+
 
 type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD0,2,2);
 type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD0,0,2);

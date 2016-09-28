@@ -1,4 +1,4 @@
-DEVICE=XMC4500
+DEVICE=XMC4400
 ifeq ($(DEVICE),XMC4400)
 	PACKAGE=F64
 	MEMORY=512
@@ -7,11 +7,13 @@ else
 	MEMORY=1024
 endif
 
-OBJS=main.o startup_$(DEVICE).o system_$(DEVICE).o xmc4_scu.o ethernet.o icmp.o system.o 
+OBJS=main.o startup_$(DEVICE).o system_$(DEVICE).o ethernet.o icmp.o system.o xmc4_scu.o
 # xmc_eth_mac.o 
 # xmc_eth_phy_ksz8031rnl.o
 
+#LDSCRIPT=./$(DEVICE)x$(MEMORY).ld
 LDSCRIPT=./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/$(DEVICE)_series/Source/GCC/$(DEVICE)x$(MEMORY).ld
+
 
 CROSS=arm-none-eabi-
 CC=$(CROSS)gcc
@@ -38,6 +40,8 @@ CFLAGS   += $(CPU)
 CXXFLAGS += $(CPU) -std=c++11
 ASFLAGS  += $(CPU)
 LDFLAGS  += $(CPU)
+
+%.o: Makefile
 
 .%.d: %.c Makefile
 	$(CC) $(CPPFLAGS) -MM $<|sed -e "s/:/ $@:/" > $@ || (rm $@; false)
