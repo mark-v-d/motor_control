@@ -42,6 +42,8 @@ iopin::ETH0_TXD1<2,9> TXD1;
 iopin::ETH0_TX_EN<2,5> TX_EN;
 iopin::output<1,0> ETH_RESET=1;
 
+iopin::U0C0_DOUT0<1,5> ENC_TXD;
+
 iopin::CCU80_OUT20<0,3> HB1;
 iopin::CCU80_OUT00<0,5> HB0;
 iopin::CCU80_OUT30<0,6> HB2;
@@ -52,9 +54,11 @@ extern "C" void SysTick_Handler(void)
     counter++;
 }
 
-void CCU80_1_IRQHandler(void)
+extern "C" void CCU80_1_IRQHandler(void)
 {
+    LED2=0;
     counter++;
+    LED2=1;
 }
 
 icmpProcessing icmp;
@@ -71,51 +75,9 @@ int main()
 
     SysTick_Config(SystemCoreClock/1000);
 
-    XMC_CCU8_SetModuleClock(HB0, XMC_CCU8_CLOCK_SCU);
-    XMC_CCU8_EnableModule(HB0);
-    XMC_CCU8_Init(HB0, XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+    pwm_3phase(HB0,HB1,HB2,18000);
 
-    XMC_CCU8_SLICE_COMPARE_CONFIG_t g_capcom_slice_object;
-    g_capcom_slice_object.tc = 0x00000401;// 00 0000 0000 0100 0000 0001,
-    g_capcom_slice_object.psl = 0;
-    g_capcom_slice_object.chc = 0;
-    g_capcom_slice_object.prescaler_initval = 0;
-    g_capcom_slice_object.dither_limit = 0;
-    g_capcom_slice_object.float_limit = 0;
-    XMC_CCU8_SLICE_CompareInit(HB0, &g_capcom_slice_object);
-    XMC_CCU8_SLICE_CompareInit(HB1, &g_capcom_slice_object);
-    XMC_CCU8_SLICE_CompareInit(HB2, &g_capcom_slice_object);
-    uint32_t pwm_period=SystemCoreClock/2/18000; // 18kHz
-    XMC_CCU8_SLICE_SetTimerPeriodMatch(HB0, pwm_period);
-    XMC_CCU8_SLICE_SetTimerPeriodMatch(HB1, pwm_period);
-    XMC_CCU8_SLICE_SetTimerPeriodMatch(HB2, pwm_period);
-
-
-    XMC_CCU8_StartPrescaler(HB0);
-    XMC_CCU8_EnableClock(HB0, HB0);
-    XMC_CCU8_EnableClock(HB0, HB1);
-    XMC_CCU8_EnableClock(HB0, HB2);
     HB1=100;
-
-#if 0
-    XMC_CCU8_SLICE_SetEvent(HB0, 
-	XMC_CCU8_SLICE_IRQ_ID_COMPARE_MATCH_UP_CH_1);
-    XMC_CCU8_SLICE_EnableEvent(HB0,
-	XMC_CCU8_SLICE_IRQ_ID_COMPARE_MATCH_UP_CH_1);
-    /* Connect compare match event to SR1 */
-    XMC_CCU8_SLICE_SetInterruptNode(HB0, 
-	XMC_CCU8_SLICE_IRQ_ID_COMPARE_MATCH_UP_CH_1, XMC_CCU8_SLICE_SR_ID_1);
-
-    /* Enable IRQ */
-    NVIC_SetPriority(CCU80_1_IRQn, 
-	NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 63, 0));
-    NVIC_EnableIRQ(CCU80_1_IRQn);
-#endif
-
-    XMC_CCU8_SLICE_StartTimer(HB0);
-    XMC_CCU8_SLICE_StartTimer(HB1);
-    XMC_CCU8_SLICE_StartTimer(HB2);
-
 
     int t=0;
     while (1) {

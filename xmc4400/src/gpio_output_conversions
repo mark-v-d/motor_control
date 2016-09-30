@@ -142,6 +142,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -158,6 +159,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -174,6 +176,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -190,6 +193,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -206,6 +210,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -222,6 +227,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -243,6 +249,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -259,6 +266,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -275,6 +283,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -291,6 +300,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -312,6 +322,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -328,6 +339,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -344,6 +356,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -360,6 +373,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -376,6 +390,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -392,6 +407,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -1346,6 +1362,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -1362,6 +1379,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -1378,6 +1396,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -1394,6 +1413,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -1410,6 +1430,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -1426,6 +1447,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -1442,6 +1464,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -1458,6 +1481,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -1474,6 +1498,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -2166,6 +2191,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -2182,6 +2208,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -2198,6 +2225,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -2214,6 +2242,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -2230,6 +2259,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -2246,6 +2276,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -2267,6 +2298,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -2283,6 +2315,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -2299,6 +2332,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -2315,6 +2349,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -2336,6 +2371,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -2352,6 +2388,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -2368,6 +2405,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -2384,6 +2422,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -2400,6 +2439,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -2416,6 +2456,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -3324,6 +3365,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -3340,6 +3382,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -3356,6 +3399,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -3372,6 +3416,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -3388,6 +3433,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -3404,6 +3450,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -3420,6 +3467,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -3436,6 +3484,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -3452,6 +3501,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -4154,6 +4204,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -4170,6 +4221,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -4186,6 +4238,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -4202,6 +4255,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -4218,6 +4272,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -4234,6 +4289,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -4255,6 +4311,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -4271,6 +4328,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -4287,6 +4345,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -4303,6 +4362,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -4324,6 +4384,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -4340,6 +4401,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -4356,6 +4418,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -4372,6 +4435,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -4388,6 +4452,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -4404,6 +4469,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -5002,6 +5068,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -5018,6 +5085,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -5034,6 +5102,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -5050,6 +5119,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -5066,6 +5136,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -5082,6 +5153,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -5098,6 +5170,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -5114,6 +5187,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -5130,6 +5204,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -5621,6 +5696,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -5637,6 +5713,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -5653,6 +5730,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -5669,6 +5747,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -5685,6 +5764,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -5701,6 +5781,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -5722,6 +5803,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -5738,6 +5820,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -5754,6 +5837,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -5770,6 +5854,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -5791,6 +5876,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -5807,6 +5893,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -5823,6 +5910,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -5839,6 +5927,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -5855,6 +5944,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -5871,6 +5961,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -6825,6 +6916,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -6841,6 +6933,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -6857,6 +6950,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -6873,6 +6967,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -6889,6 +6984,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -6905,6 +7001,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -6921,6 +7018,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -6937,6 +7035,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -6953,6 +7052,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -7694,6 +7794,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -7710,6 +7811,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -7726,6 +7828,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -7742,6 +7845,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -7758,6 +7862,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -7774,6 +7879,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -7795,6 +7901,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -7811,6 +7918,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -7827,6 +7935,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -7843,6 +7952,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -7864,6 +7974,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -7885,6 +7996,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -7901,6 +8013,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -7917,6 +8030,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -7933,6 +8047,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -7949,6 +8064,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -9586,6 +9702,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -9602,6 +9719,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -9618,6 +9736,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -9634,6 +9753,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -9650,6 +9770,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -9666,6 +9787,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -9687,6 +9809,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -9703,6 +9826,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -9719,6 +9843,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -9735,6 +9860,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -9756,6 +9882,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -9772,6 +9899,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -9788,6 +9916,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -9804,6 +9933,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -9820,6 +9950,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -9836,6 +9967,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -9852,6 +9984,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -9868,6 +10001,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -9889,6 +10023,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -9905,6 +10040,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -9926,6 +10062,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -9947,6 +10084,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -9968,6 +10106,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -9989,6 +10128,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -10005,6 +10145,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -10021,6 +10162,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -11406,6 +11548,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -11422,6 +11565,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -11438,6 +11582,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -11454,6 +11599,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -11470,6 +11616,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -11486,6 +11633,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -11502,6 +11650,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -11518,6 +11667,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -11534,6 +11684,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -11550,6 +11701,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -11566,6 +11718,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -11582,6 +11735,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -11598,6 +11752,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -11614,6 +11769,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -11630,6 +11786,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -11646,6 +11803,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -11662,6 +11820,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -11678,6 +11837,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -11694,6 +11854,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -11710,6 +11871,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -11726,6 +11888,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -11742,6 +11905,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -12861,6 +13025,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -12877,6 +13042,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -12893,6 +13059,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -12909,6 +13076,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -12925,6 +13093,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -12941,6 +13110,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -12962,6 +13132,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -12978,6 +13149,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -12994,6 +13166,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -13010,6 +13183,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -13031,6 +13205,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -13047,6 +13222,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -13063,6 +13239,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -13079,6 +13256,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -13095,6 +13273,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -13111,6 +13290,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -13127,6 +13307,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -13143,6 +13324,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -13164,6 +13346,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -13180,6 +13363,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -13201,6 +13385,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -13222,6 +13407,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -13243,6 +13429,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -13264,6 +13451,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -13280,6 +13468,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -13296,6 +13485,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -14571,6 +14761,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -14587,6 +14778,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -14603,6 +14795,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -14619,6 +14812,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -14635,6 +14829,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -14651,6 +14846,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -14667,6 +14863,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -14683,6 +14880,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -14699,6 +14897,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -14715,6 +14914,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -14731,6 +14931,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -14747,6 +14948,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -14763,6 +14965,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -14779,6 +14982,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -14795,6 +14999,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -14811,6 +15016,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -14827,6 +15033,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -14843,6 +15050,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -14859,6 +15067,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -14875,6 +15084,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -14891,6 +15101,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -14907,6 +15118,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -16086,6 +16298,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -16107,6 +16320,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -16128,6 +16342,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -16144,6 +16359,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -16160,6 +16376,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -16181,6 +16398,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -16202,6 +16420,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -16218,6 +16437,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -16234,6 +16454,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -16255,6 +16476,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -16276,6 +16498,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -16297,6 +16520,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -16313,6 +16537,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -16329,6 +16554,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -16345,6 +16571,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -16361,6 +16588,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -16377,6 +16605,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -16393,6 +16622,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -16414,6 +16644,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -16430,6 +16661,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -16446,6 +16678,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -16467,6 +16700,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -16488,6 +16722,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -16504,6 +16739,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -16520,6 +16756,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -16541,6 +16778,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -16562,6 +16800,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -16578,6 +16817,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -16594,6 +16834,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -16610,6 +16851,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -16626,6 +16868,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -16642,6 +16885,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -19528,6 +19772,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -19544,6 +19789,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -19560,6 +19806,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -19576,6 +19823,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -19592,6 +19840,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -19608,6 +19857,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -19629,6 +19879,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -19645,6 +19896,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -19661,6 +19913,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -19677,6 +19930,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -19698,6 +19952,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -19714,6 +19969,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -19730,6 +19986,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -19746,6 +20003,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -19762,6 +20020,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -19778,6 +20037,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -19794,6 +20054,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -19810,6 +20071,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -19831,6 +20093,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -19847,6 +20110,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -19868,6 +20132,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -19889,6 +20154,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -19910,6 +20176,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -19931,6 +20198,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -19947,6 +20215,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -19963,6 +20232,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -22141,6 +22411,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -22162,6 +22433,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -22183,6 +22455,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -22199,6 +22472,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -22215,6 +22489,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -22236,6 +22511,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -22257,6 +22533,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -22273,6 +22550,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -22289,6 +22567,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -22310,6 +22589,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -22331,6 +22611,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -22352,6 +22633,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -22368,6 +22650,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -22384,6 +22667,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -22400,6 +22684,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -22416,6 +22701,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -22432,6 +22718,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -22448,6 +22735,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -22469,6 +22757,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -22485,6 +22774,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -22501,6 +22791,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -22522,6 +22813,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -22543,6 +22835,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -22559,6 +22852,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -22575,6 +22869,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -22596,6 +22891,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -22617,6 +22913,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -22633,6 +22930,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -22649,6 +22947,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -22665,6 +22964,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -22681,6 +22981,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -22697,6 +22998,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -25583,6 +25885,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -25599,6 +25902,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -25615,6 +25919,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -25631,6 +25936,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -25647,6 +25953,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -25663,6 +25970,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -25684,6 +25992,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -25700,6 +26009,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -25716,6 +26026,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -25732,6 +26043,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -25753,6 +26065,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -25769,6 +26082,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -25785,6 +26099,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -25801,6 +26116,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -25817,6 +26133,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -25833,6 +26150,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -25849,6 +26167,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -25865,6 +26184,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -25886,6 +26206,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -25902,6 +26223,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -25923,6 +26245,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -25944,6 +26267,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -25965,6 +26289,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -25986,6 +26311,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -26002,6 +26328,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -26018,6 +26345,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -27892,6 +28220,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -27908,6 +28237,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -27924,6 +28254,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -27940,6 +28271,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -27956,6 +28288,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -27972,6 +28305,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -27993,6 +28327,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -28009,6 +28344,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -28025,6 +28361,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -28041,6 +28378,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -28062,6 +28400,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -28078,6 +28417,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -28094,6 +28434,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -28110,6 +28451,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -28126,6 +28468,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -28142,6 +28485,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -28158,6 +28502,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -28174,6 +28519,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -28195,6 +28541,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -28211,6 +28558,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -28232,6 +28580,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -28253,6 +28602,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -28274,6 +28624,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -28295,6 +28646,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -28311,6 +28663,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -28327,6 +28680,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -30302,6 +30656,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -30323,6 +30678,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -30344,6 +30700,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -30360,6 +30717,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -30376,6 +30734,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -30397,6 +30756,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -30418,6 +30778,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -30434,6 +30795,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -30450,6 +30812,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -30471,6 +30834,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -30492,6 +30856,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -30513,6 +30878,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -30529,6 +30895,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -30545,6 +30912,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -30561,6 +30929,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -30577,6 +30946,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -30593,6 +30963,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -30609,6 +30980,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -30630,6 +31002,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -30646,6 +31019,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -30662,6 +31036,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -30683,6 +31058,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -30704,6 +31080,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -30720,6 +31097,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -30736,6 +31114,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -30757,6 +31136,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -30778,6 +31158,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -30794,6 +31175,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -30810,6 +31192,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -30826,6 +31209,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -30842,6 +31226,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -30858,6 +31243,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -33780,6 +34166,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -33801,6 +34188,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -33822,6 +34210,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -33838,6 +34227,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -33854,6 +34244,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -33875,6 +34266,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -33896,6 +34288,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -33912,6 +34305,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -33928,6 +34322,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -33949,6 +34344,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -33970,6 +34366,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -33996,6 +34393,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -34012,6 +34410,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -34028,6 +34427,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -34044,6 +34444,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -34065,6 +34466,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -34086,6 +34488,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -34102,6 +34505,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -34123,6 +34527,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -34139,6 +34544,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -34155,6 +34561,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -34176,6 +34583,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -34202,6 +34610,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -34218,6 +34627,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -34234,6 +34644,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -34255,6 +34666,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -34281,6 +34693,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -34297,6 +34710,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -34313,6 +34727,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -34329,6 +34744,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -34345,6 +34761,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -34361,6 +34778,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -37485,6 +37903,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -37501,6 +37920,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -37517,6 +37937,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -37533,6 +37954,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -37549,6 +37971,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -37565,6 +37988,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -37586,6 +38010,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -37602,6 +38027,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -37618,6 +38044,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -37634,6 +38061,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -37655,6 +38083,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -37676,6 +38105,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -37692,6 +38122,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -37708,6 +38139,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -37724,6 +38156,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -37740,6 +38173,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -37756,6 +38190,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -37772,6 +38207,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -37793,6 +38229,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -37809,6 +38246,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -37830,6 +38268,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -37851,6 +38290,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -37872,6 +38312,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -37893,6 +38334,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -37909,6 +38351,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -37925,6 +38368,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -40224,6 +40668,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -40245,6 +40690,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -40266,6 +40712,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -40282,6 +40729,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -40298,6 +40746,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -40319,6 +40768,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -40340,6 +40790,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -40356,6 +40807,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -40372,6 +40824,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -40393,6 +40846,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -40414,6 +40868,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -40435,6 +40890,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -40451,6 +40907,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -40467,6 +40924,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -40483,6 +40941,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -40499,6 +40958,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -40515,6 +40975,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -40531,6 +40992,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -40552,6 +41014,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -40568,6 +41031,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -40584,6 +41048,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -40605,6 +41070,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -40626,6 +41092,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -40642,6 +41109,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -40658,6 +41126,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -40679,6 +41148,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -40700,6 +41170,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -40716,6 +41187,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -40732,6 +41204,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -40748,6 +41221,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -40764,6 +41238,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -40780,6 +41255,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -43970,6 +44446,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -43991,6 +44468,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -44012,6 +44490,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -44028,6 +44507,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -44044,6 +44524,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -44065,6 +44546,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -44086,6 +44568,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -44102,6 +44585,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -44118,6 +44602,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -44139,6 +44624,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -44160,6 +44646,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -44186,6 +44673,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -44202,6 +44690,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -44218,6 +44707,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -44234,6 +44724,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -44255,6 +44746,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -44276,6 +44768,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -44292,6 +44785,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -44313,6 +44807,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -44329,6 +44824,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -44345,6 +44841,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -44366,6 +44863,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -44392,6 +44890,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -44408,6 +44907,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -44424,6 +44924,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -44445,6 +44946,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -44471,6 +44973,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -44487,6 +44990,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -44503,6 +45007,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -44519,6 +45024,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -44535,6 +45041,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -44551,6 +45058,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -48142,6 +48650,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -48158,6 +48667,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -48174,6 +48684,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -48190,6 +48701,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -48206,6 +48718,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -48222,6 +48735,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -48243,6 +48757,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -48259,6 +48774,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -48275,6 +48791,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -48291,6 +48808,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -48312,6 +48830,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -48333,6 +48852,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -48349,6 +48869,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -48365,6 +48886,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -48381,6 +48903,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -48397,6 +48920,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -48413,6 +48937,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -48429,6 +48954,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -48450,6 +48976,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -48466,6 +48993,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -48487,6 +49015,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -48508,6 +49037,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -48529,6 +49059,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -48550,6 +49081,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -48566,6 +49098,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -48582,6 +49115,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -51168,6 +51702,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -51189,6 +51724,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -51210,6 +51746,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -51226,6 +51763,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=0, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -51242,6 +51780,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -51263,6 +51802,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -51284,6 +51824,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -51300,6 +51841,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=0, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -51316,6 +51858,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -51337,6 +51880,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -51358,6 +51902,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -51379,6 +51924,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=0, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -51395,6 +51941,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -51411,6 +51958,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -51427,6 +51975,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -51443,6 +51992,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU80; }
     operator XMC_CCU8_SLICE_t*() { return CCU80_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=0, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -51459,6 +52009,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -51475,6 +52026,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR1S=i; }
 };
 template <>
@@ -51496,6 +52048,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -51512,6 +52065,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC80;}
     operator uint8_t() { return 0; }
+    enum { module=1, slice=0};
     void operator=(uint32_t i) { CCU80_CC80->CR2S=i; }
 };
 template <>
@@ -51528,6 +52082,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -51549,6 +52104,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR1S=i; }
 };
 template <>
@@ -51570,6 +52126,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -51586,6 +52143,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC81;}
     operator uint8_t() { return 1; }
+    enum { module=1, slice=1};
     void operator=(uint32_t i) { CCU80_CC81->CR2S=i; }
 };
 template <>
@@ -51602,6 +52160,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -51623,6 +52182,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR1S=i; }
 };
 template <>
@@ -51644,6 +52204,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -51660,6 +52221,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC82;}
     operator uint8_t() { return 2; }
+    enum { module=1, slice=2};
     void operator=(uint32_t i) { CCU80_CC82->CR2S=i; }
 };
 template <>
@@ -51676,6 +52238,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -51692,6 +52255,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR1S=i; }
 };
 template <>
@@ -51708,6 +52272,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
@@ -51724,6 +52289,7 @@ public:
     operator XMC_CCU8_MODULE_t*() { return CCU81; }
     operator XMC_CCU8_SLICE_t*() { return CCU81_CC83;}
     operator uint8_t() { return 3; }
+    enum { module=1, slice=3};
     void operator=(uint32_t i) { CCU80_CC83->CR2S=i; }
 };
 template <>
