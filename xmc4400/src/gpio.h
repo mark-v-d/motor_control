@@ -1,8 +1,10 @@
 #ifndef GPIO_H
 #define GPIO_H
 
-#include "xmc_gpio.h"
-#include "xmc_eth_mac.h"
+#include <xmc_device.h>
+#include <xmc_gpio.h>
+#include <xmc_eth_mac.h>
+#include <xmc_ccu8.h>
 
 struct XMC_GPIO_PORT_padded:public XMC_GPIO_PORT
 {
@@ -76,6 +78,11 @@ public:
 	    "Ports 14 and 15 are input only"
 	);
 	pinBase<port,pin>::set(XMC_GPIO_HWCTRL_DISABLED);
+	pinBase<port,pin>::set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    }
+    output(int i) {
+	output();
+	*this=i;
     }
     int operator=(int i) { gpio_port[port].OMR=(i? 1:0x10000)<<pin; return i; }
     void operator^=(int i) { if(i) gpio_port[port].OMR=0x10001<<pin; }

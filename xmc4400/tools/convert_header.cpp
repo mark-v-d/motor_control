@@ -1,5 +1,6 @@
 #include <iostream>
 #include <regex>
+#include <cstdlib>
 
 using namespace std;
 
@@ -12,8 +13,16 @@ void print_output(ostream &s, string const &n)
     s   << "\ntemplate <int port, int pin>\n"
 	<< "class " << n << ":public output<port,pin>\n"
 	<< "{\npublic:\n    " << n 
-	<< "(void) { static_assert(port<0,\"Illegal pin\");}\n"
-	<< "};\n";
+	<< "(void) { static_assert(port<0,\"Illegal pin\");}\n";
+    smatch m;
+    // CCU8 conversions to interface with XMCLib
+    if(regex_search(n, m, regex("CCU8([0-3])_OUT([0-3])([0-3])"))) {
+	s   << "    operator XMC_CCU8_MODULE_t*() { return CCU8" << m[1] << "; }\n"
+	    << "    operator XMC_CCU8_SLICE_t*() { return CCU8" << m[1] << "_CC8" << m[2] << ";}\n"
+	    << "    operator uint8_t() { return " << m[2] << "; }\n"
+	    << "    void operator=(uint32_t i) { CCU80_CC8" << m[2] << "->CR" << atoi(m[3].str().c_str())/2+1 << "S=i; }\n";
+    }
+    s << "};\n";
 }
 
 void print_output(ostream &s, string const &n, string const &i, string const &p)
