@@ -4,6 +4,7 @@
 #include "ethernet.h"
 #include "icmp.h"
 #include "ccu8.h"
+#include "usic.h"
 #include "pwm_3phase.h"
 
 std::atomic<int> counter(0);
@@ -42,11 +43,13 @@ iopin::ETH0_TXD1<2,9> TXD1;
 iopin::ETH0_TX_EN<2,5> TX_EN;
 iopin::output<1,0> ETH_RESET=1;
 
-iopin::U0C0_DOUT0<1,5> ENC_TXD;
-
 iopin::CCU80_OUT20<0,3> HB1;
 iopin::CCU80_OUT00<0,5> HB0;
 iopin::CCU80_OUT30<0,6> HB2;
+
+iopin::output<1,15> ENC_DIR=1;
+iopin::U0C0_DOUT0<1,5> ENC_TXD; // FIXME, HWCTRL should only be used fo SSI
+iopin::input<1,3> ENC_RXD;
 #endif
 
 extern "C" void SysTick_Handler(void)
@@ -58,6 +61,7 @@ extern "C" void CCU80_1_IRQHandler(void)
 {
     LED2=0;
     counter++;
+    XMC_UART_CH_Transmit(XMC_UART0_CH0, 0x1a);
     LED2=1;
 }
 
@@ -68,14 +72,15 @@ Ethernet eth0(
     &icmp
 );
 
-
 extern ETH_GLOBAL_TypeDef eth_debug;
+void uart_init(void);
 int main()
 {
 
     SysTick_Config(SystemCoreClock/1000);
 
     pwm_3phase(HB0,HB1,HB2,18000);
+    uart_init();
 
     HB1=100;
     PPB->SCR=1;
@@ -111,3 +116,19 @@ void __gnu_cxx::__verbose_terminate_handler(void)
 	LED2^=1;
     }
 }
+
+void uart_init(void)
+{
+    XMC_UART_CH_CONFIG_t uart_config = {
+	.baudrate=1000000,
+	.data_bits=8U,
+	.frame_length=0,
+	.stop_bits=1,
+	.oversampling=0,
+	.parity_mode=XMC_USIC_CH_PARITY_MODE_NONE
+    };
+    XMC_UART_CH_Init(XMC_UART0_CH0, &uart_config);
+    XMC_UART_CH_SetInputSource(XMC_UART0_CH0, XMC_UART_CH_INPUT_RXD, USIC0_C0_DX0_P1_4);
+    XMC_UART_CH_Start(XMC_UART0_CH0);
+}
+

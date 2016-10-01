@@ -5,6 +5,7 @@
 #include <xmc_gpio.h>
 #include <xmc_eth_mac.h>
 #include <xmc_ccu8.h>
+#include <xmc_uart.h>
 
 struct XMC_GPIO_PORT_padded:public XMC_GPIO_PORT
 {

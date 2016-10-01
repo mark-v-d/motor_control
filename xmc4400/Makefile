@@ -7,7 +7,8 @@ else
 	MEMORY=1024
 endif
 
-OBJS=main.o startup_$(DEVICE).o system_$(DEVICE).o ethernet.o icmp.o system.o xmc4_scu.o xmc_ccu8.o 
+OBJS=main.o startup_$(DEVICE).o system_$(DEVICE).o ethernet.o icmp.o system.o 
+OBJS+=xmc4_scu.o xmc_ccu8.o xmc_usic.o xmc_uart.o xmc4_gpio.o
 # xmc_eth_mac.o 
 # xmc_eth_phy_ksz8031rnl.o
 

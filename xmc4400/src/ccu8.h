@@ -2,7 +2,7 @@
 #define CCU8_H
 
 /*
-    Figure 21-92 of the XMC440 manual gives an overview of the registers.
+    Figure 21-92 of the XMC4400 manual gives an overview of the registers.
     
 */
 
