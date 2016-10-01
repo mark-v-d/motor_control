@@ -78,6 +78,7 @@ int main()
     pwm_3phase(HB0,HB1,HB2,18000);
 
     HB1=100;
+    PPB->SCR=1;
 
     int t=0;
     while (1) {

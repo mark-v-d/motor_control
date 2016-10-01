@@ -1,6 +1,11 @@
 #ifndef CCU8_H
 #define CCU8_H
 
+/*
+    Figure 21-92 of the XMC440 manual gives an overview of the registers.
+    
+*/
+
 extern struct ccu8_t:public CCU8_GLOBAL_TypeDef {
     const uint32_t RESERVED2[31];
     struct cc8:public CCU8_CC8_TypeDef {
@@ -53,19 +58,80 @@ union GSTAT_t {
     operator uint32_t() const { return raw; }
 };
 
-union TCCLR_t {
+////////////////////////////////////////////////////////////////////////////////
+// Slice registers
+////////////////////////////////////////////////////////////////////////////////
+union INS_t {
     struct {
-	uint32_t TRBC:1;
-	uint32_t TCC:1;
-	uint32_t DITC:1;
-	uint32_t DTC1C:1;
-	uint32_t DTC2C:1;
+	uint32_t EVENT0_INPUT:4; // Select which input to map to event 0
+	uint32_t EVENT1_INPUT:4;
+	uint32_t EVENT2_INPUT:4;
+	uint32_t :4;
+	uint32_t EVENT0_EDGE:2;	// 0=none,1=rising,2=falling,3=both
+	uint32_t EVENT1_EDGE:2;
+	uint32_t EVENT2_EDGE:2;
+	uint32_t EVENT0_LEVEL:1; // 0=high level, 1=low level
+	uint32_t EVENT1_LEVEL:1;
+	uint32_t EVENT2_LEVEL:1;
+	uint32_t EVENT0_LOW_PASS_FILTER:2; // 0=none, 1=3 cycles, 2=5, 3=7
+	uint32_t EVENT1_LOW_PASS_FILTER:2;
+	uint32_t EVENT2_LOW_PASS_FILTER:2;
     };
     uint32_t raw;
     operator uint32_t() const { return raw; }
 };
 
-typedef TCCLR_t TCSET_t ;
+union CMC_t {
+    struct {
+	uint32_t EXTERNAL_START:2; // 0=none, 1=event 0, 2=event 1, 3=event 2
+	uint32_t EXTERNAL_STOP:2;
+	uint32_t EXTERNAL_CAPTURE_0:2;
+	uint32_t EXTERNAL_CAPTURE_1:2;
+	uint32_t EXTERNAL_GATE:2;
+	uint32_t EXTERNAL_UP_DOWN:2;
+	uint32_t EXTERNAL_LOAD:2;
+	uint32_t EXTERNAL_COUNT:2;
+	uint32_t OVERRIDE:1;	// This field enables the ST bit override 
+	uint32_t TRAP:1;	// trap functionality 0=disabled, 1=event 2
+	uint32_t EXTERNAL_MODULATION:2;
+	uint32_t CONCATENTATION:1; // disabled for cc[0]
+    };
+    uint32_t raw;
+    operator uint32_t() const { return raw; }
+};
+
+
+union TCST_t { // Slice Timer Status
+    struct {
+	uint32_t TIMER_RUN:1;
+	uint32_t COUNTING_DIR:1; // 0=up, 1=down
+	uint32_t :1;
+	uint32_t DEAD_TIME_COUNTER1_RUN:1;
+	uint32_t DEAD_TIME_COUNTER2_RUN:1;
+    };
+    uint32_t raw;
+    operator uint32_t() const { return raw; }
+};
+
+union TCSET_t { // Slice Timer Run Set (start the timer)
+    struct {
+	uint32_t TIMER_START:1;
+    };
+    uint32_t raw;
+    operator uint32_t() const { return raw; }
+};
+
+union TCCLR_t { // stop and clear the timer
+    struct {
+	uint32_t TIMER_STOP:1;
+	uint32_t TIMER_CLEAR:1;
+	uint32_t DITHER_CLEAR:1;
+	uint32_t DEAD_TIME_1_CLEAR:1;
+	uint32_t DEAD_TIME_2_CLEAR:1;
+    };
+    uint32_t raw;
+    operator uint32_t() const { return raw; }
+};
 
 union TC_t {
     struct {
@@ -76,7 +142,8 @@ union TC_t {
 	uint32_t ECM:1;		// Extended Capture Mode
 	uint32_t CAPC:2;	// Clear on Capture Control
 	uint32_t TLS:1;		// Timer Load selector (0=CR1, 1=CR2)
-	uint32_t ENDM:2;	// Extended Stop Function Control
+	uint32_t ENDM:2;	// External Stop Function Control
+	uint32_t STRM:2;	// External start Function Control
 	uint32_t SCE:1;		// Equal Capture Event enable
 	uint32_t CCS:1;		// Continuous Capture Enable
 	uint32_t DITHE:2;	// Dither Enable
@@ -99,6 +166,10 @@ union TC_t {
     uint32_t raw;
     operator uint32_t() const { return raw; }
 };
+
+// CC80PSL
+// CC80DIT
+// CC80PSC Prescaler Configuration
 
 
 union INTE_t {
