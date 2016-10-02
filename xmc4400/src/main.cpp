@@ -47,7 +47,9 @@ iopin::CCU80_OUT20<0,3> HB1;
 iopin::CCU80_OUT00<0,5> HB0;
 iopin::CCU80_OUT30<0,6> HB2;
 
-iopin::output<1,15> ENC_DIR=1;
+iopin::output<0,8> ENC_5V=0;
+iopin::output<1,9> ENC_12V=0;
+iopin::output<1,15> ENC_DIR=0;
 iopin::U0C0_DOUT0<1,5> ENC_TXD; // FIXME, HWCTRL should only be used fo SSI
 iopin::input<1,3> ENC_RXD;
 #endif
@@ -79,7 +81,17 @@ int main()
 
     SysTick_Config(SystemCoreClock/1000);
 
+
     pwm_3phase(HB0,HB1,HB2,18000);
+
+    counter=0;
+    ENC_5V=1;
+    while(counter<1)
+	;
+    ENC_DIR=1;
+    while(counter<2)
+	;
+
     uart_init();
 
     HB1=100;
@@ -120,7 +132,7 @@ void __gnu_cxx::__verbose_terminate_handler(void)
 void uart_init(void)
 {
     XMC_UART_CH_CONFIG_t uart_config = {
-	.baudrate=1000000,
+	.baudrate=2500000,
 	.data_bits=8U,
 	.frame_length=0,
 	.stop_bits=1,
