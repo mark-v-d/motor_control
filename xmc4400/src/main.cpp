@@ -1,11 +1,18 @@
 #include <atomic>
+#include <cmath>
+
+#include "xmc_dma.h"
+
+#define M_PI 3.1415927
 
 #include "gpio.h"
 #include "ethernet.h"
 #include "icmp.h"
 #include "ccu8.h"
-#include "usic.h"
 #include "pwm_3phase.h"
+#include "udp_logger.h"
+
+
 
 std::atomic<int> counter(0);
 
@@ -51,21 +58,8 @@ iopin::output<0,8> ENC_5V=0;
 iopin::output<1,9> ENC_12V=0;
 iopin::output<1,15> ENC_DIR=0;
 iopin::U0C0_DOUT0<1,5> ENC_TXD; // FIXME, HWCTRL should only be used fo SSI
-iopin::input<1,3> ENC_RXD;
+iopin::input<1,4> ENC_RXD;
 #endif
-
-extern "C" void SysTick_Handler(void)
-{
-    counter++;
-}
-
-extern "C" void CCU80_1_IRQHandler(void)
-{
-    LED2=0;
-    counter++;
-    XMC_UART_CH_Transmit(XMC_UART0_CH0, 0x1a);
-    LED2=1;
-}
 
 icmpProcessing icmp;
 Ethernet eth0(
@@ -74,38 +68,89 @@ Ethernet eth0(
     &icmp
 );
 
+struct position_HC_PQ23_t {
+    uint8_t start;
+    uint8_t state;
+    uint16_t rotation;
+    uint16_t encoder;
+    uint8_t crc;
+    float angle;
+
+    position_HC_PQ23_t(void) {}
+    position_HC_PQ23_t(uint8_t *p) {
+        start=p[0];
+        state=p[1];
+        encoder=(p[2]+256*p[3]);
+        angle=float(2*M_PI/1024.0)*encoder;
+        rotation=p[5]+0x100*p[6];
+        crc=p[8];
+    }
+};
+
+uint8_t rx_buffer[20] __attribute__((section ("ETH_RAM")));
+
+udp_logger logger __attribute__((section ("ETH_RAM")));
+
+extern "C" void SysTick_Handler(void)
+{
+    counter++;
+}
+
+extern "C" void CCU80_0_IRQHandler(void)
+{
+    LED2=0;
+    counter++;
+    if(counter>4500) {
+	position_HC_PQ23_t pos(rx_buffer);
+	logger.SetEncoder(pos.encoder);
+	logger.transmit(&eth0);
+	counter-=4500;
+    }
+    LED2=1;
+}
+
+uint8_t *putp;
+extern "C" void CCU80_1_IRQHandler(void)
+{
+    XMC_UART_CH_Transmit(XMC_UART0_CH0, 0x1a);
+    putp=rx_buffer;
+}
+
+extern "C" void USIC1_0_IRQHandler(void)
+{
+    // u1c1.PSCR=u1c1.PSR;
+    *putp++=u1c1.RBUF;
+}
+
+
 extern ETH_GLOBAL_TypeDef eth_debug;
 void uart_init(void);
 int main()
 {
-
     SysTick_Config(SystemCoreClock/1000);
-
 
     pwm_3phase(HB0,HB1,HB2,18000);
 
+    eth0.add_udp(&logger,1);
+
     counter=0;
     ENC_5V=1;
-    while(counter<1)
-	;
     ENC_DIR=1;
-    while(counter<2)
-	;
-
     uart_init();
 
     HB1=100;
     PPB->SCR=1;
 
+    XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
+
     int t=0;
     while (1) {
         if(counter>500) {
-            counter-=500;
+            //counter-=500;
             LED1^=1;
             HB0=t&1? 2270:2000;
             HB2=t&1? 1500:2000;
             t++;
-	    XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
 	    LED3=eth_debug.RX_FRAMES_COUNT_GOOD_BAD&1;
         };
     };
@@ -129,6 +174,8 @@ void __gnu_cxx::__verbose_terminate_handler(void)
     }
 }
 
+#include "bitfields.h"
+
 void uart_init(void)
 {
     XMC_UART_CH_CONFIG_t uart_config = {
@@ -140,7 +187,85 @@ void uart_init(void)
 	.parity_mode=XMC_USIC_CH_PARITY_MODE_NONE
     };
     XMC_UART_CH_Init(XMC_UART0_CH0, &uart_config);
-    XMC_UART_CH_SetInputSource(XMC_UART0_CH0, XMC_UART_CH_INPUT_RXD, USIC0_C0_DX0_P1_4);
-    XMC_UART_CH_Start(XMC_UART0_CH0);
-}
+    XMC_UART_CH_Init(XMC_UART1_CH1, &uart_config);
+    XMC_UART_CH_SetInputSource(XMC_UART0_CH0, 
+	XMC_UART_CH_INPUT_RXD, USIC0_C0_DX0_P1_4);
+    XMC_UART_CH_SetInputSource(XMC_UART1_CH1, 
+	XMC_UART_CH_INPUT_RXD, USIC1_C1_DX0_P0_0);
+    XMC_UART_CH_EnableInputInversion(XMC_UART1_CH1,XMC_UART_CH_INPUT_RXD);
+    XMC_UART_CH_EnableEvent(XMC_UART1_CH1, XMC_UART_CH_EVENT_STANDARD_RECEIVE);
+    XMC_UART_CH_SelectInterruptNodePointer(XMC_UART1_CH1, 
+	XMC_UART_CH_INTERRUPT_NODE_POINTER_RECEIVE, 0);
 
+    if(1) {
+	NVIC_SetPriority(USIC1_0_IRQn,  0);
+	NVIC_ClearPendingIRQ(USIC1_0_IRQn);
+	NVIC_EnableIRQ(USIC1_0_IRQn);
+    } else if(0) {
+	XMC_DMA_Enable(XMC_DMA0);
+	dma0.CH[2].SAR=reinterpret_cast<uint32_t>(&u1c1.RBUF);
+	dma0.CH[2].DAR=reinterpret_cast<uint32_t>(&rx_buffer);
+	dma0.CH[2].CTLH=9;
+	dma0.CH[2].CTLL=gpdma0_ch0_1_ns::ctll_t({{
+	    .int_en=0,
+	    .dst_tr_width=XMC_DMA_CH_TRANSFER_WIDTH_8,
+	    .src_tr_width=XMC_DMA_CH_TRANSFER_WIDTH_8,
+	    .dinc=XMC_DMA_CH_ADDRESS_COUNT_MODE_INCREMENT,
+	    .sinc=XMC_DMA_CH_ADDRESS_COUNT_MODE_NO_CHANGE,
+	    .dest_msize=XMC_DMA_CH_BURST_LENGTH_8,
+	    .src_msize=XMC_DMA_CH_BURST_LENGTH_1,
+	    .src_gather_en=0,
+	    .dst_scatter_en=0,
+	    .tt_fc=XMC_DMA_CH_TRANSFER_FLOW_P2M_PER,
+	    .llp_dst_en=0,
+	    .llp_src_en=0
+	}}).raw;
+	dma0.CH[2].CFGH=gpdma0_ch0_1_ns::cfgh_t({{
+	    .fcmode=0,
+	    .fifo_mode=0,
+	    .protctl=0,
+	    .ds_upd_en=0,
+	    .ss_upd_en=0,
+	    .src_per=4,
+	    .dest_per=0
+	}}).raw;
+	DLR->SRSEL0=12<<16; // usic1.sr0 mapped to channel 4
+	DLR->LNEN=1<<4;
+	dma0.CHENREG=0x101<<3;
+    } else {
+	XMC_DMA_CH_CONFIG_t dma_ch_config;
+	dma_ch_config.enable_interrupt = false;
+	dma_ch_config.priority=XMC_DMA_CH_PRIORITY_0;
+	dma_ch_config.block_size=9;
+	dma_ch_config.transfer_flow = XMC_DMA_CH_TRANSFER_FLOW_P2M_DMA;
+	dma_ch_config.transfer_type = 
+	    XMC_DMA_CH_TRANSFER_TYPE_MULTI_BLOCK_SRCADR_RELOAD_DSTADR_RELOAD;
+
+	dma_ch_config.dst_addr=reinterpret_cast<uint32_t>(rx_buffer);
+	dma_ch_config.dst_transfer_width = XMC_DMA_CH_TRANSFER_WIDTH_8;
+	dma_ch_config.dst_address_count_mode = 
+	    XMC_DMA_CH_ADDRESS_COUNT_MODE_INCREMENT;
+	dma_ch_config.dst_burst_length = XMC_DMA_CH_BURST_LENGTH_8;
+	dma_ch_config.dst_handshaking = XMC_DMA_CH_DST_HANDSHAKING_SOFTWARE;
+	dma_ch_config.dst_peripheral_request = 0;
+	dma_ch_config.enable_dst_scatter=0;
+	dma_ch_config.dst_scatter_control=0;
+
+	dma_ch_config.src_addr=reinterpret_cast<uint32_t>(&XMC_UART0_CH0->RBUF);
+	dma_ch_config.src_transfer_width = XMC_DMA_CH_TRANSFER_WIDTH_8;
+	dma_ch_config.src_address_count_mode = 
+	    XMC_DMA_CH_ADDRESS_COUNT_MODE_NO_CHANGE;
+	dma_ch_config.src_burst_length = XMC_DMA_CH_BURST_LENGTH_1;
+	dma_ch_config.src_handshaking=XMC_DMA_CH_SRC_HANDSHAKING_HARDWARE;
+	dma_ch_config.src_peripheral_request=
+	    DMA0_PERIPHERAL_REQUEST_USIC1_SR0_0;
+	dma_ch_config.enable_src_gather=0;
+	dma_ch_config.src_gather_control=0;
+
+	dma_ch_config.linked_list_pointer=0;
+	XMC_DMA_CH_Init(XMC_DMA0, 2, &dma_ch_config);
+    }
+
+    XMC_UART_CH_Start(XMC_UART0_CH0);
+    XMC_UART_CH_Start(XMC_UART1_CH1);
+}

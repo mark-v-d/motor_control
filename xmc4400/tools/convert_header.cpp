@@ -32,8 +32,11 @@ void print_output(ostream &s, string const &n)
 	s   << "    operator XMC_CCU8_MODULE_t*() { return CCU8" << m[1] << "; }\n"
 	    << "    operator XMC_CCU8_SLICE_t*() { return CCU8" << m[1] << "_CC8" << m[2] << ";}\n"
 	    << "    operator uint8_t() { return " << m[2] << "; }\n"
-	    << "    enum { module=" <<m[1] << ", slice=" << m[2] << "};\n"
-	    << "    void operator=(uint32_t i) { CCU80_CC8" << m[2] << "->CR" << atoi(m[3].str().c_str())/2+1 << "S=i; }\n";
+	    << "    enum { module=" << m[1] << ", slice=" << m[2] << "};\n"
+	    << "    void operator=(uint32_t i) { CCU80_CC8" << m[2] << "->CR" 
+	    << atoi(m[3].str().c_str())/2+1 << "S=i; }\n";
+    } else if(regex_search(n, m, regex("U([01])C([01])_"))) {
+	s   << "    operator XMC_USIC_CH_t*(void) { return XMC_UART" << m[1] << "_CH" << m[2] << ";}\n";
     }
     s << "};\n";
 }
@@ -43,10 +46,11 @@ void print_output(ostream &s, string const &name, string const &instance, string
     s   << "template <>\n"
 	<< "inline " << name << '<' << instance << ">::" << name;
     if(regex_search(method, regex("HWCTRL")))
-	s << "(void)\n{\n    set(" << method << ");\n}\n";
+	s << "(void)\n{\n    set(" << method << ");\n";
     else
 	s << "(void)\n{\n    set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL | " << method << "));\n"
-	"    set(XMC_GPIO_HWCTRL_DISABLED);\n}\n";
+	"    set(XMC_GPIO_HWCTRL_DISABLED);\n";
+    s << "}\n";
 }
 
 void flush_output_pin(void)

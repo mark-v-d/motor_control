@@ -62,23 +62,37 @@ pwm_3phase::pwm_3phase(A &HB0, B& HB1, C &HB2, unsigned frequency)
 	}};
 	if(i==internal_slice) {
 	    cc.PRS=4*pwm_period-1;
-	    cc.INTE=INTE_t{.ONE_MATCH=1};
-	    cc.SRS=SRS_t{.POSR=1};	// Match to CC8ySR1 (route to U0C0.DX2F)
+	    cc.INTE=INTE_t{{
+		.PERIOD_MATCH=0,
+		.ONE_MATCH=1,		// Encoder transmit
+		.COMPARE1_MATCH_UP=1	// Control loop
+	    }};
+	    cc.SRS=SRS_t{{
+		.POSR=1,      	// Match to CC8ySR1 (route to U0C0.DX2F)
+		.CM1SR=0	// Control loop ISR
+	    }};	
+	    cc.CR1S=SystemCoreClock/22000; // Encoder data should have arrived
 	} else 
 	    cc.PRS=pwm_period-1;
     }
 
     // Start timers and enable interrupt.
     if(!module) {
-	NVIC_SetPriority(CCU80_1_IRQn, 
-	    NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 63, 0));
+	uint32_t group=NVIC_GetPriorityGrouping();
+	uint32_t encode=NVIC_EncodePriority(group, 63, 0);
+	NVIC_SetPriority(CCU80_1_IRQn, encode);
+	NVIC_SetPriority(CCU80_0_IRQn, encode);
 	NVIC_EnableIRQ(CCU80_1_IRQn);
+	NVIC_EnableIRQ(CCU80_0_IRQn);
 	SCU_GENERAL->CCUCON|=SCU_GENERAL_CCUCON_GSC80_Msk;
 	SCU_GENERAL->CCUCON&=~SCU_GENERAL_CCUCON_GSC80_Msk;
     } else {
 	NVIC_SetPriority(CCU81_1_IRQn, 
 	    NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 63, 0));
 	NVIC_EnableIRQ(CCU80_1_IRQn);
+	NVIC_SetPriority(CCU81_0_IRQn, 
+	    NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 63, 0));
+	NVIC_EnableIRQ(CCU80_0_IRQn);
 	SCU_GENERAL->CCUCON|=SCU_GENERAL_CCUCON_GSC81_Msk;
 	SCU_GENERAL->CCUCON&=~SCU_GENERAL_CCUCON_GSC81_Msk;
     }

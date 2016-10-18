@@ -6,12 +6,18 @@
 #include <xmc_eth_mac.h>
 #include <xmc_ccu8.h>
 #include <xmc_uart.h>
+#include <xmc_dma.h>
 
 struct XMC_GPIO_PORT_padded:public XMC_GPIO_PORT
 {
   __I  uint32_t  RESERVED5[34];
 };
 extern XMC_GPIO_PORT_padded gpio_port[15];
+extern XMC_DMA_t dma0;
+extern XMC_USIC_CH_t u0c0;
+extern XMC_USIC_CH_t u0c1;
+extern XMC_USIC_CH_t u1c0;
+extern XMC_USIC_CH_t u1c1;
 
 namespace iopin {
 

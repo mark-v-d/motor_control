@@ -36,14 +36,14 @@ struct __attribute__ ((__packed__)) icmp_echo_t:public icmp_t {
 struct __attribute__ ((__packed__)) udp_t:public ipv4_t {
     uint16_t src_port;
     uint16_t dst_port;
-    uint16_t length;
+    uint16_t udp_length;
     uint16_t checksum;
 };
 
 struct __attribute__ ((__packed__)) ptp_v2_t:public udp_t {
     uint8_t	transport_id;
     uint8_t	version;
-    uint16_t	length;
+    uint16_t	ptp_length;
     uint8_t	subdomain;
     uint8_t	reserved;
     uint16_t	flags;
@@ -81,3 +81,8 @@ union packet {
     ptp_v2_t ptp_v2;
     udp_payload_t udp_payload;
 };
+
+inline uint16_t hton(uint16_t i)
+{
+    return (i>>8)|(i<<8);
+}

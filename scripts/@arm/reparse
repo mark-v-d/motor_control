@@ -38,7 +38,7 @@ awk '
 			result=result sprintf("%s:", clean_name(a[x]));
 		return result;
 	}
-	function clean_struct(var, result, b, i, c)
+	function clean_struct(var, result, b, i, c, tag_counter)
 	{
 		result="\"size\", " clean_byte_size(var)
 		if(object[var] ~ /DW_TAG_union_type/)
@@ -46,17 +46,21 @@ awk '
 		else
 			result=result ", \"structure\", struct("
 		split(branches[var],b)
+		tag_counter=0;
 		for(i in b) {
-			if(object[b[i]] ~ /DW_TAG_member/) {
-			if(i>1)
-				c=","
-			else
-				c=""
-			result=result sprintf("%s\n\t\"%s\", struct(%s)",
-				c,
-				clean_name(b[i]),
-				clean_type(b[i]));
-			}
+			print "# i=" i " object[b[i]]=" object[b[i]]
+			if(object[b[i]] ~ /DW_TAG_member/\
+				|| object[b[i]] ~ /DW_TAG_inheritance/\
+			) {
+				if(tag_counter++>1)
+					c=","
+				else
+					c=""
+				result=result sprintf("%s\n\t\"%s\", struct(%s)",
+					c,
+					clean_name(b[i]),
+					clean_type(b[i]));
+			} 
 		}
 		return result ")"
 
@@ -134,6 +138,7 @@ awk '
 	/DW_AT_/ {
 		attributes[$2]=1; # Make a list of known attributes
 		attribute[obj "." $2]=gensub(/^[^:]+: /,"","1",$0);
+		next;
 	}
 	/DW_TAG_/ {
 		# New object

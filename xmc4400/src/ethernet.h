@@ -2,6 +2,7 @@
 #define ETHERNET_H
 
 #include <array>
+#include <map>
 #include <atomic>
 #include "gpio.h"
 #include "packet.h"
@@ -117,6 +118,8 @@ public:
 	virtual void Received(Ethernet*,descriptor const&)=0;
     }; 
 
+    std::array<std::pair<uint16_t,Receiver*>,10> udp;
+
 private:
 
     static Ethernet *instance;
@@ -155,6 +158,7 @@ public:
     );
 
     int transmit(Transmitter *tx,void *data,size_t size);
+    void add_udp(Receiver *rx,int16_t port) { udp[0].first=port; udp[0].second=rx; }
 
 private:
     void FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control);

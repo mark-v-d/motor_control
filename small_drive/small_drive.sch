@@ -1437,7 +1437,7 @@ Text Label 2050 7750 0    60   ~ 0
 ETH0_RXD1A
 Text Label 2050 7650 0    60   ~ 0
 ETH0_RXERA
-Text Label 2100 7550 0    60   ~ 0
+Text Label 2050 7550 0    60   ~ 0
 ETH0_TX_EN
 Text Label 2100 11650 0    60   ~ 0
 HB0
@@ -5176,7 +5176,7 @@ SWDIO
 Text Label 2600 9600 0    60   ~ 0
 SWCLK
 Text Notes 4950 14000 0    60   ~ 0
-MAX3096 package too big.\nUpdate ethernet jack\nAdd pullup to ETH0_MDIO
+MAX3096 package too big.\nUpdate ethernet jack\nAdd pullup to ETH0_MDIO\nENC_Z and ENC_RXD2 swapped
 Text Label 10100 12400 0    60   ~ 0
 ENC_TXN
 Text Label 10100 12500 0    60   ~ 0

@@ -178,9 +178,9 @@ XMC_USIC_CH_STATUS_t XMC_USIC_CH_SetBaudrate(XMC_USIC_CH_t *const channel, uint3
 }
 
 void XMC_USIC_CH_ConfigExternalInputSignalToBRG(XMC_USIC_CH_t *const channel,
-		                                        const uint16_t pdiv,
-												const uint32_t oversampling,
-												const XMC_USIC_CH_INPUT_COMBINATION_MODE_t combination_mode)
+                                const uint16_t pdiv,
+				const uint32_t oversampling,
+				const XMC_USIC_CH_INPUT_COMBINATION_MODE_t combination_mode)
 {
   XMC_ASSERT("XMC_USIC_CH_ConfigExternalInputSignalToBRG: Divider out of range", ((1U < pdiv) || (pdiv < 1024U)));
   XMC_ASSERT("XMC_USIC_CH_ConfigExternalInputSignalToBRG: Oversampling out of range", ((1U < oversampling) || (oversampling < 32U)));
