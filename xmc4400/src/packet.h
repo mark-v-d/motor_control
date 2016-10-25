@@ -8,7 +8,8 @@ struct __attribute__ ((__packed__)) ethernet_t {
     void return_to_src(void) { std::swap(src_mac,dst_mac); }
 };
 
-struct __attribute__ ((__packed__)) ipv4_t:public ethernet_t {
+struct __attribute__ ((__packed__)) ipv4_header_t {
+    enum { UDP=0x11 };
     uint8_t version_headerlength;
     uint8_t services;
     uint16_t length;
@@ -21,7 +22,14 @@ struct __attribute__ ((__packed__)) ipv4_t:public ethernet_t {
     uint8_t dst_ip[4];
 };
 
+struct __attribute__ ((__packed__)) ipv4_t:
+    public ethernet_t, 
+    public ipv4_header_t 
+{
+};
+
 struct __attribute__ ((__packed__)) icmp_t:public ipv4_t {
+    enum { UNREACHABLE=3, ECHO=8 };
     uint8_t type;
     uint8_t code;
     uint16_t icmp_checksum;
@@ -33,11 +41,24 @@ struct __attribute__ ((__packed__)) icmp_echo_t:public icmp_t {
     uint8_t payload[56];
 };
 
-struct __attribute__ ((__packed__)) udp_t:public ipv4_t {
+struct __attribute__ ((__packed__)) icmp_unreachable_t:public icmp_t {
+    ipv4_header_t ipv4; 
+};
+
+struct __attribute__ ((__packed__)) udp_header_t {
     uint16_t src_port;
     uint16_t dst_port;
     uint16_t udp_length;
     uint16_t checksum;
+};
+
+struct __attribute__ ((__packed__)) udp_t:public ipv4_t, public udp_header_t {
+};
+
+struct __attribute__ ((__packed__)) icmp_unreachable_udp_t:
+    public icmp_unreachable_t
+{
+    udp_header_t udp;
 };
 
 struct __attribute__ ((__packed__)) ptp_v2_t:public udp_t {
@@ -76,6 +97,8 @@ union packet {
     ipv4_t ipv4;
     icmp_t icmp;
     icmp_echo_t icmp_echo;
+    icmp_unreachable_t icmp_unreachable;
+    icmp_unreachable_udp_t icmp_unreachable_udp;
     udp_t udp;
     // tcp_t tcp;
     ptp_v2_t ptp_v2;

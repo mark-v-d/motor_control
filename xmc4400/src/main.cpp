@@ -83,7 +83,9 @@ struct position_HC_PQ23_t {
         encoder=(p[2]+256*p[3]);
         angle=float(2*M_PI/1024.0)*encoder;
         rotation=p[5]+0x100*p[6];
-        crc=p[8];
+        crc=p[0];
+        for(int i=1;i<9;i++)
+	    crc^=p[i];
     }
 };
 
@@ -103,6 +105,7 @@ extern "C" void CCU80_0_IRQHandler(void)
     if(counter>4500) {
 	position_HC_PQ23_t pos(rx_buffer);
 	logger.SetEncoder(pos.encoder);
+	logger.EncoderPacket(rx_buffer);
 	logger.transmit(&eth0);
 	counter-=4500;
     }
@@ -131,7 +134,7 @@ int main()
 
     pwm_3phase(HB0,HB1,HB2,18000);
 
-    eth0.add_udp(&logger,1);
+    eth0.add_udp_receiver(&logger,1);
 
     counter=0;
     ENC_5V=1;

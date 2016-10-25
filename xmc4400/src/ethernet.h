@@ -111,6 +111,7 @@ public:
     class Transmitter {
     public:
 	virtual void Transmitted(Ethernet*,descriptor const&)=0;
+	virtual void Unreachable(Ethernet*)=0;
     };
 
     class Receiver {
@@ -118,7 +119,9 @@ public:
 	virtual void Received(Ethernet*,descriptor const&)=0;
     }; 
 
-    std::array<std::pair<uint16_t,Receiver*>,10> udp;
+
+    std::map<uint16_t,Receiver*> udp;
+    std::map<uint16_t,Transmitter*> udp_tx;
 
 private:
 
@@ -158,7 +161,14 @@ public:
     );
 
     int transmit(Transmitter *tx,void *data,size_t size);
-    void add_udp(Receiver *rx,int16_t port) { udp[0].first=port; udp[0].second=rx; }
+    void add_udp_receiver(Receiver *rx,int16_t port) { udp[port]=rx; }
+    void add_udp_transmitter(Transmitter *tx,int16_t port) { udp_tx[port]=tx; }
+    void erase_udp_transmitter(Transmitter *tx,int16_t port);
+
+    void Unreachable_udp(uint16_t port) { 
+	if(udp_tx.count(port)) 
+	    udp_tx[port]->Unreachable(this); 
+    }
 
 private:
     void FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control);

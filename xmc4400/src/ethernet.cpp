@@ -212,13 +212,11 @@ void Ethernet::receiveIRQ(void)
     // Handle all packets not owned by the ethernet DMA
     while(!(rxd[rx_get].status & descriptor::OWN)) {
 	switch(rxd[rx_get].packetType()) {
-	case descriptor::UDP:
-	    for(auto p: udp) {
-		if(rxd[rx_get].buffer->udp.dst_port!=p.first)
-		    continue;
-		p.second->Received(this,rxd[rx_get]);
-	    }
-	    break;
+	case descriptor::UDP: {
+	    uint16_t port=rxd[rx_get].buffer->udp.dst_port;
+	    if(udp.count(port))
+		udp[port]->Received(this,rxd[rx_get]);
+	    } break;
 	case descriptor::ICMP:                               
 	    if(icmpHandler)                      
 		icmpHandler->Received(this,rxd[rx_get]);
@@ -248,6 +246,12 @@ int Ethernet::transmit(
 
 void Ethernet::transmitIRQ(void)
 {
+}
+
+void Ethernet::erase_udp_transmitter(Transmitter *tx,int16_t port)
+{
+    if(udp_tx.count(port) && udp_tx[port]==tx)
+	udp_tx.erase(port);
 }
 
 inline void ETH0_0_IRQHandler(uint32_t event)

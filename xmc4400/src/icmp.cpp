@@ -9,12 +9,21 @@ void icmpProcessing::Received(
     Ethernet::descriptor const &desc
 ) {
     pkt=desc.buffer->icmp_echo;
-    swap(pkt.dst_mac,pkt.src_mac);
-    swap(pkt.dst_ip,pkt.src_ip); 
-    pkt.type=0; // ICMP_ECHO_REPLY;
-    pkt.ipv4_checksum=0;
-    pkt.icmp_checksum=0;
-    eth->transmit(this,&pkt,(0x3fff&(desc.status>>16))-4);
+    switch(pkt.type) {
+    case icmp_t::ECHO:
+	swap(pkt.dst_mac,pkt.src_mac);
+	swap(pkt.dst_ip,pkt.src_ip); 
+	pkt.type=0; // ICMP_ECHO_REPLY;
+	pkt.ipv4_checksum=0;
+	pkt.icmp_checksum=0;
+	eth->transmit(this,&pkt,(0x3fff&(desc.status>>16))-4);
+	break;
+    case icmp_t::UNREACHABLE: {
+	auto pkt=desc.buffer->icmp_unreachable_udp; 
+	if(pkt.ipv4.protocol==ipv4_t::UDP)
+	    eth->Unreachable_udp(pkt.udp.dst_port);
+	} break;
+    }
 }
 
 void icmpProcessing::Transmitted(
