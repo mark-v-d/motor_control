@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -37,9 +38,17 @@ int main(int argc, char **argv)
 	    struct {
 		uint32_t counter;
 		uint32_t encoder;
+		uint8_t enc_raw[9];
 	    };
 	} d;
 	int  len=recv(s,&d,sizeof(d),0);
-	std::cout << "ack " << len << " " << d.counter << " " << d.encoder << std::endl;
+	std::cout << "ack " << std::dec << len << " " << d.counter << " " << std::setw(5) << d.encoder;
+	std::cout << std::hex;
+	uint16_t checksum=0xff;
+	for(int i=0;i<sizeof(d.enc_raw);i++) {
+	    std::cout << " 0x" << std::setw(2) << int(d.enc_raw[i]);
+	    checksum^=d.enc_raw[i];
+	}
+	std::cout << " checksum=" << checksum << std::endl;
     }
 }
