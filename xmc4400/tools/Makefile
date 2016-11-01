@@ -1,4 +1,4 @@
-CXXFLAGS=-std=c++11 -g
+CXXFLAGS=-std=c++14 -g
 
 convert_header: convert_header.cpp
 

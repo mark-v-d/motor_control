@@ -86,10 +86,12 @@ struct position_HC_PQ23_t {
         crc=p[0];
         for(int i=1;i<9;i++)
 	    crc^=p[i];
+	// crc should be 0
     }
 };
 
 uint8_t rx_buffer[20] __attribute__((section ("ETH_RAM")));
+uint8_t *putp;
 
 udp_logger logger __attribute__((section ("ETH_RAM")));
 
@@ -109,20 +111,22 @@ extern "C" void CCU80_0_IRQHandler(void)
 	logger.transmit(&eth0);
 	counter-=4500;
     }
+    putp=rx_buffer;
     LED2=1;
 }
 
-uint8_t *putp;
 extern "C" void CCU80_1_IRQHandler(void)
 {
-    XMC_UART_CH_Transmit(XMC_UART0_CH0, 0x1a);
-    putp=rx_buffer;
+    //XMC_UART_CH_Transmit(XMC_UART0_CH0, 0x1a);
+    //putp=rx_buffer;
 }
 
 extern "C" void USIC1_0_IRQHandler(void)
 {
-    // u1c1.PSCR=u1c1.PSR;
+    LED3=0;
+    u1c1.PSCR=u1c1.PSR;
     *putp++=u1c1.RBUF;
+    LED3=1;
 }
 
 
@@ -146,6 +150,7 @@ int main()
 
     XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
 
+    for(;;);
     int t=0;
     while (1) {
         if(counter>500) {
@@ -200,7 +205,25 @@ void uart_init(void)
     XMC_UART_CH_SelectInterruptNodePointer(XMC_UART1_CH1, 
 	XMC_UART_CH_INTERRUPT_NODE_POINTER_RECEIVE, 0);
 
+    if(1) { // timer trigger
+	usic_ch_ns::tcsr_t tcsr;
+	tcsr.raw=u0c0.TCSR;
+	tcsr.tdssm=0;
+	tcsr.tdvtr=1;
+	u0c0.TCSR=tcsr.raw;
+
+	usic_ch_ns::dx2cr_t dx2cr; dx2cr.raw=0;
+	dx2cr.insw=1;
+	dx2cr.cm=1;
+	dx2cr.dsel=USIC0_C0_DX2_CCU80_SR1;
+	u0c0.DXCR[2]=dx2cr.raw;
+
+	u0c0.TBUF[0]=0x1a;
+    }
+
+
     if(1) {
+	// No  DMA
 	NVIC_SetPriority(USIC1_0_IRQn,  0);
 	NVIC_ClearPendingIRQ(USIC1_0_IRQn);
 	NVIC_EnableIRQ(USIC1_0_IRQn);

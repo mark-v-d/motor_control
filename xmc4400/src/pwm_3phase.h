@@ -1,5 +1,6 @@
 #include <array>
 #include <xmc_scu.h>
+#include <xmc_vadc.h>
 
 class pwm_3phase {
     uint32_t pwm_period;
@@ -95,5 +96,23 @@ pwm_3phase::pwm_3phase(A &HB0, B& HB1, C &HB2, unsigned frequency)
 	NVIC_EnableIRQ(CCU80_0_IRQn);
 	SCU_GENERAL->CCUCON|=SCU_GENERAL_CCUCON_GSC81_Msk;
 	SCU_GENERAL->CCUCON&=~SCU_GENERAL_CCUCON_GSC81_Msk;
+    }
+
+    { // ADC
+	XMC_VADC_GLOBAL_CONFIG_t g_global_config={
+	    {{
+		.boundary0=0,
+		.boundary1=0
+	    }},
+	    #if 0
+	    .clock_config={
+		 .analog_clock_divider  = 3,
+		 .msb_conversion_clock  = 0,
+		 .arbiter_clock_divider = 1
+	    }
+	    #endif
+
+	};
+	XMC_VADC_GLOBAL_Init(VADC, &g_global_config);
     }
 }

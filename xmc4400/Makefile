@@ -8,7 +8,7 @@ else
 endif
 
 OBJS=main.o startup_$(DEVICE).o system_$(DEVICE).o ethernet.o icmp.o system.o 
-OBJS+=xmc4_scu.o xmc_ccu8.o xmc_usic.o xmc_uart.o xmc4_gpio.o xmc_dma.o
+OBJS+=xmc4_scu.o xmc_ccu8.o xmc_usic.o xmc_uart.o xmc4_gpio.o xmc_dma.o xmc_vadc.o
 # xmc_eth_mac.o 
 # xmc_eth_phy_ksz8031rnl.o
 
@@ -38,7 +38,7 @@ CPPFLAGS+=-D $(DEVICE)_$(PACKAGE)x$(MEMORY)
 CPU = -g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 CFLAGS   += $(CPU)
-CXXFLAGS += $(CPU) -std=c++11 -O
+CXXFLAGS += $(CPU) -std=c++14 -O
 ASFLAGS  += $(CPU)
 LDFLAGS  += $(CPU)
 
