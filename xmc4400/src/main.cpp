@@ -11,6 +11,7 @@
 #include "ccu8.h"
 #include "pwm_3phase.h"
 #include "udp_logger.h"
+#include "bitfields.h"
 
 
 
@@ -111,6 +112,18 @@ extern "C" void CCU80_0_IRQHandler(void)
 	logger.transmit(&eth0);
 	counter-=4500;
     }
+    if(!(dma0.CHENREG&1<<2)) {
+	LED3=0;
+	usic_ch_ns::trbscr_t trbscr;
+	trbscr.flushrb=1;
+	// u0c0.TRBSCR=trbscr.raw;
+	u1c1.RBUF==0;
+
+	dma0.CH[2].CTLH=9;
+	dma0.CH[2].DAR=reinterpret_cast<uint32_t>(&rx_buffer);
+	dma0.CHENREG=0x101<<2;
+	LED3=1;
+    }
     putp=rx_buffer;
     LED2=1;
 }
@@ -182,8 +195,8 @@ void __gnu_cxx::__verbose_terminate_handler(void)
     }
 }
 
-#include "bitfields.h"
 
+void init_adc(void);
 void uart_init(void)
 {
     XMC_UART_CH_CONFIG_t uart_config = {
@@ -221,13 +234,13 @@ void uart_init(void)
 	u0c0.TBUF[0]=0x1a;
     }
 
-
     if(1) {
 	// No  DMA
 	NVIC_SetPriority(USIC1_0_IRQn,  0);
 	NVIC_ClearPendingIRQ(USIC1_0_IRQn);
 	NVIC_EnableIRQ(USIC1_0_IRQn);
-    } else if(0) {
+    } else if(1) {
+	// USIC1 SR0 -> DMA0[2]
 	XMC_DMA_Enable(XMC_DMA0);
 	dma0.CH[2].SAR=reinterpret_cast<uint32_t>(&u1c1.RBUF);
 	dma0.CH[2].DAR=reinterpret_cast<uint32_t>(&rx_buffer);
@@ -238,11 +251,11 @@ void uart_init(void)
 	    .src_tr_width=XMC_DMA_CH_TRANSFER_WIDTH_8,
 	    .dinc=XMC_DMA_CH_ADDRESS_COUNT_MODE_INCREMENT,
 	    .sinc=XMC_DMA_CH_ADDRESS_COUNT_MODE_NO_CHANGE,
-	    .dest_msize=XMC_DMA_CH_BURST_LENGTH_8,
+	    .dest_msize=XMC_DMA_CH_BURST_LENGTH_1,
 	    .src_msize=XMC_DMA_CH_BURST_LENGTH_1,
 	    .src_gather_en=0,
 	    .dst_scatter_en=0,
-	    .tt_fc=XMC_DMA_CH_TRANSFER_FLOW_P2M_PER,
+	    .tt_fc=XMC_DMA_CH_TRANSFER_FLOW_P2M_DMA,
 	    .llp_dst_en=0,
 	    .llp_src_en=0
 	}}).raw;
@@ -255,43 +268,147 @@ void uart_init(void)
 	    .src_per=4,
 	    .dest_per=0
 	}}).raw;
+	dma0.CH[2].CFGL=gpdma0_ch0_1_ns::cfgl_t({{
+	    .ch_prior=0,
+	    .ch_susp=0,
+	    .fifo_empty=0,
+	    .hs_sel_dst=0,
+	    .hs_sel_src=0,
+	    .lock_ch_l=0,
+	    .lock_b_l=0,
+	    .lock_ch=0,
+	    .lock_b=0,
+	    .dst_hs_pol=0,
+	    .src_hs_pol=0,
+	    .max_abrst=0,
+	    .reload_src=0,
+	    .reload_dst=0
+	}}).raw;
 	DLR->SRSEL0=12<<16; // usic1.sr0 mapped to channel 4
 	DLR->LNEN=1<<4;
-	dma0.CHENREG=0x101<<3;
-    } else {
-	XMC_DMA_CH_CONFIG_t dma_ch_config;
-	dma_ch_config.enable_interrupt = false;
-	dma_ch_config.priority=XMC_DMA_CH_PRIORITY_0;
-	dma_ch_config.block_size=9;
-	dma_ch_config.transfer_flow = XMC_DMA_CH_TRANSFER_FLOW_P2M_DMA;
-	dma_ch_config.transfer_type = 
-	    XMC_DMA_CH_TRANSFER_TYPE_MULTI_BLOCK_SRCADR_RELOAD_DSTADR_RELOAD;
+	dma0.CHENREG=0x101<<2;
+    } 
 
-	dma_ch_config.dst_addr=reinterpret_cast<uint32_t>(rx_buffer);
-	dma_ch_config.dst_transfer_width = XMC_DMA_CH_TRANSFER_WIDTH_8;
-	dma_ch_config.dst_address_count_mode = 
-	    XMC_DMA_CH_ADDRESS_COUNT_MODE_INCREMENT;
-	dma_ch_config.dst_burst_length = XMC_DMA_CH_BURST_LENGTH_8;
-	dma_ch_config.dst_handshaking = XMC_DMA_CH_DST_HANDSHAKING_SOFTWARE;
-	dma_ch_config.dst_peripheral_request = 0;
-	dma_ch_config.enable_dst_scatter=0;
-	dma_ch_config.dst_scatter_control=0;
-
-	dma_ch_config.src_addr=reinterpret_cast<uint32_t>(&XMC_UART0_CH0->RBUF);
-	dma_ch_config.src_transfer_width = XMC_DMA_CH_TRANSFER_WIDTH_8;
-	dma_ch_config.src_address_count_mode = 
-	    XMC_DMA_CH_ADDRESS_COUNT_MODE_NO_CHANGE;
-	dma_ch_config.src_burst_length = XMC_DMA_CH_BURST_LENGTH_1;
-	dma_ch_config.src_handshaking=XMC_DMA_CH_SRC_HANDSHAKING_HARDWARE;
-	dma_ch_config.src_peripheral_request=
-	    DMA0_PERIPHERAL_REQUEST_USIC1_SR0_0;
-	dma_ch_config.enable_src_gather=0;
-	dma_ch_config.src_gather_control=0;
-
-	dma_ch_config.linked_list_pointer=0;
-	XMC_DMA_CH_Init(XMC_DMA0, 2, &dma_ch_config);
-    }
+    init_adc();
 
     XMC_UART_CH_Start(XMC_UART0_CH0);
     XMC_UART_CH_Start(XMC_UART1_CH1);
+}
+
+void init_adc(void)
+{
+    XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_VADC);
+    XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_VADC);
+    vadc.CLC=0;
+    vadc.GLOBCFG=vadc_ns::globcfg_t({{
+	.diva=3,
+	.dcmsb=0,
+	.divd=1,
+	.divwc=1,
+	.dp_cal0=0,
+	.dp_cal1=0,
+	.dp_cal2=0,
+	.dp_cal3=0,
+	.sucal=0
+    }}).raw;
+    vadc.GLOBICLASS[0]=vadc_g_ns::iclass_t({{
+	.stcs=0,	// no additional cycles
+	.cms=0,		// 12-bit conversion
+	.stce=0,	// dnc
+	.cme=0		// dnc
+    }}).raw;
+    vadc.GLOBRCR=vadc_g_ns::rcr_t({{
+	.drctr=0,	// tbd
+	.dmm=0,	// not used
+	.wfr=0,	// overwrite
+	.fen=0,	// not used
+	.srgen=0	// no service request
+    }}).raw;
+
+    for(int i=0;i<4;i++) {
+	// Channel control
+	vadc.G[i].CHCTR[0]=vadc_g_ns::chctr_t({{
+	    .iclsel=2,	// global class 0
+	    .bndsell=0,	// dnc
+	    .bndselu=0,	// dnc
+	    .chevmode=0,		// no event
+	    .sync=1,
+	    .refsel=0,
+	    .resreg=0,
+	    .restbs=0,
+	    .respos=0,
+	    .bwdch=0,
+	    .bwden=0
+	}}).raw;
+	vadc.G[i].RCR[0]=vadc_g_ns::rcr_t({{
+	    .drctr=3,	// 4 results
+	    .dmm=0,	// accumulation 
+	    .wfr=0,	// overwrite
+	    .fen=0,	// seperate result
+	    .srgen=0	// no service request
+	}}).raw;
+	if(i) {
+	    // slave
+	    vadc.G[i].SYNCTR=vadc_g_ns::synctr_t({{
+		.stsel=1,	// synchronise to G0
+		.evalr1=0,
+		.evalr2=0,
+		.evalr3=0
+	    }}).raw;
+	} else { 
+	    // master
+	    // Arbiter, only queued mode is enabled
+	    vadc.G[i].ARBPR=vadc_g_ns::arbpr_t({{
+		.prio0=3,
+		.csm0=1,
+		.prio1=0,
+		.csm1=0,
+		.prio2=0,
+		.csm2=0,
+		.asen0=1,
+		.asen1=0,
+		.asen2=0
+	    }}).raw;
+	    vadc.G[i].QMR0=vadc_g_ns::qmr0_t({{
+		.engt=1,
+		.entr=1,
+		.clrv=0,
+		.trev=0,
+		.flush=0,
+		.cev=0,
+		.rptdis=0
+	    }}).raw;
+	    vadc.G[i].QINR0=vadc_g_ns::qinr0_t({{
+		.reqchnr=0,
+		.rf=1,
+		.ensi=0,
+		.extr=0,
+		
+	    }}).raw;
+	    vadc.G[i].SYNCTR=vadc_g_ns::synctr_t({{
+		.stsel=0,	// Master
+		.evalr1=1,
+		.evalr2=1,
+		.evalr3=1
+	    }}).raw;
+	    vadc.G[i].QCTRL0=vadc_g_ns::qctrl0_t({{
+		.srcresreg=0,	// Use CHCTR.resreg
+		.xtsel=8, 	// CCU80::SR2
+		.xtlvl=0,
+		.xtmode=2,
+		.xtwc=1,
+		.gtsel=0,
+		.gtlvl=0,
+		.gtwc=0,
+		.tmen=0,	// Uncertain
+		.tmwc=1
+	    }}).raw;
+	}
+    }
+    vadc.G[0].ARBCFG=vadc_g_ns::arbcfg_t({{
+	.anonc=3,	// permanently on (master/standalone mode)
+	.arbrnd=0,	// 4 slots per round
+	.arbm=0,	// arbiter runs permanently
+	.anons=3	// G0 is the master
+    }}).raw;
 }

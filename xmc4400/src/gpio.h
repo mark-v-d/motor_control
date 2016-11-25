@@ -19,6 +19,16 @@ extern XMC_USIC_CH_t u0c1;
 extern XMC_USIC_CH_t u1c0;
 extern XMC_USIC_CH_t u1c1;
 
+struct VADC_complete_t:public VADC_GLOBAL_TypeDef 
+{
+    __I uint32_t RESERVED5[3];
+    struct group:public VADC_G_TypeDef
+    {
+	__I uint32_t RESERVED[16];
+    } G[4];
+};
+extern VADC_complete_t vadc;
+
 namespace iopin {
 
 template <int port, int pin>

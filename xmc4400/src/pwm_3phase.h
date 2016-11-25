@@ -73,15 +73,25 @@ pwm_3phase::pwm_3phase(A &HB0, B& HB1, C &HB2, unsigned frequency)
 		.CM1SR=0	// Control loop ISR
 	    }};	
 	    cc.CR1S=SystemCoreClock/22000; // Encoder data should have arrived
-	} else 
+	} else {
+	    if((internal_slice==0 && i==1) || i==0) {
+		cc.INTE=INTE_t{{
+		    .PERIOD_MATCH=0,
+		    .ONE_MATCH=1		// Trigger ADC
+		}};
+		cc.SRS=SRS_t{{
+		    .POSR=2,      // Match to CC8ySR2 (route to ADC)
+		}};	
+	    }
 	    cc.PRS=pwm_period-1;
+	}
     }
 
     // Start timers and enable interrupt.
     if(!module) {
 	uint32_t group=NVIC_GetPriorityGrouping();
 	uint32_t encode=NVIC_EncodePriority(group, 63, 0);
-	NVIC_SetPriority(CCU80_1_IRQn, encode);
+	// NVIC_SetPriority(CCU80_1_IRQn, encode);
 	NVIC_SetPriority(CCU80_0_IRQn, encode);
 	NVIC_EnableIRQ(CCU80_1_IRQn);
 	NVIC_EnableIRQ(CCU80_0_IRQn);
@@ -90,7 +100,7 @@ pwm_3phase::pwm_3phase(A &HB0, B& HB1, C &HB2, unsigned frequency)
     } else {
 	NVIC_SetPriority(CCU81_1_IRQn, 
 	    NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 63, 0));
-	NVIC_EnableIRQ(CCU80_1_IRQn);
+	// NVIC_EnableIRQ(CCU80_1_IRQn);
 	NVIC_SetPriority(CCU81_0_IRQn, 
 	    NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 63, 0));
 	NVIC_EnableIRQ(CCU80_0_IRQn);
