@@ -77,7 +77,7 @@ pwm_3phase::pwm_3phase(A &HB0, B& HB1, C &HB2, unsigned frequency)
 	    if((internal_slice==0 && i==1) || i==0) {
 		cc.INTE=INTE_t{{
 		    .PERIOD_MATCH=0,
-		    .ONE_MATCH=1		// Trigger ADC
+		    .ONE_MATCH=1,		// Trigger ADC
 		}};
 		cc.SRS=SRS_t{{
 		    .POSR=2,      // Match to CC8ySR2 (route to ADC)
@@ -108,21 +108,4 @@ pwm_3phase::pwm_3phase(A &HB0, B& HB1, C &HB2, unsigned frequency)
 	SCU_GENERAL->CCUCON&=~SCU_GENERAL_CCUCON_GSC81_Msk;
     }
 
-    { // ADC
-	XMC_VADC_GLOBAL_CONFIG_t g_global_config={
-	    {{
-		.boundary0=0,
-		.boundary1=0
-	    }},
-	    #if 0
-	    .clock_config={
-		 .analog_clock_divider  = 3,
-		 .msb_conversion_clock  = 0,
-		 .arbiter_clock_divider = 1
-	    }
-	    #endif
-
-	};
-	XMC_VADC_GLOBAL_Init(VADC, &g_global_config);
-    }
 }

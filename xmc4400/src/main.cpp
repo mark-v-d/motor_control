@@ -11,6 +11,7 @@
 #include "ccu8.h"
 #include "pwm_3phase.h"
 #include "udp_logger.h"
+#include "udp_poker.h"
 #include "bitfields.h"
 
 
@@ -95,6 +96,7 @@ uint8_t rx_buffer[20] __attribute__((section ("ETH_RAM")));
 uint8_t *putp;
 
 udp_logger logger __attribute__((section ("ETH_RAM")));
+udp_poker poker __attribute__((section ("ETH_RAM")));
 
 extern "C" void SysTick_Handler(void)
 {
@@ -105,25 +107,19 @@ extern "C" void CCU80_0_IRQHandler(void)
 {
     LED2=0;
     counter++;
-    if(counter>4500) {
-	position_HC_PQ23_t pos(rx_buffer);
+    position_HC_PQ23_t pos(rx_buffer);
+    uint32_t adc[4];
+    for(int i=0;i<4;i++)
+	adc[i]=vadc.G[i].RES[0];
+
+    if(counter>=1500) {
+	logger.SetADC(adc[0],adc[1],adc[2],adc[3]);
 	logger.SetEncoder(pos.encoder);
 	logger.EncoderPacket(rx_buffer);
 	logger.transmit(&eth0);
-	counter-=4500;
+	counter-=1500;
     }
-    if(!(dma0.CHENREG&1<<2)) {
-	LED3=0;
-	usic_ch_ns::trbscr_t trbscr;
-	trbscr.flushrb=1;
-	// u0c0.TRBSCR=trbscr.raw;
-	u1c1.RBUF==0;
 
-	dma0.CH[2].CTLH=9;
-	dma0.CH[2].DAR=reinterpret_cast<uint32_t>(&rx_buffer);
-	dma0.CHENREG=0x101<<2;
-	LED3=1;
-    }
     putp=rx_buffer;
     LED2=1;
 }
@@ -142,16 +138,26 @@ extern "C" void USIC1_0_IRQHandler(void)
     LED3=1;
 }
 
+extern "C" void VADC0_G0_0_IRQHandler(void)
+{
+    LED1=0;
+    vadc.G[0].REFCLR=vadc.G[0].REFLAG;
+    LED1=1;
+}
+
 
 extern ETH_GLOBAL_TypeDef eth_debug;
 void uart_init(void);
+void init_adc(void);
 int main()
 {
     SysTick_Config(SystemCoreClock/1000);
 
+    init_adc();
     pwm_3phase(HB0,HB1,HB2,18000);
 
     eth0.add_udp_receiver(&logger,1);
+    eth0.add_udp_receiver(&poker,2);
 
     counter=0;
     ENC_5V=1;
@@ -196,7 +202,6 @@ void __gnu_cxx::__verbose_terminate_handler(void)
 }
 
 
-void init_adc(void);
 void uart_init(void)
 {
     XMC_UART_CH_CONFIG_t uart_config = {
@@ -289,7 +294,6 @@ void uart_init(void)
 	dma0.CHENREG=0x101<<2;
     } 
 
-    init_adc();
 
     XMC_UART_CH_Start(XMC_UART0_CH0);
     XMC_UART_CH_Start(XMC_UART1_CH1);
@@ -297,6 +301,12 @@ void uart_init(void)
 
 void init_adc(void)
 {
+    /*
+	Only channel 0 of the ADCs is used. Group 0 is used in queued mode
+	only and triggered by the timer at the PWM zero crossing.
+	4 results are accumulated in result 1, and put in a fifo to
+	be read at result 0.
+    */
     XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_VADC);
     XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_VADC);
     vadc.CLC=0;
@@ -317,34 +327,35 @@ void init_adc(void)
 	.stce=0,	// dnc
 	.cme=0		// dnc
     }}).raw;
-    vadc.GLOBRCR=vadc_g_ns::rcr_t({{
-	.drctr=0,	// tbd
-	.dmm=0,	// not used
-	.wfr=0,	// overwrite
-	.fen=0,	// not used
-	.srgen=0	// no service request
-    }}).raw;
 
     for(int i=0;i<4;i++) {
 	// Channel control
 	vadc.G[i].CHCTR[0]=vadc_g_ns::chctr_t({{
-	    .iclsel=2,	// global class 0
-	    .bndsell=0,	// dnc
-	    .bndselu=0,	// dnc
-	    .chevmode=0,		// no event
-	    .sync=1,
+	    .iclsel=2,		// global class 0
+	    .bndsell=0,		// dnc
+	    .bndselu=0,		// dnc
+	    .chevmode=0,	// no event
+	    .sync=1,		// Synchronised conversion (G0 master)
 	    .refsel=0,
-	    .resreg=0,
+	    .resreg=1,		// Top of 2 entry fifo
 	    .restbs=0,
 	    .respos=0,
 	    .bwdch=0,
 	    .bwden=0
 	}}).raw;
-	vadc.G[i].RCR[0]=vadc_g_ns::rcr_t({{
+	// Accumulate 4 results
+	vadc.G[i].RCR[1]=vadc_g_ns::rcr_t({{
 	    .drctr=3,	// 4 results
 	    .dmm=0,	// accumulation 
 	    .wfr=0,	// overwrite
-	    .fen=0,	// seperate result
+	    .fen=0,	// top of fifo
+	    .srgen=uint32_t(i==0? 1:0)	// no service request
+	}}).raw;
+	vadc.G[i].RCR[0]=vadc_g_ns::rcr_t({{
+	    .drctr=0,	// 4 results
+	    .dmm=0,	// accumulation 
+	    .wfr=0,	// overwrite
+	    .fen=1,	// part of fifo
 	    .srgen=0	// no service request
 	}}).raw;
 	if(i) {
@@ -382,26 +393,26 @@ void init_adc(void)
 		.reqchnr=0,
 		.rf=1,
 		.ensi=0,
-		.extr=0,
+		.extr=1,
 		
-	    }}).raw;
-	    vadc.G[i].SYNCTR=vadc_g_ns::synctr_t({{
-		.stsel=0,	// Master
-		.evalr1=1,
-		.evalr2=1,
-		.evalr3=1
 	    }}).raw;
 	    vadc.G[i].QCTRL0=vadc_g_ns::qctrl0_t({{
 		.srcresreg=0,	// Use CHCTR.resreg
 		.xtsel=8, 	// CCU80::SR2
 		.xtlvl=0,
-		.xtmode=2,
+		.xtmode=1,
 		.xtwc=1,
 		.gtsel=0,
 		.gtlvl=0,
 		.gtwc=0,
 		.tmen=0,	// Uncertain
 		.tmwc=1
+	    }}).raw;
+	    vadc.G[i].SYNCTR=vadc_g_ns::synctr_t({{
+		.stsel=0,	// Master
+		.evalr1=1,
+		.evalr2=1,
+		.evalr3=1
 	    }}).raw;
 	}
     }
@@ -411,4 +422,7 @@ void init_adc(void)
 	.arbm=0,	// arbiter runs permanently
 	.anons=3	// G0 is the master
     }}).raw;
+    NVIC_SetPriority(VADC0_G0_0_IRQn,  0);
+    NVIC_ClearPendingIRQ(VADC0_G0_0_IRQn);
+    NVIC_EnableIRQ(VADC0_G0_0_IRQn);
 }

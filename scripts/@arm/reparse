@@ -12,7 +12,10 @@ awk '
 	}
 	function clean_byte_size(var)
 	{
-		return gensub(/.*: /,"", "1",attribute[var ".DW_AT_byte_size"]);
+		if(var ".DW_AT_byte_size" in attribute)
+			return gensub(/.*: /,"", "1",attribute[var ".DW_AT_byte_size"]);
+		else
+			return "\"unknown\"";
 	}
 	function clean_encoding(var, enc)
 	{
@@ -29,7 +32,9 @@ awk '
 	}
 	function clean_name(var)
 	{
-		return gensub(/.*: /,"","1",attribute[var ".DW_AT_name"]);
+		if(var ".DW_AT_name" in attribute)
+			return gensub(/.*: /,"","1",attribute[var ".DW_AT_name"]);
+		return "Anonymous";
 	}
 	function clean_scope(var, a, x, result)
 	{
@@ -48,19 +53,22 @@ awk '
 		split(branches[var],b)
 		tag_counter=0;
 		for(i in b) {
-			print "# i=" i " object[b[i]]=" object[b[i]]
-			if(object[b[i]] ~ /DW_TAG_member/\
-				|| object[b[i]] ~ /DW_TAG_inheritance/\
-			) {
-				if(tag_counter++>1)
-					c=","
-				else
-					c=""
+			print "# i=" i " object[b[i]]=" object[b[i]] " tag_counter=" tag_counter
+			if(tag_counter)
+				c=","
+			else
+				c=""
+			if(object[b[i]] ~ /DW_TAG_member/) {
 				result=result sprintf("%s\n\t\"%s\", struct(%s)",
 					c,
 					clean_name(b[i]),
 					clean_type(b[i]));
-			} 
+				tag_counter++;
+			} else if(object[b[i]] ~ /DW_TAG_inheritance/) {
+				result=result sprintf("%s\"inheritance_%d\", struct(\"none\", [])",c,tag_counter++);
+				tag_counter++;
+			}
+			
 		}
 		return result ")"
 
@@ -123,6 +131,8 @@ awk '
 			return "\"size\"," clean_byte_size(var) \
 				", \"encoding\",\"" clean_encoding(var) \
 				"\""
+		case /DW_TAG_inheritance/:
+			return "DW_TAG_inheritance";
 		case /DW_TAG_enumeration_type/:
 			return clean_type(type) ", " clean_enumeration(var);
 		default:

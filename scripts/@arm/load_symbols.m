@@ -10,7 +10,9 @@ end
 function var=add_decoding(var)
 	for x=fieldnames(var)'
 		name=x{1};
-		if isfield(var.(name).type,"structure") 
+		if !isfield(var.(name),"type") || !isfield(var.(name).type,"encoding")
+			continue;
+		elseif isfield(var.(name).type,"structure") 
 			var.(name).decode="structure";
 			var.(name).type.structure= ...
 				add_decoding(var.(name).type.structure);
