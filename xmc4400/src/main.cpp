@@ -103,24 +103,53 @@ extern "C" void SysTick_Handler(void)
     counter++;
 }
 
+uint32_t hb[3];
+float adc[4];
+float adc_scale[4]={0.0010819,0.0010819,1.0,1.0};
+int32_t adc_offset[4];
+int tc;
+
+enum {
+    OFFSET_CALIBRATE,
+    ACTIVE
+} state;
+
 extern "C" void CCU80_0_IRQHandler(void)
 {
     LED2=0;
-    counter++;
     position_HC_PQ23_t pos(rx_buffer);
-    uint32_t adc[4];
     for(int i=0;i<4;i++)
-	adc[i]=vadc.G[i].RES[0];
+	adc[i]=(int32_t(vadc.G[i].RES[0]&0xffff)-adc_offset[i])*adc_scale[i];
 
-    if(counter>=1500) {
+    switch(state) {
+    case OFFSET_CALIBRATE:
+	if(counter==0x200) {
+	    state=ACTIVE;
+	    for(int i=0;i<4;i++)
+		adc_offset[i]>>=8;
+	} else if(counter>=0x100){
+	    for(int i=0;i<4;i++)
+		adc_offset[i]+=vadc.G[i].RES[0]&0xffff;
+	    tc++;
+	}
+	break;
+    case ACTIVE:
+	HB0=hb[0];
+	HB1=hb[1];
+	HB2=hb[2];
+	break;
+    }
+
+    if(!(counter&0xfff)) {
 	logger.SetADC(adc[0],adc[1],adc[2],adc[3]);
 	logger.SetEncoder(pos.encoder);
 	logger.EncoderPacket(rx_buffer);
 	logger.transmit(&eth0);
-	counter-=1500;
     }
 
+    counter++;
     putp=rx_buffer;
+    static_cast<XMC_CCU8_MODULE_t*>(HB0)->GCSS=0x1111;
     LED2=1;
 }
 
@@ -151,7 +180,7 @@ void uart_init(void);
 void init_adc(void);
 int main()
 {
-    SysTick_Config(SystemCoreClock/1000);
+    // SysTick_Config(SystemCoreClock/1000);
 
     init_adc();
     pwm_3phase(HB0,HB1,HB2,18000);
@@ -169,19 +198,8 @@ int main()
 
     XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
 
-    for(;;);
-    int t=0;
-    while (1) {
-        if(counter>500) {
-            //counter-=500;
-            LED1^=1;
-            HB0=t&1? 2270:2000;
-            HB2=t&1? 1500:2000;
-            t++;
-	    LED3=eth_debug.RX_FRAMES_COUNT_GOOD_BAD&1;
-        };
-    };
-
+    for(;;)
+	;
     return 0;
 }
 
