@@ -9,6 +9,7 @@ class pwm_3phase {
 public:
     template <typename A, typename B, typename C>
     pwm_3phase(A &HB0, B& HB1, C &HB2, unsigned frequency);
+    uint32_t period(void) { return pwm_period; }
 };
 
 template <typename A, typename B, typename C>

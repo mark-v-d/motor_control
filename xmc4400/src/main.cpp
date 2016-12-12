@@ -13,6 +13,7 @@
 #include "udp_logger.h"
 #include "udp_poker.h"
 #include "bitfields.h"
+#include "encoder.h"
 
 
 
@@ -55,6 +56,7 @@ iopin::output<1,0> ETH_RESET=1;
 iopin::CCU80_OUT20<0,3> HB1;
 iopin::CCU80_OUT00<0,5> HB0;
 iopin::CCU80_OUT30<0,6> HB2;
+iopin::output<0,10> HBEN=1;
 
 iopin::output<0,8> ENC_5V=0;
 iopin::output<1,9> ENC_12V=0;
@@ -70,30 +72,8 @@ Ethernet eth0(
     &icmp
 );
 
-struct position_HC_PQ23_t {
-    uint8_t start;
-    uint8_t state;
-    uint16_t rotation;
-    uint16_t encoder;
-    uint8_t crc;
-    float angle;
-
-    position_HC_PQ23_t(void) {}
-    position_HC_PQ23_t(uint8_t *p) {
-        start=p[0];
-        state=p[1];
-        encoder=(p[2]+256*p[3]);
-        angle=float(2*M_PI/1024.0)*encoder;
-        rotation=p[5]+0x100*p[6];
-        crc=p[0];
-        for(int i=1;i<9;i++)
-	    crc^=p[i];
-	// crc should be 0
-    }
-};
-
 uint8_t rx_buffer[20] __attribute__((section ("ETH_RAM")));
-uint8_t *putp;
+volatile int putp, put_last;
 
 udp_logger logger __attribute__((section ("ETH_RAM")));
 udp_poker poker __attribute__((section ("ETH_RAM")));
@@ -109,25 +89,68 @@ float adc_scale[4]={0.0010819,0.0010819,1.0,1.0};
 int32_t adc_offset[4];
 int tc;
 
+float Istator[2];
+float Irotor[2];
+float I[2];
+float kP[2], kI[2];
+float Iset[2];
+float Vrotor[2];
+float Vstator[2];
+float lim=0.85;
+float output_scale;
+float output[3];
+
 enum {
+    STARTUP,
+    OFFSET_DELAY,
     OFFSET_CALIBRATE,
-    ACTIVE
+    ACTIVE,
+    CONTROLLED,
+    VOLTAGE
 } state;
+
+void init_pos_dummy(position_t*,uint8_t*) {}
+void (*init_pos)(position_t*,uint8_t*)=init_pos_dummy;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
     LED2=0;
-    position_HC_PQ23_t pos(rx_buffer);
+    position_t pos;
+    (*init_pos)(&pos,rx_buffer);
     for(int i=0;i<4;i++)
 	adc[i]=(int32_t(vadc.G[i].RES[0]&0xffff)-adc_offset[i])*adc_scale[i];
 
+    float current[3];
+    current[0]=adc[0];
+    current[1]=adc[1];
+    current[2]=-current[0]-current[1];
+
+    float angle=pos.angle;
+    Istator[0]=float(3.0/2)*current[0];
+    Istator[1]=float(sqrt(3))*current[1]+float(sqrt(3)/2)*current[0];
+    Irotor[0]= cosf(angle)*Istator[0]+sinf(angle)*Istator[1];
+    Irotor[1]=-sinf(angle)*Istator[0]+cosf(angle)*Istator[1];
+
     switch(state) {
+    case STARTUP:
+	HB0=0;
+	HB1=0;
+	HB2=0;
+	state=OFFSET_DELAY;
+	break;
+    case OFFSET_DELAY:
+	if(counter>=1000) {
+	    state=OFFSET_CALIBRATE;
+	    adc_offset[0]=adc_offset[1]=adc_offset[2]=0;
+	    tc=0;
+	}
+	break;
     case OFFSET_CALIBRATE:
-	if(counter==0x200) {
+	if(counter>=1000+0x100) {
 	    state=ACTIVE;
 	    for(int i=0;i<4;i++)
-		adc_offset[i]>>=8;
-	} else if(counter>=0x100){
+		adc_offset[i]/=tc;
+	} else {
 	    for(int i=0;i<4;i++)
 		adc_offset[i]+=vadc.G[i].RES[0]&0xffff;
 	    tc++;
@@ -138,17 +161,54 @@ extern "C" void CCU80_0_IRQHandler(void)
 	HB1=hb[1];
 	HB2=hb[2];
 	break;
+    case CONTROLLED:
+	for(int i=0;i<2;i++) {
+	    float err=Iset[i]-Irotor[i];
+	    I[i]+=kI[i]*err;
+	    Vrotor[i]=err*kP[i]+I[i];
+	}
+
+    case VOLTAGE:
+	float sq_len=Vrotor[0]*Vrotor[0]+Vrotor[1]*Vrotor[1];
+	if(sq_len>float(lim*lim)) {
+	    Vrotor[0]*=lim/sqrtf(sq_len);
+	    Vrotor[1]*=lim/sqrtf(sq_len);
+	    I[0]*=lim/sqrtf(sq_len);
+	    I[1]*=lim/sqrtf(sq_len);
+	}
+
+	Vstator[0]= cosf(angle)*Vrotor[0]-sinf(angle)*Vrotor[1];
+	Vstator[1]= sinf(angle)*Vrotor[0]+cosf(angle)*Vrotor[1];
+
+	if(	(output[0]=float(sqrt(3)/3)*Vstator[1]+Vstator[0])>=0 &&
+	    (output[1]=float(2/sqrt(3))*Vstator[1])>=0
+	) {
+	    output[2]=0;
+	} else if(
+	    (output[1]=-Vstator[0]+float(sqrt(3)/3)*Vstator[1])>=0 &&
+	    (output[2]=-float(sqrt(3)/3)*Vstator[1]-Vstator[0])>=0
+	) {
+	    output[0]=0;
+	} else {
+	    output[0]=Vstator[0]-float(sqrt(3)/3)*Vstator[1];
+	    output[1]=0;
+	    output[2]=-float(2/sqrt(3))*Vstator[1];
+	}
+	HB0=output_scale*output[0];
+	HB1=output_scale*output[1];
+	HB2=output_scale*output[2];
+	break;
     }
 
-    if(!(counter&0xfff)) {
-	logger.SetADC(adc[0],adc[1],adc[2],adc[3]);
-	logger.SetEncoder(pos.encoder);
-	logger.EncoderPacket(rx_buffer);
-	logger.transmit(&eth0);
-    }
+    logger.SetADC(adc[0],adc[1],adc[2],adc[3]);
+    logger.SetEncoder(pos.encoder,pos.angle);
+    logger.SetRotor(Vrotor,Irotor);
+    logger.EncoderPacket(rx_buffer);
+    logger.SetOutput(output);
+    logger.transmit(&eth0);
 
     counter++;
-    putp=rx_buffer;
+    putp=0;
     static_cast<XMC_CCU8_MODULE_t*>(HB0)->GCSS=0x1111;
     LED2=1;
 }
@@ -163,7 +223,26 @@ extern "C" void USIC1_0_IRQHandler(void)
 {
     LED3=0;
     u1c1.PSCR=u1c1.PSR;
-    *putp++=u1c1.RBUF;
+    rx_buffer[putp++]=u1c1.RBUF;
+    put_last=putp;
+    LED3=1;
+}
+
+/* Mapped to TBI */
+extern "C" void USIC0_0_IRQHandler(void)
+{
+    LED3=0;
+    ENC_DIR=1;
+    u0c0.PSCR=USIC_CH_PSCR_CTBIF_Msk;
+    LED3=1;
+}
+
+/* Mapped to TSI */
+extern "C" void USIC0_1_IRQHandler(void)
+{
+    LED3=0;
+    ENC_DIR=0;
+    u0c0.PSCR=USIC_CH_PSCR_CTSIF_Msk;
     LED3=1;
 }
 
@@ -176,24 +255,22 @@ extern "C" void VADC0_G0_0_IRQHandler(void)
 
 
 extern ETH_GLOBAL_TypeDef eth_debug;
-void uart_init(void);
 void init_adc(void);
 int main()
 {
     // SysTick_Config(SystemCoreClock/1000);
 
     init_adc();
-    pwm_3phase(HB0,HB1,HB2,18000);
+    pwm_3phase pwm(HB0,HB1,HB2,18000);
+    output_scale=pwm.period();
 
     eth0.add_udp_receiver(&logger,1);
     eth0.add_udp_receiver(&poker,2);
 
-    counter=0;
-    ENC_5V=1;
-    ENC_DIR=1;
-    uart_init();
+    HBEN=0;
+    init_mitsubishi();
 
-    HB1=100;
+    HBEN=1;
     PPB->SCR=1;
 
     XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
@@ -219,103 +296,6 @@ void __gnu_cxx::__verbose_terminate_handler(void)
     }
 }
 
-
-void uart_init(void)
-{
-    XMC_UART_CH_CONFIG_t uart_config = {
-	.baudrate=2500000,
-	.data_bits=8U,
-	.frame_length=0,
-	.stop_bits=1,
-	.oversampling=0,
-	.parity_mode=XMC_USIC_CH_PARITY_MODE_NONE
-    };
-    XMC_UART_CH_Init(XMC_UART0_CH0, &uart_config);
-    XMC_UART_CH_Init(XMC_UART1_CH1, &uart_config);
-    XMC_UART_CH_SetInputSource(XMC_UART0_CH0, 
-	XMC_UART_CH_INPUT_RXD, USIC0_C0_DX0_P1_4);
-    XMC_UART_CH_SetInputSource(XMC_UART1_CH1, 
-	XMC_UART_CH_INPUT_RXD, USIC1_C1_DX0_P0_0);
-    XMC_UART_CH_EnableInputInversion(XMC_UART1_CH1,XMC_UART_CH_INPUT_RXD);
-    XMC_UART_CH_EnableEvent(XMC_UART1_CH1, XMC_UART_CH_EVENT_STANDARD_RECEIVE);
-    XMC_UART_CH_SelectInterruptNodePointer(XMC_UART1_CH1, 
-	XMC_UART_CH_INTERRUPT_NODE_POINTER_RECEIVE, 0);
-
-    if(1) { // timer trigger
-	usic_ch_ns::tcsr_t tcsr;
-	tcsr.raw=u0c0.TCSR;
-	tcsr.tdssm=0;
-	tcsr.tdvtr=1;
-	u0c0.TCSR=tcsr.raw;
-
-	usic_ch_ns::dx2cr_t dx2cr; dx2cr.raw=0;
-	dx2cr.insw=1;
-	dx2cr.cm=1;
-	dx2cr.dsel=USIC0_C0_DX2_CCU80_SR1;
-	u0c0.DXCR[2]=dx2cr.raw;
-
-	u0c0.TBUF[0]=0x1a;
-    }
-
-    if(1) {
-	// No  DMA
-	NVIC_SetPriority(USIC1_0_IRQn,  0);
-	NVIC_ClearPendingIRQ(USIC1_0_IRQn);
-	NVIC_EnableIRQ(USIC1_0_IRQn);
-    } else if(1) {
-	// USIC1 SR0 -> DMA0[2]
-	XMC_DMA_Enable(XMC_DMA0);
-	dma0.CH[2].SAR=reinterpret_cast<uint32_t>(&u1c1.RBUF);
-	dma0.CH[2].DAR=reinterpret_cast<uint32_t>(&rx_buffer);
-	dma0.CH[2].CTLH=9;
-	dma0.CH[2].CTLL=gpdma0_ch0_1_ns::ctll_t({{
-	    .int_en=0,
-	    .dst_tr_width=XMC_DMA_CH_TRANSFER_WIDTH_8,
-	    .src_tr_width=XMC_DMA_CH_TRANSFER_WIDTH_8,
-	    .dinc=XMC_DMA_CH_ADDRESS_COUNT_MODE_INCREMENT,
-	    .sinc=XMC_DMA_CH_ADDRESS_COUNT_MODE_NO_CHANGE,
-	    .dest_msize=XMC_DMA_CH_BURST_LENGTH_1,
-	    .src_msize=XMC_DMA_CH_BURST_LENGTH_1,
-	    .src_gather_en=0,
-	    .dst_scatter_en=0,
-	    .tt_fc=XMC_DMA_CH_TRANSFER_FLOW_P2M_DMA,
-	    .llp_dst_en=0,
-	    .llp_src_en=0
-	}}).raw;
-	dma0.CH[2].CFGH=gpdma0_ch0_1_ns::cfgh_t({{
-	    .fcmode=0,
-	    .fifo_mode=0,
-	    .protctl=0,
-	    .ds_upd_en=0,
-	    .ss_upd_en=0,
-	    .src_per=4,
-	    .dest_per=0
-	}}).raw;
-	dma0.CH[2].CFGL=gpdma0_ch0_1_ns::cfgl_t({{
-	    .ch_prior=0,
-	    .ch_susp=0,
-	    .fifo_empty=0,
-	    .hs_sel_dst=0,
-	    .hs_sel_src=0,
-	    .lock_ch_l=0,
-	    .lock_b_l=0,
-	    .lock_ch=0,
-	    .lock_b=0,
-	    .dst_hs_pol=0,
-	    .src_hs_pol=0,
-	    .max_abrst=0,
-	    .reload_src=0,
-	    .reload_dst=0
-	}}).raw;
-	DLR->SRSEL0=12<<16; // usic1.sr0 mapped to channel 4
-	DLR->LNEN=1<<4;
-	dma0.CHENREG=0x101<<2;
-    } 
-
-
-    XMC_UART_CH_Start(XMC_UART0_CH0);
-    XMC_UART_CH_Start(XMC_UART1_CH1);
-}
 
 void init_adc(void)
 {
@@ -443,4 +423,144 @@ void init_adc(void)
     NVIC_SetPriority(VADC0_G0_0_IRQn,  0);
     NVIC_ClearPendingIRQ(VADC0_G0_0_IRQn);
     NVIC_EnableIRQ(VADC0_G0_0_IRQn);
+}
+
+/*
+    Configure the Mitsubishi encoder interface
+    returns 1 if failed.
+*/
+int init_mitsubishi(void)
+{
+    XMC_UART_CH_CONFIG_t uart_config = {
+	.baudrate=2500000,
+	.data_bits=8U,
+	.frame_length=0,
+	.stop_bits=2,
+	.oversampling=0,
+	.parity_mode=XMC_USIC_CH_PARITY_MODE_NONE
+    };
+    XMC_UART_CH_Init(XMC_UART0_CH0, &uart_config);
+    XMC_UART_CH_Init(XMC_UART1_CH1, &uart_config);
+    XMC_UART_CH_SetInputSource(XMC_UART0_CH0, 
+	XMC_UART_CH_INPUT_RXD, USIC0_C0_DX0_P1_4);
+    XMC_UART_CH_SetInputSource(XMC_UART1_CH1, 
+	XMC_UART_CH_INPUT_RXD, USIC1_C1_DX0_P0_0);
+    XMC_UART_CH_EnableInputInversion(XMC_UART1_CH1,XMC_UART_CH_INPUT_RXD);
+    XMC_UART_CH_EnableEvent(XMC_UART1_CH1, XMC_UART_CH_EVENT_STANDARD_RECEIVE);
+    XMC_UART_CH_SelectInterruptNodePointer(XMC_UART1_CH1, 
+	XMC_UART_CH_INTERRUPT_NODE_POINTER_RECEIVE, 0);
+
+    // Configure to send single characters
+    u0c0.TCSR=usic_ch_ns::tcsr_t({{
+	.wlemd=0,
+	.selmd=0,
+	.flemd=0,
+	.wamd=0,
+	.hpcmd=0,
+	.sof=0,
+	.eof=0,
+	.tdv=0,		// read-only
+	.tdssm=1,	// single shot-mode 
+	.tden=1,
+	.tdvtr=0
+    }}).raw;
+
+
+    // Receive on channel 1
+    NVIC_SetPriority(USIC1_0_IRQn,  0);
+    NVIC_ClearPendingIRQ(USIC1_0_IRQn);
+    NVIC_EnableIRQ(USIC1_0_IRQn);
+
+    // Start transmitting
+    NVIC_SetPriority(USIC0_0_IRQn,  0);
+    NVIC_ClearPendingIRQ(USIC0_0_IRQn);
+    NVIC_EnableIRQ(USIC0_0_IRQn);
+
+    // End transmittting
+    NVIC_SetPriority(USIC0_1_IRQn,  0);
+    NVIC_ClearPendingIRQ(USIC0_1_IRQn);
+    NVIC_EnableIRQ(USIC0_1_IRQn);
+
+    // XMC_UART_CH_Start(XMC_UART0_CH0);
+    u0c0.INPR=usic_ch_ns::inpr_t({{
+	.tsinp=1,	// End transmission
+	.tbinp=0	// Start transmission
+    }}).raw;
+    u0c0.CCR=usic_ch_ns::ccr_t({{
+	.mode=2,	// UART
+	.hpcen=0,
+	.pm=0,		// No parity
+	.rsien=0,
+	.dlien=0,
+	.tsien=0,
+	.tbien=0,
+	.rien=0,
+	.aien=0,
+	.brgien=0
+    }}).raw;
+
+    XMC_UART_CH_Start(XMC_UART1_CH1);
+
+
+    u0c0.TBUF[0]=0x1a;
+    uint32_t old_counter=counter;
+    while(counter<old_counter+1)
+	;
+    ENC_5V=1;
+    ENC_DIR=1;
+    old_counter=counter;
+    while(counter<old_counter+450)
+	;
+
+    const uint8_t init_list[]={0x7a,0x1a};
+    for(int i=0;i<sizeof(init_list);i++) {
+	u0c0.TBUF[0]=init_list[i];
+	old_counter=counter;
+	while(counter<old_counter+1)
+	    ;
+	if(put_last>1) {
+	    while(counter<old_counter+2)
+		;
+	}
+	put_last=0;
+	putp=0;
+    }
+
+    u0c0.TBUF[0]=0x12;
+    old_counter=counter;
+    while(counter<old_counter+1)
+	;
+
+    if(rx_buffer[0]==0x7a && rx_buffer[1]==0x01 && rx_buffer[2]==0x7b)
+	init_pos=position_HC_PQ23;
+    else if(1)
+	init_pos=position_MFS13_13;
+    else {
+	ENC_5V=0;
+	ENC_DIR=0;
+	XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC0);
+	XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC1);
+	XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC0);
+	XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC1);
+	return 1; 
+    }
+
+
+    if(1) { // timer trigger
+	usic_ch_ns::tcsr_t tcsr;
+	tcsr.raw=u0c0.TCSR;
+	tcsr.tdssm=0;
+	tcsr.tdvtr=1;
+	u0c0.TCSR=tcsr.raw;
+
+	usic_ch_ns::dx2cr_t dx2cr; dx2cr.raw=0;
+	dx2cr.insw=1;
+	dx2cr.cm=1;
+	dx2cr.dsel=USIC0_C0_DX2_CCU80_SR1;
+	u0c0.DXCR[2]=dx2cr.raw;
+
+	u0c0.TBUF[0]=0x2;
+    }
+
+    return 0;
 }
