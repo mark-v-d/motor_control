@@ -73,7 +73,7 @@ Ethernet eth0(
 );
 
 uint8_t rx_buffer[20] __attribute__((section ("ETH_RAM")));
-volatile int putp, put_last;
+volatile int putp;
 
 udp_logger logger __attribute__((section ("ETH_RAM")));
 udp_poker poker __attribute__((section ("ETH_RAM")));
@@ -208,43 +208,50 @@ extern "C" void CCU80_0_IRQHandler(void)
     logger.transmit(&eth0);
 
     counter++;
-    putp=0;
     static_cast<XMC_CCU8_MODULE_t*>(HB0)->GCSS=0x1111;
     LED2=1;
 }
 
+/* This interrupt is used to trigger the encoder */
 extern "C" void CCU80_1_IRQHandler(void)
 {
-    //XMC_UART_CH_Transmit(XMC_UART0_CH0, 0x1a);
-    //putp=rx_buffer;
+    if(init_pos==position_MFS13_13) {
+	ENC_DIR=1;
+	putp=0;
+	u0c0.TBUF[0]=0x12;
+    } else if(init_pos==position_HC_PQ23){
+	ENC_DIR=1;
+	putp=0;
+	u0c0.TBUF[0]=0x1a;
+    }
 }
 
+/* Mapped to Frame finished */
+extern "C" void USIC0_1_IRQHandler(void)
+{
+    LED0=0;
+    ENC_DIR=0;
+    LED0=1;
+}
+
+/* Receive interrupt channel 0 (bi-directional) */
+extern "C" void USIC0_0_IRQHandler(void)
+{
+    LED3=0;
+    u0c0.PSCR=u0c0.PSR;
+    rx_buffer[putp++]=u0c0.RBUF;
+    LED3=1;
+}
+
+/* Receive interrupt channel 1 (input only) */
 extern "C" void USIC1_0_IRQHandler(void)
 {
     LED3=0;
     u1c1.PSCR=u1c1.PSR;
     rx_buffer[putp++]=u1c1.RBUF;
-    put_last=putp;
     LED3=1;
 }
 
-/* Mapped to TBI */
-extern "C" void USIC0_0_IRQHandler(void)
-{
-    LED3=0;
-    ENC_DIR=1;
-    u0c0.PSCR=USIC_CH_PSCR_CTBIF_Msk;
-    LED3=1;
-}
-
-/* Mapped to TSI */
-extern "C" void USIC0_1_IRQHandler(void)
-{
-    LED3=0;
-    ENC_DIR=0;
-    u0c0.PSCR=USIC_CH_PSCR_CTSIF_Msk;
-    LED3=1;
-}
 
 extern "C" void VADC0_G0_0_IRQHandler(void)
 {
@@ -252,7 +259,6 @@ extern "C" void VADC0_G0_0_IRQHandler(void)
     vadc.G[0].REFCLR=vadc.G[0].REFLAG;
     LED1=1;
 }
-
 
 extern ETH_GLOBAL_TypeDef eth_debug;
 void init_adc(void);
@@ -425,6 +431,16 @@ void init_adc(void)
     NVIC_EnableIRQ(VADC0_G0_0_IRQn);
 }
 
+void serial_tx(uint8_t data)
+{
+    ENC_DIR=1;
+    putp=0;
+    u0c0.TBUF[0]=0x1a;
+    uint32_t old_counter=counter;
+    while(counter<old_counter+1)
+	;
+}
+
 /*
     Configure the Mitsubishi encoder interface
     returns 1 if failed.
@@ -435,20 +451,13 @@ int init_mitsubishi(void)
 	.baudrate=2500000,
 	.data_bits=8U,
 	.frame_length=0,
-	.stop_bits=2,
+	.stop_bits=1,
 	.oversampling=0,
 	.parity_mode=XMC_USIC_CH_PARITY_MODE_NONE
     };
     XMC_UART_CH_Init(XMC_UART0_CH0, &uart_config);
-    XMC_UART_CH_Init(XMC_UART1_CH1, &uart_config);
     XMC_UART_CH_SetInputSource(XMC_UART0_CH0, 
 	XMC_UART_CH_INPUT_RXD, USIC0_C0_DX0_P1_4);
-    XMC_UART_CH_SetInputSource(XMC_UART1_CH1, 
-	XMC_UART_CH_INPUT_RXD, USIC1_C1_DX0_P0_0);
-    XMC_UART_CH_EnableInputInversion(XMC_UART1_CH1,XMC_UART_CH_INPUT_RXD);
-    XMC_UART_CH_EnableEvent(XMC_UART1_CH1, XMC_UART_CH_EVENT_STANDARD_RECEIVE);
-    XMC_UART_CH_SelectInterruptNodePointer(XMC_UART1_CH1, 
-	XMC_UART_CH_INTERRUPT_NODE_POINTER_RECEIVE, 0);
 
     // Configure to send single characters
     u0c0.TCSR=usic_ch_ns::tcsr_t({{
@@ -465,13 +474,7 @@ int init_mitsubishi(void)
 	.tdvtr=0
     }}).raw;
 
-
-    // Receive on channel 1
-    NVIC_SetPriority(USIC1_0_IRQn,  0);
-    NVIC_ClearPendingIRQ(USIC1_0_IRQn);
-    NVIC_EnableIRQ(USIC1_0_IRQn);
-
-    // Start transmitting
+    // Receive channel 0
     NVIC_SetPriority(USIC0_0_IRQn,  0);
     NVIC_ClearPendingIRQ(USIC0_0_IRQn);
     NVIC_EnableIRQ(USIC0_0_IRQn);
@@ -483,8 +486,11 @@ int init_mitsubishi(void)
 
     // XMC_UART_CH_Start(XMC_UART0_CH0);
     u0c0.INPR=usic_ch_ns::inpr_t({{
-	.tsinp=1,	// End transmission
-	.tbinp=0	// Start transmission
+	.tsinp=0,	// End transmission (not used)
+	.tbinp=0,	// Start transmission (not used)
+	.rinp=0,	// Receive interrupt
+	.ainp=0,	// alternate receive interrupt (not used)
+	.pinp=1		// protocol interrupt (frame finished)
     }}).raw;
     u0c0.CCR=usic_ch_ns::ccr_t({{
 	.mode=2,	// UART
@@ -492,50 +498,59 @@ int init_mitsubishi(void)
 	.pm=0,		// No parity
 	.rsien=0,
 	.dlien=0,
-	.tsien=0,
-	.tbien=0,
-	.rien=0,
+	.tsien=0,	// shifter finished 
+	.tbien=0,	// transmit buffer
+	.rien=1,	// receive interrupt
 	.aien=0,
 	.brgien=0
     }}).raw;
+    u0c0.PCR=usic_ch_ns::pcr_asc_t({{
+	.smd=1,
+	.stpb=0,
+	.idm=0,
+	.sbien=0,
+	.cden=0,
+	.rnien=0,
+	.feien=0,
+	.ffien=1,	// frame finished enable
+	.sp=9,
+	.pl=0,
+	.rsten=0,
+	.tsten=0,
+	.mclk=0
+    }}).raw;
 
-    XMC_UART_CH_Start(XMC_UART1_CH1);
-
-
-    u0c0.TBUF[0]=0x1a;
-    uint32_t old_counter=counter;
-    while(counter<old_counter+1)
-	;
+    // Powerup and wait
+    serial_tx(0x1a);
     ENC_5V=1;
-    ENC_DIR=1;
-    old_counter=counter;
+    uint32_t old_counter=counter;
     while(counter<old_counter+450)
 	;
 
-    const uint8_t init_list[]={0x7a,0x1a};
-    for(int i=0;i<sizeof(init_list);i++) {
-	u0c0.TBUF[0]=init_list[i];
-	old_counter=counter;
-	while(counter<old_counter+1)
-	    ;
-	if(put_last>1) {
-	    while(counter<old_counter+2)
-		;
-	}
-	put_last=0;
-	putp=0;
+    // First try to use the bi-directional mode
+    serial_tx(0x1a);
+    if(putp==9) {
+	init_pos=position_MFS13_13;
+	return 0;
     }
 
-    u0c0.TBUF[0]=0x12;
-    old_counter=counter;
-    while(counter<old_counter+1)
-	;
+    XMC_UART_CH_Init(XMC_UART1_CH1, &uart_config);
+    XMC_UART_CH_SetInputSource(XMC_UART1_CH1, 
+	XMC_UART_CH_INPUT_RXD, USIC1_C1_DX0_P0_0);
+    XMC_UART_CH_EnableInputInversion(XMC_UART1_CH1,XMC_UART_CH_INPUT_RXD);
+    XMC_UART_CH_EnableEvent(XMC_UART1_CH1, 
+	XMC_UART_CH_EVENT_STANDARD_RECEIVE);
+    XMC_UART_CH_SelectInterruptNodePointer(XMC_UART1_CH1, 
+	XMC_UART_CH_INTERRUPT_NODE_POINTER_RECEIVE, 0);
+    XMC_UART_CH_Start(XMC_UART1_CH1);
+    // Receive on channel 1
+    NVIC_SetPriority(USIC1_0_IRQn,  0);
+    NVIC_ClearPendingIRQ(USIC1_0_IRQn);
+    NVIC_EnableIRQ(USIC1_0_IRQn);
 
-    if(rx_buffer[0]==0x7a && rx_buffer[1]==0x01 && rx_buffer[2]==0x7b)
-	init_pos=position_HC_PQ23;
-    else if(1)
-	init_pos=position_MFS13_13;
-    else {
+
+    serial_tx(0x1a);
+    if(putp!=9) {
 	ENC_5V=0;
 	ENC_DIR=0;
 	XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC0);
@@ -545,22 +560,7 @@ int init_mitsubishi(void)
 	return 1; 
     }
 
-
-    if(1) { // timer trigger
-	usic_ch_ns::tcsr_t tcsr;
-	tcsr.raw=u0c0.TCSR;
-	tcsr.tdssm=0;
-	tcsr.tdvtr=1;
-	u0c0.TCSR=tcsr.raw;
-
-	usic_ch_ns::dx2cr_t dx2cr; dx2cr.raw=0;
-	dx2cr.insw=1;
-	dx2cr.cm=1;
-	dx2cr.dsel=USIC0_C0_DX2_CCU80_SR1;
-	u0c0.DXCR[2]=dx2cr.raw;
-
-	u0c0.TBUF[0]=0x2;
-    }
+    init_pos=position_HC_PQ23;
 
     return 0;
 }

@@ -6078,6 +6078,49 @@ union psr_t {
     };
     uint32_t raw;
 };
+
+union psr_asc_t {
+    struct {
+        uint32_t txidle:1;	// 0
+        uint32_t rxidle:1;	// 1
+        uint32_t sbd:1;		// 2
+        uint32_t col:1;		// 3 
+        uint32_t rns:1;		// 4
+        uint32_t fer0:1;	// 5
+        uint32_t fer1:1;	// 6
+        uint32_t rff:1;		// 7
+        uint32_t tff:1;		// 8
+        uint32_t busy:1;	// 9
+        uint32_t rsif:1;	// 10
+        uint32_t dlif:1;	// 11
+        uint32_t tsif:1;	// 12
+        uint32_t tbif:1;	// 13
+        uint32_t rif:1;		// 14
+        uint32_t aif:1;		// 15
+        uint32_t brgif:1;	// 16
+    };
+    uint32_t raw;
+};
+union pcr_asc_t {
+    struct {
+	uint32_t smd:1;		// 0 sample mode 0->1 bit, 1->3-bit
+	uint32_t stpb:1;	// 1 stop-bits 0->1b-ti, 1->2-bit
+	uint32_t idm:1;		// 2 idle mode detection
+	uint32_t sbien:1;	// 3 synchronisation break ien
+	uint32_t cden:1;	// 4 collision detect enable
+	uint32_t rnien:1;	// 5 receive noise ien
+	uint32_t feien:1;	// 6 frame error
+	uint32_t ffien:1;	// 7 frame finished interrupt enable
+	uint32_t sp:5;		// 8..12 sample point
+	uint32_t pl:3;		// 13..15 pulse length
+	uint32_t rsten:1;	// 16 Receiver Status Enable
+	uint32_t tsten:1;	// 17 Transmitter Status Enable
+	uint32_t :13;
+	uint32_t mclk:1;	// 31 Master Clock Enable
+    };
+    uint32_t raw;
+};
+
 union rbctr_t {
     struct {
         uint32_t dptr:6;	// 0

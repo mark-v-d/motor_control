@@ -92,7 +92,7 @@ pwm_3phase::pwm_3phase(A &HB0, B& HB1, C &HB2, unsigned frequency)
     if(!module) {
 	uint32_t group=NVIC_GetPriorityGrouping();
 	uint32_t encode=NVIC_EncodePriority(group, 63, 0);
-	// NVIC_SetPriority(CCU80_1_IRQn, encode);
+	NVIC_SetPriority(CCU80_1_IRQn, encode);
 	NVIC_SetPriority(CCU80_0_IRQn, encode);
 	NVIC_EnableIRQ(CCU80_1_IRQn);
 	NVIC_EnableIRQ(CCU80_0_IRQn);
