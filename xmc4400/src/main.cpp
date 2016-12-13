@@ -452,63 +452,15 @@ int init_mitsubishi(void)
     XMC_UART_CH_Init(XMC_UART0_CH0, &uart_config);
     XMC_UART_CH_SetInputSource(XMC_UART0_CH0, 
 	XMC_UART_CH_INPUT_RXD, USIC0_C0_DX0_P1_4);
-
-    // Configure to send single characters
-    u0c0.TCSR=usic_ch_ns::tcsr_t({{
-	.wlemd=0,
-	.selmd=0,
-	.flemd=0,
-	.wamd=0,
-	.hpcmd=0,
-	.sof=0,
-	.eof=0,
-	.tdv=0,		// read-only
-	.tdssm=1,	// single shot-mode 
-	.tden=1,
-	.tdvtr=0
-    }}).raw;
-
+    XMC_UART_CH_EnableEvent(XMC_UART0_CH0, 
+	XMC_UART_CH_EVENT_FRAME_FINISHED );
+    XMC_UART_CH_SelectInterruptNodePointer(XMC_UART0_CH0, 
+	XMC_UART_CH_INTERRUPT_NODE_POINTER_PROTOCOL, 1);
+    XMC_UART_CH_Start(XMC_UART0_CH0);
     // Protocol interrupt
     NVIC_SetPriority(USIC0_1_IRQn,  0);
     NVIC_ClearPendingIRQ(USIC0_1_IRQn);
     NVIC_EnableIRQ(USIC0_1_IRQn);
-
-    // XMC_UART_CH_Start(XMC_UART0_CH0);
-    u0c0.INPR=usic_ch_ns::inpr_t({{
-	.tsinp=0,	// End transmission (not used)
-	.tbinp=0,	// Start transmission (not used)
-	.rinp=0,	// Receive interrupt (not used)
-	.ainp=0,	// alternate receive interrupt (not used)
-	.pinp=1		// protocol interrupt (frame finished)
-    }}).raw;
-    u0c0.CCR=usic_ch_ns::ccr_t({{
-	.mode=2,	// UART
-	.hpcen=0,
-	.pm=0,		// No parity
-	.rsien=0,
-	.dlien=0,
-	.tsien=0,	// shifter finished 
-	.tbien=0,	// transmit buffer
-	.rien=0,	// receive interrupt
-	.aien=0,
-	.brgien=0
-    }}).raw;
-    usic_ch_ns::pcr_asc_t pcr({{
-	.smd=1,
-	.stpb=0,
-	.idm=0,
-	.sbien=0,
-	.cden=0,
-	.rnien=0,
-	.feien=0,
-	.ffien=1,	// frame finished enable
-	.sp=9,
-	.pl=0,
-	.rsten=0,
-	.tsten=0,
-	.mclk=0
-    }});
-    u0c0.PCR=pcr.raw;
 
     // Powerup and wait
     serial_tx(0x1a);
@@ -525,8 +477,8 @@ int init_mitsubishi(void)
     }
 
     // We don't need to disable the transmitter in full-duplex
-    pcr.ffien=0;
-    u0c0.PCR=pcr.raw;
+    XMC_UART_CH_DisableEvent(XMC_UART0_CH0, 
+	XMC_UART_CH_EVENT_FRAME_FINISHED );
     NVIC_DisableIRQ(USIC0_1_IRQn);
 
     XMC_UART_CH_Init(XMC_UART1_CH1, &uart_config);
