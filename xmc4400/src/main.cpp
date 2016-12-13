@@ -1,11 +1,9 @@
 #include <atomic>
 #include <cmath>
 
-#include "xmc_dma.h"
-
 #define M_PI 3.1415927
 
-#include "gpio.h"
+#include "hardware.h"
 #include "ethernet.h"
 #include "icmp.h"
 #include "ccu8.h"
@@ -15,55 +13,8 @@
 #include "bitfields.h"
 #include "encoder.h"
 
-
-
 std::atomic<int> counter(0);
 
-#if (UC_DEVICE == XMC4500)
-iopin::input<1,14> BUTTON1;
-iopin::output<1,0> LED0;
-iopin::output<1,1> LED1;
-iopin::output<1,2> LED2;
-iopin::output<1,3> LED3;
-iopin::input<15,8> CLK_RMII;
-iopin::input<15,9> CRS_DV;
-iopin::input<2,2> RXD0;
-iopin::input<2,3> RXD1;
-iopin::input<2,4> RXER;
-iopin::ETH0_MDC<2,7> MDC;
-iopin::ETH0_MDO<2,0> MDIO;
-iopin::ETH0_TXD0<2,8> TXD0;
-iopin::ETH0_TXD1<2,9> TXD1;
-iopin::ETH0_TX_EN<2,5> TX_EN;
-#else
-iopin::output<0,7> LED0=1;
-iopin::output<0,11> LED1=1;
-iopin::output<0,4> LED2=1;
-iopin::output<0,2> LED3=1;
-iopin::output<0,9> LED4=1;
-iopin::input<2,1> CLK_RMII;
-iopin::input<0,1> CRS_DV;
-iopin::input<2,2> RXD0;
-iopin::input<2,3> RXD1;
-iopin::input<2,4> RXER;
-iopin::ETH0_MDC<2,7> MDC;
-iopin::ETH0_MDO<2,0> MDIO;
-iopin::ETH0_TXD0<2,8> TXD0;
-iopin::ETH0_TXD1<2,9> TXD1;
-iopin::ETH0_TX_EN<2,5> TX_EN;
-iopin::output<1,0> ETH_RESET=1;
-
-iopin::CCU80_OUT20<0,3> HB1;
-iopin::CCU80_OUT00<0,5> HB0;
-iopin::CCU80_OUT30<0,6> HB2;
-iopin::output<0,10> HBEN=1;
-
-iopin::output<0,8> ENC_5V=0;
-iopin::output<1,9> ENC_12V=0;
-iopin::output<1,15> ENC_DIR=0;
-iopin::U0C0_DOUT0<1,5> ENC_TXD; // FIXME, HWCTRL should only be used fo SSI
-iopin::input<1,4> ENC_RXD;
-#endif
 
 icmpProcessing icmp;
 Ethernet eth0(
@@ -108,9 +59,6 @@ enum {
     CONTROLLED,
     VOLTAGE
 } state;
-
-void init_pos_dummy(position_t*,uint8_t*) {}
-void (*init_pos)(position_t*,uint8_t*)=init_pos_dummy;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
@@ -423,91 +371,4 @@ void init_adc(void)
     NVIC_SetPriority(VADC0_G0_0_IRQn,  0);
     NVIC_ClearPendingIRQ(VADC0_G0_0_IRQn);
     NVIC_EnableIRQ(VADC0_G0_0_IRQn);
-}
-
-void serial_tx(uint8_t data)
-{
-    ENC_DIR=1;
-    putp=0;
-    u0c0.TBUF[0]=0x1a;
-    uint32_t old_counter=counter;
-    while(counter<old_counter+1)
-	;
-}
-
-/*
-    Configure the Mitsubishi encoder interface
-    returns 1 if failed.
-*/
-int init_mitsubishi(void)
-{
-    XMC_UART_CH_CONFIG_t uart_config = {
-	.baudrate=2500000,
-	.data_bits=8U,
-	.frame_length=0,
-	.stop_bits=1,
-	.oversampling=0,
-	.parity_mode=XMC_USIC_CH_PARITY_MODE_NONE
-    };
-    XMC_UART_CH_Init(XMC_UART0_CH0, &uart_config);
-    XMC_UART_CH_SetInputSource(XMC_UART0_CH0, 
-	XMC_UART_CH_INPUT_RXD, USIC0_C0_DX0_P1_4);
-    XMC_UART_CH_EnableEvent(XMC_UART0_CH0, 
-	XMC_UART_CH_EVENT_FRAME_FINISHED );
-    XMC_UART_CH_SelectInterruptNodePointer(XMC_UART0_CH0, 
-	XMC_UART_CH_INTERRUPT_NODE_POINTER_PROTOCOL, 1);
-    XMC_UART_CH_Start(XMC_UART0_CH0);
-    // Protocol interrupt
-    NVIC_SetPriority(USIC0_1_IRQn,  0);
-    NVIC_ClearPendingIRQ(USIC0_1_IRQn);
-    NVIC_EnableIRQ(USIC0_1_IRQn);
-
-    // Powerup and wait
-    serial_tx(0x1a);
-    ENC_5V=1;
-    uint32_t old_counter=counter;
-    while(counter<old_counter+450)
-	;
-
-    // First try to use half-duplex mode
-    serial_tx(0x1a);
-    if(putp==9) {
-	init_pos=position_MFS13_13;
-	return 0;
-    }
-
-    // We don't need to disable the transmitter in full-duplex
-    XMC_UART_CH_DisableEvent(XMC_UART0_CH0, 
-	XMC_UART_CH_EVENT_FRAME_FINISHED );
-    NVIC_DisableIRQ(USIC0_1_IRQn);
-
-    XMC_UART_CH_Init(XMC_UART1_CH1, &uart_config);
-    XMC_UART_CH_SetInputSource(XMC_UART1_CH1, 
-	XMC_UART_CH_INPUT_RXD, USIC1_C1_DX0_P0_0);
-    XMC_UART_CH_EnableInputInversion(XMC_UART1_CH1,XMC_UART_CH_INPUT_RXD);
-    XMC_UART_CH_EnableEvent(XMC_UART1_CH1, 
-	XMC_UART_CH_EVENT_STANDARD_RECEIVE);
-    XMC_UART_CH_SelectInterruptNodePointer(XMC_UART1_CH1, 
-	XMC_UART_CH_INTERRUPT_NODE_POINTER_RECEIVE, 0);
-    XMC_UART_CH_Start(XMC_UART1_CH1);
-    // Receive on channel 1
-    NVIC_SetPriority(USIC1_0_IRQn,  0);
-    NVIC_ClearPendingIRQ(USIC1_0_IRQn);
-    NVIC_EnableIRQ(USIC1_0_IRQn);
-
-    serial_tx(0x1a);
-    if(putp!=9) {
-	ENC_5V=0;
-	ENC_DIR=0;
-	XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC0);
-	XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC1);
-	XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC0);
-	XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC1);
-	NVIC_DisableIRQ(USIC1_0_IRQn);
-	return 1; 
-    }
-
-    init_pos=position_HC_PQ23;
-
-    return 0;
 }

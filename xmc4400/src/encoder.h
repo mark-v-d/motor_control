@@ -16,6 +16,8 @@ struct position_t {
     uint8_t crc;
 };
 
+extern void (*init_pos)(position_t*,uint8_t*);
+
 void position_MFS13_13(position_t *pos, uint8_t *p);
 void position_HC_PQ23(position_t *pos, uint8_t *p);
 
