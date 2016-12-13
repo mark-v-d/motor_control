@@ -215,35 +215,29 @@ extern "C" void CCU80_0_IRQHandler(void)
 /* This interrupt is used to trigger the encoder */
 extern "C" void CCU80_1_IRQHandler(void)
 {
-    if(init_pos==position_MFS13_13) {
-	ENC_DIR=1;
-	putp=0;
-	u0c0.TBUF[0]=0x12;
-    } else if(init_pos==position_HC_PQ23){
+    if(	init_pos==position_MFS13_13 ||
+	init_pos==position_HC_PQ23
+    ) {
 	ENC_DIR=1;
 	putp=0;
 	u0c0.TBUF[0]=0x1a;
     }
 }
 
-/* Mapped to Frame finished */
+/* Mapped to Frame finished (half-duplex serial) */
 extern "C" void USIC0_1_IRQHandler(void)
 {
     LED0=0;
-    ENC_DIR=0;
+    uint32_t reason=u0c0.PSR;
+    if(reason & USIC_CH_PSR_ASCMode_TFF_Msk)
+	ENC_DIR=0;
+    else if(reason & USIC_CH_PSR_ASCMode_RFF_Msk)
+	rx_buffer[putp++]=u0c0.RBUF;
+    u0c0.PSCR=reason;
     LED0=1;
 }
 
-/* Receive interrupt channel 0 (bi-directional) */
-extern "C" void USIC0_0_IRQHandler(void)
-{
-    LED3=0;
-    u0c0.PSCR=u0c0.PSR;
-    rx_buffer[putp++]=u0c0.RBUF;
-    LED3=1;
-}
-
-/* Receive interrupt channel 1 (input only) */
+/* Receive interrupt channel 1 (full-duplex serial) */
 extern "C" void USIC1_0_IRQHandler(void)
 {
     LED3=0;
@@ -474,12 +468,7 @@ int init_mitsubishi(void)
 	.tdvtr=0
     }}).raw;
 
-    // Receive channel 0
-    NVIC_SetPriority(USIC0_0_IRQn,  0);
-    NVIC_ClearPendingIRQ(USIC0_0_IRQn);
-    NVIC_EnableIRQ(USIC0_0_IRQn);
-
-    // End transmittting
+    // Protocol interrupt
     NVIC_SetPriority(USIC0_1_IRQn,  0);
     NVIC_ClearPendingIRQ(USIC0_1_IRQn);
     NVIC_EnableIRQ(USIC0_1_IRQn);
@@ -488,7 +477,7 @@ int init_mitsubishi(void)
     u0c0.INPR=usic_ch_ns::inpr_t({{
 	.tsinp=0,	// End transmission (not used)
 	.tbinp=0,	// Start transmission (not used)
-	.rinp=0,	// Receive interrupt
+	.rinp=0,	// Receive interrupt (not used)
 	.ainp=0,	// alternate receive interrupt (not used)
 	.pinp=1		// protocol interrupt (frame finished)
     }}).raw;
@@ -500,11 +489,11 @@ int init_mitsubishi(void)
 	.dlien=0,
 	.tsien=0,	// shifter finished 
 	.tbien=0,	// transmit buffer
-	.rien=1,	// receive interrupt
+	.rien=0,	// receive interrupt
 	.aien=0,
 	.brgien=0
     }}).raw;
-    u0c0.PCR=usic_ch_ns::pcr_asc_t({{
+    usic_ch_ns::pcr_asc_t pcr({{
 	.smd=1,
 	.stpb=0,
 	.idm=0,
@@ -518,7 +507,8 @@ int init_mitsubishi(void)
 	.rsten=0,
 	.tsten=0,
 	.mclk=0
-    }}).raw;
+    }});
+    u0c0.PCR=pcr.raw;
 
     // Powerup and wait
     serial_tx(0x1a);
@@ -527,12 +517,17 @@ int init_mitsubishi(void)
     while(counter<old_counter+450)
 	;
 
-    // First try to use the bi-directional mode
+    // First try to use half-duplex mode
     serial_tx(0x1a);
     if(putp==9) {
 	init_pos=position_MFS13_13;
 	return 0;
     }
+
+    // We don't need to disable the transmitter in full-duplex
+    pcr.ffien=0;
+    u0c0.PCR=pcr.raw;
+    NVIC_DisableIRQ(USIC0_1_IRQn);
 
     XMC_UART_CH_Init(XMC_UART1_CH1, &uart_config);
     XMC_UART_CH_SetInputSource(XMC_UART1_CH1, 
@@ -548,7 +543,6 @@ int init_mitsubishi(void)
     NVIC_ClearPendingIRQ(USIC1_0_IRQn);
     NVIC_EnableIRQ(USIC1_0_IRQn);
 
-
     serial_tx(0x1a);
     if(putp!=9) {
 	ENC_5V=0;
@@ -557,6 +551,7 @@ int init_mitsubishi(void)
 	XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC1);
 	XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC0);
 	XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC1);
+	NVIC_DisableIRQ(USIC1_0_IRQn);
 	return 1; 
     }
 
