@@ -35,6 +35,8 @@ template <int port, int pin>
 class pinBase
 {
 public:
+    constexpr static int PORT=port;
+    constexpr static int PIN=pin;
     pinBase() { static_assert(port>=0 && port<=15,
 	"Illegal port, should be 0..15");
     }
@@ -161,5 +163,6 @@ type_conversion(XMC_ETH_MAC_PORT_CTRL_MDIO,1,11);
 
 #include "gpio_output_conversions"
 
+#include "uart_conversions.h"
 }
 #endif

@@ -47,6 +47,7 @@ static iopin::output<1,9> ENC_12V=0;
 static iopin::output<1,15> ENC_DIR=0;
 static iopin::U0C0_DOUT0<1,5> ENC_TXD; // FIXME, HWCTRL should only be used fo SSI
 static iopin::input<1,4> ENC_RXD;
+static iopin::input<0,0> ENC_RXD2;
 #endif
 
 #endif

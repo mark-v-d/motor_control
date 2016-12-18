@@ -4,57 +4,167 @@
 #include "xmc_scu.h"
 
 #include <atomic>
+#include <math.h>
 
-void init_pos_dummy(position_t*,uint8_t*) {}
-void (*init_pos)(position_t*,uint8_t*)=init_pos_dummy;
+std::unique_ptr<encoder_t> encoder(new dummy_encoder_t);
 
+extern std::atomic<uint32_t> counter;
 
-void position_MFS13_13(position_t *pos, uint8_t *p)
+constexpr auto PI=acos(-1);
+
+/*******************************************************************************
+    Dummy encoder, encoder is initially of this type and it does nothing
+    and is never valid.
+*******************************************************************************/
+uint32_t dummy_encoder_t::position(void) { return 0;} 
+float dummy_encoder_t::angle(void) { return 0.0; }
+bool dummy_encoder_t::valid(void) { return false;}
+
+void dummy_encoder_t::trigger(void) {}
+void dummy_encoder_t::half_duplex(void) {}
+void dummy_encoder_t::full_duplex(void) {}
+
+/*******************************************************************************
+    Mitsubishi base class
+*******************************************************************************/
+class mitsubishi_encoder_t:public encoder_t {
+protected:
+    int putp;
+    uint8_t rx_buffer[16];
+public:
+    virtual uint32_t position(void) { return 0; }
+    virtual float angle(void) { return 0.0F; }
+    virtual bool valid(void) { return false; }
+
+    virtual void trigger(void) {}
+    virtual void half_duplex(void);
+    virtual void full_duplex(void);
+
+    static int detect(void);
+private:
+    void serial_tx(uint8_t);
+};
+
+void mitsubishi_encoder_t::half_duplex(void)
 {
-    const float conv=2.0*3.14159265358979/262144.0;
-    pos->start=p[0];
-    pos->state=p[1];
-    pos->encoder=p[2]+256*p[3]+65536*p[4];
-    pos->angle=conv*pos->encoder;
-    pos->rotation=p[5]+0x100*p[6]+0x10000*p[7];
-    pos->crc=0;
-    for(int i=0;i<9;i++)
-	pos->crc^=p[i];
+    XMC_USIC_CH_t *usic=ENC_TXD;
+    uint32_t reason=usic->PSR;
+    if(reason & USIC_CH_PSR_ASCMode_TFF_Msk)
+	ENC_DIR=0;
+    else if(reason & USIC_CH_PSR_ASCMode_RFF_Msk)
+	rx_buffer[putp++]=usic->RBUF;
+    usic->PSCR=reason;
 }
 
-void position_HC_PQ23(position_t *pos, uint8_t *p) 
+void mitsubishi_encoder_t::full_duplex(void)
 {
-    const float PI=3.14159265358979;
-    pos->start=p[0];
-    pos->state=p[1];
-    pos->encoder=(p[2]+256*p[3]);
-    pos->angle=float(2*PI/1024.0)*pos->encoder;
-    pos->rotation=p[5]+0x100*p[6];
-    pos->crc=0;
-    for(int i=0;i<9;i++)
-	pos->crc^=p[i];
+    // static_assert(uart_number(ENC_RXD2)==1, "FIXME");
+    u1c1.PSCR=u1c1.PSR;
+    rx_buffer[putp++]=u1c1.RBUF;
 }
 
-extern uint8_t rx_buffer[20] __attribute__((section ("ETH_RAM")));
-extern volatile int putp;
-extern std::atomic<int> counter;
-
-void serial_tx(uint8_t data)
+void mitsubishi_encoder_t::serial_tx(uint8_t data)
 {
     ENC_DIR=1;
     putp=0;
-    u0c0.TBUF[0]=0x1a;
+    ENC_TXD=data;
     uint32_t old_counter=counter;
     while(counter<old_counter+1)
 	;
 }
 
-/*
-    Configure the Mitsubishi encoder interface
-    returns 1 if failed.
-*/
-int init_mitsubishi(void)
+/* HC-MFS13-S13 motor *********************************************************/
+class mitsubishi_MFS13_t:public mitsubishi_encoder_t 
 {
+    constexpr static int poles=4;
+    constexpr static int increments_per_revolution=(1<<20);
+    constexpr static float conv=2.0*PI*poles/increments_per_revolution;
+public:
+    virtual uint32_t position(void);
+    virtual float angle(void); 
+    virtual bool valid(void);
+
+    virtual void trigger(void);
+};
+
+float mitsubishi_MFS13_t::angle(void)
+{
+    uint32_t encoder=rx_buffer[2]+(1<<8)*rx_buffer[3]+(1<<16)*rx_buffer[4];
+    return conv*float(encoder);
+}
+
+uint32_t mitsubishi_MFS13_t::position(void)
+{
+    return rx_buffer[2]+(1<<8)*rx_buffer[3]+(1<<16)*rx_buffer[4]
+	+(1<<20)*rx_buffer[5]+(1<<28)*(rx_buffer[6]*0x0f);
+}
+
+bool mitsubishi_MFS13_t::valid(void)
+{
+    if(putp!=9)
+	return false;
+    uint8_t crc=0;
+    for(int i=0;i<putp;i++)
+	crc^=rx_buffer[i];
+    return crc==0;
+}
+
+void mitsubishi_MFS13_t::trigger(void)
+{
+    ENC_DIR=1;
+    putp=0;
+    ENC_TXD=0x1a;
+} 
+
+/* HC-PQ[24]3 motor ***********************************************************/
+class mitsubishi_PQ_t:public mitsubishi_encoder_t 
+{
+    constexpr static int poles=4;
+    constexpr static int increments_per_revolution=(1<<12);
+    constexpr static float conv=2.0*PI*poles/increments_per_revolution;
+public:
+    virtual uint32_t position(void);
+    virtual float angle(void); 
+    virtual bool valid(void);
+
+    virtual void trigger(void);
+};
+
+float mitsubishi_PQ_t::angle(void)
+{
+    uint32_t encoder=rx_buffer[2]+(1<<8)*rx_buffer[3];
+    return conv*float(encoder);
+}
+
+uint32_t mitsubishi_PQ_t::position(void)
+{
+    return rx_buffer[2]+(1<<8)*rx_buffer[3]
+	+(1<<12)*rx_buffer[5]+(1<<20)*rx_buffer[6]+(1<<28)*rx_buffer[7];
+}
+
+bool mitsubishi_PQ_t::valid(void)
+{
+    if(putp!=9)
+	return false;
+    uint8_t crc=0;
+    for(int i=0;i<putp;i++)
+	crc^=rx_buffer[i];
+    return crc==0;
+}
+
+void mitsubishi_PQ_t::trigger(void)
+{
+    ENC_DIR=1;
+    putp=0;
+    ENC_TXD=0x1a;
+} 
+
+/******************************************************************************/
+int mitsubishi_encoder_t::detect(void)
+{
+    mitsubishi_encoder_t *p=new mitsubishi_encoder_t;
+    encoder=std::unique_ptr<mitsubishi_encoder_t>(p);
+
     XMC_UART_CH_CONFIG_t uart_config = {
 	.baudrate=2500000,
 	.data_bits=8U,
@@ -63,36 +173,37 @@ int init_mitsubishi(void)
 	.oversampling=0,
 	.parity_mode=XMC_USIC_CH_PARITY_MODE_NONE
     };
-    XMC_UART_CH_Init(XMC_UART0_CH0, &uart_config);
-    XMC_UART_CH_SetInputSource(XMC_UART0_CH0, 
+
+    XMC_UART_CH_Init(ENC_TXD, &uart_config);
+    XMC_UART_CH_SetInputSource(ENC_TXD, 
 	XMC_UART_CH_INPUT_RXD, USIC0_C0_DX0_P1_4);
-    XMC_UART_CH_EnableEvent(XMC_UART0_CH0, 
+    XMC_UART_CH_EnableEvent(ENC_TXD, 
 	XMC_UART_CH_EVENT_FRAME_FINISHED );
-    XMC_UART_CH_SelectInterruptNodePointer(XMC_UART0_CH0, 
+    XMC_UART_CH_SelectInterruptNodePointer(ENC_TXD, 
 	XMC_UART_CH_INTERRUPT_NODE_POINTER_PROTOCOL, 1);
-    XMC_UART_CH_Start(XMC_UART0_CH0);
+    XMC_UART_CH_Start(ENC_TXD);
     // Protocol interrupt
     NVIC_SetPriority(USIC0_1_IRQn,  0);
     NVIC_ClearPendingIRQ(USIC0_1_IRQn);
     NVIC_EnableIRQ(USIC0_1_IRQn);
 
+
     // Powerup and wait
-    serial_tx(0x1a);
+    p->serial_tx(0x1a);
     ENC_5V=1;
     uint32_t old_counter=counter;
     while(counter<old_counter+450)
 	;
 
     // First try to use half-duplex mode
-    serial_tx(0x1a);
-    if(putp==9) {
-	init_pos=position_MFS13_13;
+    p->serial_tx(0x1a);
+    if(p->putp==9) {
+	encoder=std::unique_ptr<mitsubishi_MFS13_t>(new mitsubishi_MFS13_t);
 	return 0;
     }
 
     // We don't need to disable the transmitter in full-duplex
-    XMC_UART_CH_DisableEvent(XMC_UART0_CH0, 
-	XMC_UART_CH_EVENT_FRAME_FINISHED );
+    XMC_UART_CH_DisableEvent(ENC_TXD, XMC_UART_CH_EVENT_FRAME_FINISHED );
     NVIC_DisableIRQ(USIC0_1_IRQn);
 
     XMC_UART_CH_Init(XMC_UART1_CH1, &uart_config);
@@ -109,8 +220,8 @@ int init_mitsubishi(void)
     NVIC_ClearPendingIRQ(USIC1_0_IRQn);
     NVIC_EnableIRQ(USIC1_0_IRQn);
 
-    serial_tx(0x1a);
-    if(putp!=9) {
+    p->serial_tx(0x1a);
+    if(p->putp!=9) {
 	ENC_5V=0;
 	ENC_DIR=0;
 	XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC0);
@@ -118,9 +229,16 @@ int init_mitsubishi(void)
 	XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC0);
 	XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC1);
 	NVIC_DisableIRQ(USIC1_0_IRQn);
-	return 1; 
+	return 1;
     }
 
-    init_pos=position_HC_PQ23;
+    encoder=std::unique_ptr<mitsubishi_PQ_t>(new mitsubishi_PQ_t);
     return 0;
+}
+
+
+void init_encoder(void)
+{
+    if(mitsubishi_encoder_t::detect())
+	return;
 }

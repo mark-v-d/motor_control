@@ -27,8 +27,8 @@ void print_output(ostream &s, string const &n)
 
     smatch m;
 
-    // CCU8 conversions to interface with XMCLib
     if(regex_search(n, m, regex("CCU8([0-3])_OUT([0-3])([0-3])"))) {
+	// CCU8 conversions to interface with XMCLib
 	s   << "    operator XMC_CCU8_MODULE_t*() { return CCU8" << m[1] << "; }\n"
 	    << "    operator XMC_CCU8_SLICE_t*() { return CCU8" << m[1] << "_CC8" << m[2] << ";}\n"
 	    << "    operator uint8_t() { return " << m[2] << "; }\n"
@@ -36,7 +36,12 @@ void print_output(ostream &s, string const &n)
 	    << "    void operator=(uint32_t i) { CCU80_CC8" << m[2] << "->CR" 
 	    << atoi(m[3].str().c_str())/2+1 << "S=i; }\n";
     } else if(regex_search(n, m, regex("U([01])C([01])_"))) {
-	s   << "    operator XMC_USIC_CH_t*(void) { return XMC_UART" << m[1] << "_CH" << m[2] << ";}\n";
+	// UART functions
+	s   << "    operator XMC_USIC_CH_t*(void) { return XMC_UART" << m[1] << "_CH" << m[2] << ";}\n"
+	    << "    int uart_number(void) { return " << m[1] << ";}\n"
+	    << "    int channel_number(void) { return " << m[2] << ";};\n";
+	if(regex_search(n,regex("DOUT0")))
+	    s << "    void operator=(uint32_t t) { u" << m[1] << "c" << m[2] << ".TBUF[0]=t; }\n";
     }
     s << "};\n";
 }

@@ -15,16 +15,12 @@
 
 std::atomic<int> counter(0);
 
-
 icmpProcessing icmp;
 Ethernet eth0(
     0x000319450000ULL, 0, 
     RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO,
     &icmp
 );
-
-uint8_t rx_buffer[20] __attribute__((section ("ETH_RAM")));
-volatile int putp;
 
 udp_logger logger __attribute__((section ("ETH_RAM")));
 udp_poker poker __attribute__((section ("ETH_RAM")));
@@ -63,8 +59,7 @@ enum {
 extern "C" void CCU80_0_IRQHandler(void)
 {
     LED2=0;
-    position_t pos;
-    (*init_pos)(&pos,rx_buffer);
+    // assert this is the correct handler
     for(int i=0;i<4;i++)
 	adc[i]=(int32_t(vadc.G[i].RES[0]&0xffff)-adc_offset[i])*adc_scale[i];
 
@@ -73,85 +68,91 @@ extern "C" void CCU80_0_IRQHandler(void)
     current[1]=adc[1];
     current[2]=-current[0]-current[1];
 
-    float angle=pos.angle;
-    Istator[0]=float(3.0/2)*current[0];
-    Istator[1]=float(sqrt(3))*current[1]+float(sqrt(3)/2)*current[0];
-    Irotor[0]= cosf(angle)*Istator[0]+sinf(angle)*Istator[1];
-    Irotor[1]=-sinf(angle)*Istator[0]+cosf(angle)*Istator[1];
+    if(!encoder->valid()) {
+	HBEN=0;
+	LED2=1;
+    } else {
+	float angle=encoder->angle();
+	Istator[0]=float(3.0/2)*current[0];
+	Istator[1]=float(sqrt(3))*current[1]+float(sqrt(3)/2)*current[0];
+	Irotor[0]= cosf(angle)*Istator[0]+sinf(angle)*Istator[1];
+	Irotor[1]=-sinf(angle)*Istator[0]+cosf(angle)*Istator[1];
 
-    switch(state) {
-    case STARTUP:
-	HB0=0;
-	HB1=0;
-	HB2=0;
-	state=OFFSET_DELAY;
-	break;
-    case OFFSET_DELAY:
-	if(counter>=1000) {
-	    state=OFFSET_CALIBRATE;
-	    adc_offset[0]=adc_offset[1]=adc_offset[2]=0;
-	    tc=0;
-	}
-	break;
-    case OFFSET_CALIBRATE:
-	if(counter>=1000+0x100) {
-	    state=ACTIVE;
-	    for(int i=0;i<4;i++)
-		adc_offset[i]/=tc;
-	} else {
-	    for(int i=0;i<4;i++)
-		adc_offset[i]+=vadc.G[i].RES[0]&0xffff;
-	    tc++;
-	}
-	break;
-    case ACTIVE:
-	HB0=hb[0];
-	HB1=hb[1];
-	HB2=hb[2];
-	break;
-    case CONTROLLED:
-	for(int i=0;i<2;i++) {
-	    float err=Iset[i]-Irotor[i];
-	    I[i]+=kI[i]*err;
-	    Vrotor[i]=err*kP[i]+I[i];
-	}
+	switch(state) {
+	case STARTUP:
+	    HB0=0;
+	    HB1=0;
+	    HB2=0;
+	    state=OFFSET_DELAY;
+	    break;
+	case OFFSET_DELAY:
+	    if(counter>=1000) {
+		state=OFFSET_CALIBRATE;
+		adc_offset[0]=adc_offset[1]=adc_offset[2]=0;
+		tc=0;
+	    }
+	    break;
+	case OFFSET_CALIBRATE:
+	    if(counter>=1000+0x100) {
+		state=ACTIVE;
+		for(int i=0;i<4;i++)
+		    adc_offset[i]/=tc;
+	    } else {
+		for(int i=0;i<4;i++)
+		    adc_offset[i]+=vadc.G[i].RES[0]&0xffff;
+		tc++;
+	    }
+	    break;
+	case ACTIVE:
+	    HBEN=1;
+	    HB0=hb[0];
+	    HB1=hb[1];
+	    HB2=hb[2];
+	    break;
+	case CONTROLLED:
+	    for(int i=0;i<2;i++) {
+		float err=Iset[i]-Irotor[i];
+		I[i]+=kI[i]*err;
+		Vrotor[i]=err*kP[i]+I[i];
+	    }
+	    // Intentionally no break
+	case VOLTAGE:
+	    HBEN=1;
+	    float sq_len=Vrotor[0]*Vrotor[0]+Vrotor[1]*Vrotor[1];
+	    if(sq_len>float(lim*lim)) {
+		Vrotor[0]*=lim/sqrtf(sq_len);
+		Vrotor[1]*=lim/sqrtf(sq_len);
+		I[0]*=lim/sqrtf(sq_len);
+		I[1]*=lim/sqrtf(sq_len);
+	    }
 
-    case VOLTAGE:
-	float sq_len=Vrotor[0]*Vrotor[0]+Vrotor[1]*Vrotor[1];
-	if(sq_len>float(lim*lim)) {
-	    Vrotor[0]*=lim/sqrtf(sq_len);
-	    Vrotor[1]*=lim/sqrtf(sq_len);
-	    I[0]*=lim/sqrtf(sq_len);
-	    I[1]*=lim/sqrtf(sq_len);
-	}
+	    Vstator[0]=cosf(angle)*Vrotor[0]-sinf(angle)*Vrotor[1];
+	    Vstator[1]=sinf(angle)*Vrotor[0]+cosf(angle)*Vrotor[1];
 
-	Vstator[0]= cosf(angle)*Vrotor[0]-sinf(angle)*Vrotor[1];
-	Vstator[1]= sinf(angle)*Vrotor[0]+cosf(angle)*Vrotor[1];
-
-	if(	(output[0]=float(sqrt(3)/3)*Vstator[1]+Vstator[0])>=0 &&
-	    (output[1]=float(2/sqrt(3))*Vstator[1])>=0
-	) {
-	    output[2]=0;
-	} else if(
-	    (output[1]=-Vstator[0]+float(sqrt(3)/3)*Vstator[1])>=0 &&
-	    (output[2]=-float(sqrt(3)/3)*Vstator[1]-Vstator[0])>=0
-	) {
-	    output[0]=0;
-	} else {
-	    output[0]=Vstator[0]-float(sqrt(3)/3)*Vstator[1];
-	    output[1]=0;
-	    output[2]=-float(2/sqrt(3))*Vstator[1];
+	    if(	(output[0]=float(sqrt(3)/3)*Vstator[1]+Vstator[0])>=0 &&
+		(output[1]=float(2/sqrt(3))*Vstator[1])>=0
+	    ) {
+		output[2]=0;
+	    } else if(
+		(output[1]=-Vstator[0]+float(sqrt(3)/3)*Vstator[1])>=0 &&
+		(output[2]=-float(sqrt(3)/3)*Vstator[1]-Vstator[0])>=0
+	    ) {
+		output[0]=0;
+	    } else {
+		output[0]=Vstator[0]-float(sqrt(3)/3)*Vstator[1];
+		output[1]=0;
+		output[2]=-float(2/sqrt(3))*Vstator[1];
+	    }
+	    HB0=output_scale*output[0];
+	    HB1=output_scale*output[1];
+	    HB2=output_scale*output[2];
+	    break;
 	}
-	HB0=output_scale*output[0];
-	HB1=output_scale*output[1];
-	HB2=output_scale*output[2];
-	break;
     }
 
     logger.SetADC(adc[0],adc[1],adc[2],adc[3]);
-    logger.SetEncoder(pos.encoder,pos.angle);
+    logger.SetEncoder(encoder->position(),encoder->angle());
     logger.SetRotor(Vrotor,Irotor);
-    logger.EncoderPacket(rx_buffer);
     logger.SetOutput(output);
     logger.transmit(&eth0);
 
@@ -163,37 +164,25 @@ extern "C" void CCU80_0_IRQHandler(void)
 /* This interrupt is used to trigger the encoder */
 extern "C" void CCU80_1_IRQHandler(void)
 {
-    if(	init_pos==position_MFS13_13 ||
-	init_pos==position_HC_PQ23
-    ) {
-	ENC_DIR=1;
-	putp=0;
-	u0c0.TBUF[0]=0x1a;
-    }
-}
-
-/* Mapped to Frame finished (half-duplex serial) */
-extern "C" void USIC0_1_IRQHandler(void)
-{
-    LED0=0;
-    uint32_t reason=u0c0.PSR;
-    if(reason & USIC_CH_PSR_ASCMode_TFF_Msk)
-	ENC_DIR=0;
-    else if(reason & USIC_CH_PSR_ASCMode_RFF_Msk)
-	rx_buffer[putp++]=u0c0.RBUF;
-    u0c0.PSCR=reason;
-    LED0=1;
+    // assert this is the correct handler
+    encoder->trigger();
 }
 
 /* Receive interrupt channel 1 (full-duplex serial) */
 extern "C" void USIC1_0_IRQHandler(void)
 {
     LED3=0;
-    u1c1.PSCR=u1c1.PSR;
-    rx_buffer[putp++]=u1c1.RBUF;
+    encoder->full_duplex();
     LED3=1;
 }
 
+/* Mapped to Frame finished (half-duplex serial) */
+extern "C" void USIC0_1_IRQHandler(void)
+{
+    LED0=0;
+    encoder->half_duplex();
+    LED0=1;
+}
 
 extern "C" void VADC0_G0_0_IRQHandler(void)
 {
@@ -207,7 +196,6 @@ void init_adc(void);
 int main()
 {
     // SysTick_Config(SystemCoreClock/1000);
-
     init_adc();
     pwm_3phase pwm(HB0,HB1,HB2,18000);
     output_scale=pwm.period();
@@ -215,10 +203,8 @@ int main()
     eth0.add_udp_receiver(&logger,1);
     eth0.add_udp_receiver(&poker,2);
 
-    HBEN=0;
-    init_mitsubishi();
+    init_encoder();
 
-    HBEN=1;
     PPB->SCR=1;
 
     XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
@@ -243,7 +229,6 @@ void __gnu_cxx::__verbose_terminate_handler(void)
 	LED2^=1;
     }
 }
-
 
 void init_adc(void)
 {

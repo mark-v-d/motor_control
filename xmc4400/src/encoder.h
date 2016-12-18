@@ -1,26 +1,33 @@
 #ifndef ENCODER_H
 #define ENCODER_H
 #include <stdint.h>
+#include <memory>
 
-/* encoder 4500Hz,
-    0 0101 1000 --> 0x1a
-    2.5Mb/s
-*/
+class encoder_t {
+public:
+    virtual ~encoder_t(void) {}
+    virtual uint32_t position(void)=0;
+    virtual float angle(void)=0;
+    virtual bool valid(void)=0;
 
-struct position_t {
-    uint8_t start;
-    uint8_t state;
-    uint32_t encoder;
-    float angle;
-    uint32_t rotation;
-    uint8_t crc;
+    virtual void trigger(void)=0;
+    virtual void half_duplex(void)=0;
+    virtual void full_duplex(void)=0;
 };
 
-extern void (*init_pos)(position_t*,uint8_t*);
+class dummy_encoder_t:public encoder_t {
+public:
+    virtual uint32_t position(void);
+    virtual float angle(void);
+    virtual bool valid(void);
 
-void position_MFS13_13(position_t *pos, uint8_t *p);
-void position_HC_PQ23(position_t *pos, uint8_t *p);
+    virtual void trigger(void);
+    virtual void half_duplex(void);
+    virtual void full_duplex(void);
+};
 
-int init_mitsubishi(void);
+extern std::unique_ptr<encoder_t> encoder;
+
+void init_encoder(void);
 
 #endif // ENCODER_H
