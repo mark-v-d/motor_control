@@ -195,13 +195,13 @@ extern ETH_GLOBAL_TypeDef eth_debug;
 void init_adc(void);
 int main()
 {
+    eth0.add_udp_receiver(&logger,1);
+    eth0.add_udp_receiver(&poker,2);
+
     // SysTick_Config(SystemCoreClock/1000);
     init_adc();
     pwm_3phase pwm(HB0,HB1,HB2,18000);
     output_scale=pwm.period();
-
-    eth0.add_udp_receiver(&logger,1);
-    eth0.add_udp_receiver(&poker,2);
 
     init_encoder();
 

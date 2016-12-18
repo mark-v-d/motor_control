@@ -47,11 +47,10 @@ private:
 
 void mitsubishi_encoder_t::half_duplex(void)
 {
+    ENC_DIR=0;
     XMC_USIC_CH_t *usic=ENC_TXD;
     uint32_t reason=usic->PSR;
-    if(reason & USIC_CH_PSR_ASCMode_TFF_Msk)
-	ENC_DIR=0;
-    else if(reason & USIC_CH_PSR_ASCMode_RFF_Msk)
+    if(reason & USIC_CH_PSR_ASCMode_RFF_Msk)
 	rx_buffer[putp++]=usic->RBUF;
     usic->PSCR=reason;
 }
