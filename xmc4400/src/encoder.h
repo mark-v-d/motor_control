@@ -15,17 +15,6 @@ public:
     virtual void full_duplex(void)=0;
 };
 
-class dummy_encoder_t:public encoder_t {
-public:
-    virtual uint32_t position(void);
-    virtual float angle(void);
-    virtual bool valid(void);
-
-    virtual void trigger(void);
-    virtual void half_duplex(void);
-    virtual void full_duplex(void);
-};
-
 extern std::unique_ptr<encoder_t> encoder;
 
 void init_encoder(void);

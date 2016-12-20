@@ -6,7 +6,6 @@
 #include <atomic>
 #include <math.h>
 
-std::unique_ptr<encoder_t> encoder(new dummy_encoder_t);
 
 extern std::atomic<uint32_t> counter;
 
@@ -16,6 +15,17 @@ constexpr auto PI=acos(-1);
     Dummy encoder, encoder is initially of this type and it does nothing
     and is never valid.
 *******************************************************************************/
+class dummy_encoder_t:public encoder_t {
+public:
+    virtual uint32_t position(void);
+    virtual float angle(void);
+    virtual bool valid(void);
+
+    virtual void trigger(void);
+    virtual void half_duplex(void);
+    virtual void full_duplex(void);
+};
+
 uint32_t dummy_encoder_t::position(void) { return 0;} 
 float dummy_encoder_t::angle(void) { return 0.0; }
 bool dummy_encoder_t::valid(void) { return false;}
@@ -23,6 +33,8 @@ bool dummy_encoder_t::valid(void) { return false;}
 void dummy_encoder_t::trigger(void) {}
 void dummy_encoder_t::half_duplex(void) {}
 void dummy_encoder_t::full_duplex(void) {}
+
+std::unique_ptr<encoder_t> encoder(new dummy_encoder_t);
 
 /*******************************************************************************
     Mitsubishi base class
@@ -175,9 +187,8 @@ int mitsubishi_encoder_t::detect(void)
 
     XMC_UART_CH_Init(ENC_TXD, &uart_config);
     XMC_UART_CH_SetInputSource(ENC_TXD, 
-	XMC_UART_CH_INPUT_RXD, USIC0_C0_DX0_P1_4);
-    XMC_UART_CH_EnableEvent(ENC_TXD, 
-	XMC_UART_CH_EVENT_FRAME_FINISHED );
+	XMC_UART_CH_INPUT_RXD, rxd_num(ENC_RXD)); //USIC0_C0_DX0_P1_4);
+    XMC_UART_CH_EnableEvent(ENC_TXD, XMC_UART_CH_EVENT_FRAME_FINISHED );
     XMC_UART_CH_SelectInterruptNodePointer(ENC_TXD, 
 	XMC_UART_CH_INTERRUPT_NODE_POINTER_PROTOCOL, 1);
     XMC_UART_CH_Start(ENC_TXD);
@@ -198,7 +209,7 @@ int mitsubishi_encoder_t::detect(void)
     p->serial_tx(0x1a);
     if(p->putp==9) {
 	encoder=std::unique_ptr<mitsubishi_MFS13_t>(new mitsubishi_MFS13_t);
-	return 0;
+	return 1;
     }
 
     // We don't need to disable the transmitter in full-duplex
@@ -228,16 +239,130 @@ int mitsubishi_encoder_t::detect(void)
 	XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC0);
 	XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC1);
 	NVIC_DisableIRQ(USIC1_0_IRQn);
-	return 1;
+	encoder=std::unique_ptr<dummy_encoder_t>(new dummy_encoder_t);
+	return 0;
     }
 
     encoder=std::unique_ptr<mitsubishi_PQ_t>(new mitsubishi_PQ_t);
-    return 0;
+    return 1;
 }
 
+
+/*******************************************************************************
+    Hiperface encoder
+*******************************************************************************/
+class hiperface_t:public encoder_t {
+    uint8_t rx_buffer[8];
+    uint8_t tx_buffer[8];
+    volatile int rx_put, tx_get, tx_len;
+    std::atomic<uint32_t> counter;
+public:
+    virtual uint32_t position(void) { return 0; }
+    virtual float angle(void) { return 0.0F; }
+    virtual bool valid(void) { return false; }
+
+    virtual void trigger(void) { counter++; }
+    virtual void half_duplex(void);
+    virtual void full_duplex(void) {}
+
+    static int detect(void);
+private:
+    void transmit(std::initializer_list<uint8_t> msg)
+    {
+	ENC_DIR=1;
+	uint8_t crc=0;
+	tx_len=0;
+	for(auto x=msg.begin();x!=msg.end();x++) {
+	    crc^=*x;
+	    tx_buffer[tx_len++]=*x;
+	}
+	tx_buffer[tx_len++]=crc;
+	tx_get=0;
+	rx_put=0;
+	ENC_TXD=tx_buffer[tx_get++]; 
+	while(tx_get<tx_len)
+	    ;
+	counter=0;
+	while(counter<90)
+	    ;
+    }
+};
+
+void hiperface_t::half_duplex(void)
+{
+    LED2=0;
+    XMC_USIC_CH_t *usic=ENC_TXD;
+    uint32_t reason=usic->PSR;
+    if(reason & USIC_CH_PSR_ASCMode_TFF_Msk) {
+	if(tx_get<tx_len)
+	    ENC_TXD=tx_buffer[tx_get++];
+	else
+	    ENC_DIR=0;
+    } else if(reason & USIC_CH_PSR_ASCMode_RFF_Msk) {
+	rx_buffer[rx_put++]=usic->RBUF;
+    }
+    usic->PSCR=reason;
+    LED2=1;
+}
+
+int hiperface_t::detect(void)
+{
+    hiperface_t *p=new hiperface_t;
+    encoder=std::unique_ptr<hiperface_t>(p);
+
+    XMC_UART_CH_CONFIG_t uart_config = {
+	.baudrate=9600,
+	.data_bits=8U,
+	.frame_length=0,
+	.stop_bits=1,
+	.oversampling=0,
+	.parity_mode=XMC_USIC_CH_PARITY_MODE_EVEN
+    };
+
+    XMC_UART_CH_Init(ENC_TXD, &uart_config);
+    XMC_UART_CH_SetInputSource(ENC_TXD, 
+	XMC_UART_CH_INPUT_RXD, rxd_num(ENC_RXD)); //USIC0_C0_DX0_P1_4);
+    XMC_UART_CH_EnableEvent(ENC_TXD, XMC_UART_CH_EVENT_FRAME_FINISHED );
+    XMC_UART_CH_SelectInterruptNodePointer(ENC_TXD, 
+	XMC_UART_CH_INTERRUPT_NODE_POINTER_PROTOCOL, 1);
+    XMC_UART_CH_Start(ENC_TXD);
+    // Protocol interrupt
+    NVIC_SetPriority(USIC0_1_IRQn,  0);
+    NVIC_ClearPendingIRQ(USIC0_1_IRQn);
+    NVIC_EnableIRQ(USIC0_1_IRQn);
+
+    // Powerup and wait
+    ENC_12V=1;
+    p->counter=0;
+    while(p->counter<900) // sleep 0.2 sec
+	;
+    p->transmit({0xff, 0x53}); // reset
+    do {
+	p->transmit({0xff, 0x50});	// ask status
+    } while(p->rx_put!=4 || p->rx_buffer[2]);
+    p->transmit({0xff,0x42});
+
+    if(p->rx_put!=7) {
+	ENC_12V=0;
+	ENC_DIR=0;
+	// FIXME
+	XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC0);
+	XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC1);
+	XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC0);
+	XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC1);
+	NVIC_DisableIRQ(USIC1_0_IRQn);
+	NVIC_DisableIRQ(USIC0_1_IRQn);
+	encoder=std::unique_ptr<dummy_encoder_t>(new dummy_encoder_t);
+	return 0;
+    }
+
+    return 1;
+}
 
 void init_encoder(void)
 {
     if(mitsubishi_encoder_t::detect())
+	return;
+    if(hiperface_t::detect())
 	return;
 }
