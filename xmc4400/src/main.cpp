@@ -13,7 +13,7 @@
 #include "bitfields.h"
 #include "encoder.h"
 
-std::atomic<int> counter(0);
+std::atomic<uint32_t> sleep_counter(0);
 
 icmpProcessing icmp;
 Ethernet eth0(
@@ -27,14 +27,13 @@ udp_poker poker __attribute__((section ("ETH_RAM")));
 
 extern "C" void SysTick_Handler(void)
 {
-    counter++;
+    // counter++;
 }
 
 uint32_t hb[3];
 float adc[4];
 float adc_scale[4]={0.0010819,0.0010819,1.0,1.0};
 int32_t adc_offset[4];
-int tc;
 
 float Istator[2];
 float Irotor[2];
@@ -52,12 +51,15 @@ enum {
     OFFSET_DELAY,
     OFFSET_CALIBRATE,
     ACTIVE,
-    CONTROLLED,
+    CURRENT,
     VOLTAGE
 } state;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
+    static_assert(HB0.module==0, "Wrong interrupt handler for HB0");
+    static uint32_t counter;
+
     LED2=0;
     // assert this is the correct handler
     for(int i=0;i<4;i++)
@@ -68,9 +70,45 @@ extern "C" void CCU80_0_IRQHandler(void)
     current[1]=adc[1];
     current[2]=-current[0]-current[1];
 
-    if(!encoder->valid()) {
+    switch(state) {
+    case STARTUP:
 	HBEN=0;
-	LED2=1;
+	HB0=0;
+	HB1=0;
+	HB2=0;
+	state=OFFSET_DELAY;
+	counter=0;
+	break;
+    case OFFSET_DELAY:
+	if(++counter>=1000) {
+	    state=OFFSET_CALIBRATE;
+	    counter=0;
+	    adc_offset[0]=adc_offset[1]=adc_offset[2]=0;
+	}
+	break;
+    case OFFSET_CALIBRATE:
+	if(++counter>=256) {
+	    state=CURRENT;
+	    for(int i=0;i<4;i++)
+		adc_offset[i]/=counter;
+	} else {
+	    for(int i=0;i<4;i++)
+		adc_offset[i]+=vadc.G[i].RES[0]&0xffff;
+	}
+	break;
+    }
+
+    if(!encoder->valid()) {
+	switch(state) {
+	case ACTIVE:
+	    HBEN=1;
+	    HB0=hb[0];
+	    HB1=hb[1];
+	    HB2=hb[2];
+	    break;
+	default:
+	    HBEN=0;
+	}
     } else {
 	float angle=encoder->angle();
 	Istator[0]=float(3.0/2)*current[0];
@@ -79,37 +117,7 @@ extern "C" void CCU80_0_IRQHandler(void)
 	Irotor[1]=-sinf(angle)*Istator[0]+cosf(angle)*Istator[1];
 
 	switch(state) {
-	case STARTUP:
-	    HB0=0;
-	    HB1=0;
-	    HB2=0;
-	    state=OFFSET_DELAY;
-	    break;
-	case OFFSET_DELAY:
-	    if(counter>=1000) {
-		state=OFFSET_CALIBRATE;
-		adc_offset[0]=adc_offset[1]=adc_offset[2]=0;
-		tc=0;
-	    }
-	    break;
-	case OFFSET_CALIBRATE:
-	    if(counter>=1000+0x100) {
-		state=ACTIVE;
-		for(int i=0;i<4;i++)
-		    adc_offset[i]/=tc;
-	    } else {
-		for(int i=0;i<4;i++)
-		    adc_offset[i]+=vadc.G[i].RES[0]&0xffff;
-		tc++;
-	    }
-	    break;
-	case ACTIVE:
-	    HBEN=1;
-	    HB0=hb[0];
-	    HB1=hb[1];
-	    HB2=hb[2];
-	    break;
-	case CONTROLLED:
+	case CURRENT:
 	    for(int i=0;i<2;i++) {
 		float err=Iset[i]-Irotor[i];
 		I[i]+=kI[i]*err;
@@ -156,7 +164,6 @@ extern "C" void CCU80_0_IRQHandler(void)
     logger.SetOutput(output);
     logger.transmit(&eth0);
 
-    counter++;
     static_cast<XMC_CCU8_MODULE_t*>(HB0)->GCSS=0x1111;
     LED2=1;
 }
@@ -164,8 +171,9 @@ extern "C" void CCU80_0_IRQHandler(void)
 /* This interrupt is used to trigger the encoder */
 extern "C" void CCU80_1_IRQHandler(void)
 {
-    // assert this is the correct handler
+    static_assert(HB0.module==0, "Wrong interrupt handler for HB0");
     encoder->trigger();
+    sleep_counter++;
 }
 
 /* Receive interrupt channel 1 (full-duplex serial) */
@@ -179,6 +187,7 @@ extern "C" void USIC1_0_IRQHandler(void)
 /* Mapped to Frame finished (half-duplex serial) */
 extern "C" void USIC0_1_IRQHandler(void)
 {
+    // static_assert(ENC_TXD.uart_number()==0, "Wrong encoder handler");
     LED0=0;
     encoder->half_duplex();
     LED0=1;
@@ -200,7 +209,7 @@ int main()
 
     // SysTick_Config(SystemCoreClock/1000);
     init_adc();
-    pwm_3phase pwm(HB0,HB1,HB2,18000);
+    pwm_3phase pwm(HB0,HB1,HB2,4*trigger_HZ);
     output_scale=pwm.period();
 
     init_encoder();

@@ -7,6 +7,8 @@
 #include <xmc_ccu8.h>
 #include <xmc_uart.h>
 #include <xmc_dma.h>
+#include <xmc_scu.h>
+
 
 struct XMC_GPIO_PORT_padded:public XMC_GPIO_PORT
 {
@@ -163,6 +165,6 @@ type_conversion(XMC_ETH_MAC_PORT_CTRL_MDIO,1,11);
 
 #include "gpio_output_conversions"
 
-#include "uart_conversions.h"
+#include "input_conversions.h"
 }
 #endif

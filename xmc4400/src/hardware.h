@@ -1,6 +1,24 @@
 #ifndef HARDWARE_H
 #define HARDWARE_H
 
+#include <chrono>
+#include <atomic>
+#include <stdint.h>
+
+constexpr float trigger_HZ=4500.0;
+
+extern std::atomic<uint32_t> sleep_counter;
+
+template <class T>
+inline void sleep(T time)
+{
+    using tick_t=std::chrono::duration<uint32_t,std::ratio<1,int(trigger_HZ)>>;
+    auto ticks=std::chrono::duration_cast<tick_t>(time);
+    sleep_counter=0;
+    while(sleep_counter<ticks.count())
+	;
+}
+
 #include "gpio.h"
 
 #if (UC_DEVICE == XMC4500)
@@ -48,6 +66,10 @@ static iopin::output<1,15> ENC_DIR=0;
 static iopin::U0C0_DOUT0<1,5> ENC_TXD; // FIXME, HWCTRL should only be used fo SSI
 static iopin::input<1,4> ENC_RXD;
 static iopin::input<0,0> ENC_RXD2;
+
+static iopin::input<14,7> ENC_SIN;
+static iopin::input<14,6> ENC_COS;
+
 #endif
 
 #endif
