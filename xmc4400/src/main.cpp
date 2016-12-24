@@ -57,6 +57,8 @@ enum {
 } state;
 
 float manual_angle;
+float vservo;
+constexpr float servo_factor=0.00185805929607582;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
@@ -67,6 +69,7 @@ extern "C" void CCU80_0_IRQHandler(void)
     // assert this is the correct handler
     for(int i=0;i<4;i++)
 	adc[i]=(int32_t(vadc.G[i].RES[0]&0xffff)-adc_offset[i])*adc_scale[i];
+    vservo=(0xffff-dsd.ch[dsd_channel(MDAT)].RESM)*servo_factor;
 
     float current[3];
     current[0]=adc[0];
@@ -210,6 +213,7 @@ extern "C" void VADC0_G0_0_IRQHandler(void)
 
 extern ETH_GLOBAL_TypeDef eth_debug;
 void init_adc(void);
+void init_voltage_measurement(void);
 int main()
 {
     eth0.add_udp_receiver(&logger,1);
@@ -220,6 +224,7 @@ int main()
     pwm_3phase pwm(HB0,HB1,HB2,4*trigger_HZ);
     output_scale=pwm.period();
 
+    init_voltage_measurement();
     init_encoder();
 
     PPB->SCR=1;
@@ -373,4 +378,37 @@ void init_adc(void)
     NVIC_SetPriority(VADC0_G0_0_IRQn,  0);
     NVIC_ClearPendingIRQ(VADC0_G0_0_IRQn);
     NVIC_EnableIRQ(VADC0_G0_0_IRQn);
+}
+
+#include "xmc_dsd.h"
+
+void init_voltage_measurement(void)
+{
+    XMC_DSD_Init(DSD);
+    dsd.GLOBCFG=1;
+    constexpr int ch=dsd_channel(MDAT);
+    dsd.ch[ch].MODCFG=dsd_ch_ns::modcfg_t({{
+	.divm=15,
+	.dwc=1
+    }}).raw;
+    dsd.ch[ch].DICFG=dsd_ch_ns::dicfg_t({{
+	.dsrc=dsd_dsrc(MDAT),	// data not inverted
+	.dswc=1,		// Enable dsrc update
+	.itrmode=0,		// integrator bypassed
+	.tstrmode=0,		// No timestamp trigger
+	.trsel=0,		// Don't care, trigger not used
+	.trwc=1,		// Write Control for Trigger Parameters
+	.csrc=15, 		// Internal clock
+	.strobe=1,		// sample trigger is generated at each rising clock edge
+	.scwc=1			// write control
+    }}).raw;
+    dsd.ch[ch].FCFGC=dsd_ch_ns::fcfgc_t({{
+	.cfmdf=63,	// decimate by 256
+	.cfmc=2,	// 3rd order
+	.cfen=1,	// enable CIC
+	.srgm=0,	// no service requests
+	.cfmsv=3,	// start value ?!?
+	.cfmdcnt=10 	// Decimation counter
+    }}).raw;
+    dsd.GLOBRC|=1<<ch; 
 }

@@ -37,6 +37,13 @@ struct CCU4_complete_t:public CCU4_GLOBAL_TypeDef {
     } cc[4];
 };
 
+struct DSD_complete_t:public DSD_GLOBAL_TypeDef {
+    __I uint32_t RESERVED6[6];
+    struct dsd_ch_t:public DSD_CH_TypeDef {
+	__I uint32_t RESERVED10[21];
+    } ch[4];
+};
+
 extern XMC_GPIO_PORT_padded gpio_port[15];
 extern XMC_DMA_t dma0;
 extern XMC_USIC_CH_t u0c0;
@@ -49,6 +56,7 @@ extern CCU4_complete_t ccu40;
 extern CCU4_complete_t ccu41;
 extern CCU4_complete_t ccu42;
 extern CCU4_complete_t ccu43;
+extern DSD_complete_t dsd;
 
 namespace iopin {
 

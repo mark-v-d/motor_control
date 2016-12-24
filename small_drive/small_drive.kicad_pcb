@@ -1,9 +1,9 @@
-(kicad_pcb (version 20160815) (host pcbnew "(2016-09-25 revision 51d0c0a)-master")
+(kicad_pcb (version 20160815) (host pcbnew "(2016-11-01 revision ca1ecc0)-master")
 
   (general
     (links 507)
     (no_connects 0)
-    (area 38.949999 103.949999 139.050001 184.050001)
+    (area 32.144048 101.8425 144.855953 193.135001)
     (thickness 1.6)
     (drawings 12)
     (tracks 1876)

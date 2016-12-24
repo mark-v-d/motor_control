@@ -70,6 +70,9 @@ static iopin::input<0,0> ENC_RXD2;
 static iopin::input<14,7> ENC_SIN;
 static iopin::input<14,6> ENC_COS;
 
+static iopin::input<2,6> MDAT;
+static iopin::DSD_MCLK1<1,8> MCLK;
+
 #endif
 
 #endif

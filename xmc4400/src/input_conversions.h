@@ -43,6 +43,32 @@ SPECIALISATION(posif_pinZ, int, 14, 5, 1);
 SPECIALISATION(posif_pinB, int, 14, 6, 1);
 SPECIALISATION(posif_pinA, int, 14, 7, 1);
 
+BASE__FUNCTION(dsd_channel, int);
+SPECIALISATION(dsd_channel, int, 0, 7, 1);
+SPECIALISATION(dsd_channel, int, 0, 8, 0);
+SPECIALISATION(dsd_channel, int, 1, 5, 2);
+SPECIALISATION(dsd_channel, int, 1, 6, 2);
+SPECIALISATION(dsd_channel, int, 2, 6, 1);
+SPECIALISATION(dsd_channel, int, 2, 7, 0);
+SPECIALISATION(dsd_channel, int, 3, 3, 3);
+
+BASE__FUNCTION(dsd_dsrc, int);
+SPECIALISATION(dsd_dsrc, int, 0, 7, 2);
+SPECIALISATION(dsd_dsrc, int, 0, 8, 2);
+SPECIALISATION(dsd_dsrc, int, 1, 5, 4);
+SPECIALISATION(dsd_dsrc, int, 1, 6, 2);
+SPECIALISATION(dsd_dsrc, int, 2, 6, 4);
+SPECIALISATION(dsd_dsrc, int, 2, 7, 4);
+SPECIALISATION(dsd_dsrc, int, 3, 3, 4);
+
+BASE__FUNCTION(dsd_not_dsrc, int);
+SPECIALISATION(dsd_not_dsrc, int, 0, 7, 3);
+SPECIALISATION(dsd_not_dsrc, int, 0, 8, 3);
+SPECIALISATION(dsd_not_dsrc, int, 1, 5, 5);
+SPECIALISATION(dsd_not_dsrc, int, 1, 6, 3);
+SPECIALISATION(dsd_not_dsrc, int, 2, 6, 5);
+SPECIALISATION(dsd_not_dsrc, int, 2, 7, 5);
+SPECIALISATION(dsd_not_dsrc, int, 3, 3, 5);
 
 template <class T>
 constexpr XMC_SCU_PERIPHERAL_CLOCK_t posif_clock(T const &o)
