@@ -253,13 +253,19 @@ int mitsubishi_encoder_t::detect(void)
     Hiperface encoder
 *******************************************************************************/
 class hiperface_t:public encoder_t {
+    // FIXME, these settings are for the DS56S
+    constexpr static int poles=3;
+    constexpr static int increments_per_revolution=(1<<12);
+    constexpr static float conv=2.0*PI*poles/increments_per_revolution;
+    constexpr static float offset=PI/3;
+
     uint8_t rx_buffer[8];
     uint8_t tx_buffer[8];
     volatile int rx_put, tx_get, tx_len;
 public:
     virtual uint32_t position(void) { return CCU40_CC40->TIMER; }
-    virtual float angle(void) { return 0.0F; }
-    virtual bool valid(void) { return false; }
+    virtual float angle(void) { return conv*ccu40.cc[0].TIMER+offset; }
+    virtual bool valid(void) { return true; }
 
     virtual void trigger(void) { }
     virtual void half_duplex(void);

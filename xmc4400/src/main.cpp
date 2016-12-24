@@ -51,9 +51,12 @@ enum {
     OFFSET_DELAY,
     OFFSET_CALIBRATE,
     ACTIVE,
+    MANUAL_ANGLE,
     CURRENT,
     VOLTAGE
 } state;
+
+float manual_angle;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
@@ -98,7 +101,7 @@ extern "C" void CCU80_0_IRQHandler(void)
 	break;
     }
 
-    if(!encoder->valid()) {
+    if(!encoder->valid() && !state==MANUAL_ANGLE) {
 	switch(state) {
 	case ACTIVE:
 	    HBEN=1;
@@ -110,13 +113,18 @@ extern "C" void CCU80_0_IRQHandler(void)
 	    HBEN=0;
 	}
     } else {
-	float angle=encoder->angle();
+	float angle;
+	if(state!=MANUAL_ANGLE)
+	    angle=encoder->angle();
+	else
+	    angle=manual_angle;
 	Istator[0]=float(3.0/2)*current[0];
 	Istator[1]=float(sqrt(3))*current[1]+float(sqrt(3)/2)*current[0];
 	Irotor[0]= cosf(angle)*Istator[0]+sinf(angle)*Istator[1];
 	Irotor[1]=-sinf(angle)*Istator[0]+cosf(angle)*Istator[1];
 
 	switch(state) {
+	case MANUAL_ANGLE:
 	case CURRENT:
 	    for(int i=0;i<2;i++) {
 		float err=Iset[i]-Irotor[i];
