@@ -2,9 +2,12 @@
 #include "hardware.h"
 
 #include "xmc_scu.h"
+#include "xmc_ccu4.h"
 
 #include <atomic>
 #include <math.h>
+
+#include "bitfields.h"
 
 constexpr auto PI=acos(-1);
 
@@ -254,7 +257,7 @@ class hiperface_t:public encoder_t {
     uint8_t tx_buffer[8];
     volatile int rx_put, tx_get, tx_len;
 public:
-    virtual uint32_t position(void) { return 0; }
+    virtual uint32_t position(void) { return CCU40_CC40->TIMER; }
     virtual float angle(void) { return 0.0F; }
     virtual bool valid(void) { return false; }
 
@@ -299,6 +302,72 @@ void hiperface_t::half_duplex(void)
     LED2=1;
 }
 
+#include "xmc_posif.h"
+
+void posif_init(uint32_t position)
+{
+    static_assert(posif_unit(ENC_COS)==posif_unit(ENC_SIN),
+	"ENC_COS and ENC_SIN must be part of the same POSIF unit");
+    auto p=&posif[posif_unit(ENC_COS)];
+
+    XMC_POSIF_CONFIG_t PCONF({{{
+	.mode=XMC_POSIF_MODE_QD,
+	.input0=posif_pinA(ENC_SIN),
+	.input1=posif_pinB(ENC_COS),
+	.input2=0,
+	.filter=7
+    }}});
+    XMC_POSIF_Init(p, &PCONF);
+
+    XMC_POSIF_QD_CONFIG_t qd;
+    qd.phase_a=0;
+    qd.phase_b=0;       /**< Phase-B active level configuration */
+    qd.phase_leader=0;  /**< Which of the two phase signals[Phase A or Phase B] leads the other? */
+    qd.index=XMC_POSIF_QD_INDEX_GENERATION_NEVER;
+    XMC_POSIF_QD_Init(p, &qd);
+
+    XMC_POSIF_Start(p);
+
+    /* Initialise counter FIXME, allocate unit in some way */
+    XMC_CCU4_SetModuleClock(CCU40, XMC_CCU4_CLOCK_SCU);
+    XMC_CCU4_EnableModule(CCU40);
+    XMC_CCU4_Init(CCU40, XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+    ccu40.GIDLC=1;		// slice[0] out of idle
+
+    ccu40.cc[0].INS=ccu4_cc4_ns::ins_t({{
+	.ev0is=CCU40_IN0_POSIF0_OUT0,	// q_clock
+	.ev1is=CCU40_IN1_POSIF0_OUT1,	// q_dir
+	.ev2is=CCU40_IN2_POSIF0_OUT2,	// FIXME map this to CCU80 SR1
+	.ev0em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
+	.ev1em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
+	.ev2em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_NONE,
+	.ev0lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
+	.ev1lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_COUNT_UP_ON_LOW,
+	.ev2lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
+	.lpf0m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
+	.lpf1m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
+	.lpf2m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED
+    }}).raw;
+    ccu40.cc[0].CMC=ccu4_cc4_ns::cmc_t({{
+	.strts=0,	// no externa start
+	.ends=0,	// no external end
+	.cap0s=0,	// Should be mapped to CCU80 SR1
+	.cap1s=0,	// not external capture 1
+	.gates=0,	// no external gating
+	.uds=2,		// up/down
+	.lds=0,		// no external load
+	.cnts=1,	// count
+	.ofs=0,
+	.ts=0,
+	.mos=0,
+	.tce=0 
+    }}).raw; 
+    ccu40.cc[0].PRS=0xffff;	// 16-bit period
+    ccu40.GCSS=1;		// transfer enable (to load period)
+    ccu40.cc[0].TIMER=(position/8)&0xffff; 
+    ccu40.cc[0].TCSET=1;	// timer ON
+}
+
 int hiperface_t::detect(void)
 {
     using namespace std::chrono;
@@ -341,16 +410,12 @@ int hiperface_t::detect(void)
 	return 0;
     }
 
+    uint32_t position=p->rx_buffer[5]+0x100L*p->rx_buffer[4]+0x10000L*p->rx_buffer[3]+0x1000000L*p->rx_buffer[2];
+    posif_init(position);
+
     return 1;
 }
 
-void posif_init(void)
-{
-    static_assert(posif_unit(ENC_COS)==posif_unit(ENC_SIN),
-	"ENC_COS and ENC_SIN must be part of the same POSIF unit");
-    XMC_SCU_CLOCK_UngatePeripheralClock(posif_clock(ENC_COS));
-    XMC_SCU_RESET_DeassertPeripheralReset(posif_reset(ENC_COS));
-}
 
 void init_encoder(void)
 {

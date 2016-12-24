@@ -33,6 +33,17 @@ BASE__FUNCTION(posif_unit, int);
 SPECIALISATION(posif_unit, int, 14, 6, 0);
 SPECIALISATION(posif_unit, int, 14, 7, 0);
 
+BASE__FUNCTION(posif_pinZ, int);
+BASE__FUNCTION(posif_pinB, int);
+BASE__FUNCTION(posif_pinA, int);
+SPECIALISATION(posif_pinZ, int,  2, 3, 0);
+SPECIALISATION(posif_pinB, int,  2, 4, 0);
+SPECIALISATION(posif_pinA, int,  2, 5, 0);
+SPECIALISATION(posif_pinZ, int, 14, 5, 1);
+SPECIALISATION(posif_pinB, int, 14, 6, 1);
+SPECIALISATION(posif_pinA, int, 14, 7, 1);
+
+
 template <class T>
 constexpr XMC_SCU_PERIPHERAL_CLOCK_t posif_clock(T const &o)
 {

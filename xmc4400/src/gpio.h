@@ -9,17 +9,17 @@
 #include <xmc_dma.h>
 #include <xmc_scu.h>
 
-
+/******************************************************************************
+    Registers, so we can examine them in the debugger
+******************************************************************************/
 struct XMC_GPIO_PORT_padded:public XMC_GPIO_PORT
 {
   __I  uint32_t  RESERVED5[34];
 };
-extern XMC_GPIO_PORT_padded gpio_port[15];
-extern XMC_DMA_t dma0;
-extern XMC_USIC_CH_t u0c0;
-extern XMC_USIC_CH_t u0c1;
-extern XMC_USIC_CH_t u1c0;
-extern XMC_USIC_CH_t u1c1;
+
+struct POSIF_PADDED_t:public POSIF_GLOBAL_TypeDef {
+  __I  uint32_t  RESERVED6[4031];
+};
 
 struct VADC_complete_t:public VADC_GLOBAL_TypeDef 
 {
@@ -29,7 +29,26 @@ struct VADC_complete_t:public VADC_GLOBAL_TypeDef
 	__I uint32_t RESERVED[16];
     } G[4];
 };
+
+struct CCU4_complete_t:public CCU4_GLOBAL_TypeDef {
+    __I uint32_t RESERVED2[31];
+    struct cc4_t:public CCU4_CC4_TypeDef {
+	__I uint32_t RESERVED2[19];
+    } cc[4];
+};
+
+extern XMC_GPIO_PORT_padded gpio_port[15];
+extern XMC_DMA_t dma0;
+extern XMC_USIC_CH_t u0c0;
+extern XMC_USIC_CH_t u0c1;
+extern XMC_USIC_CH_t u1c0;
+extern XMC_USIC_CH_t u1c1;
+extern POSIF_PADDED_t posif[2];
 extern VADC_complete_t vadc;
+extern CCU4_complete_t ccu40;
+extern CCU4_complete_t ccu41;
+extern CCU4_complete_t ccu42;
+extern CCU4_complete_t ccu43;
 
 namespace iopin {
 
