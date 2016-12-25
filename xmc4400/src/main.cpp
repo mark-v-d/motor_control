@@ -69,7 +69,7 @@ extern "C" void CCU80_0_IRQHandler(void)
     // assert this is the correct handler
     for(int i=0;i<4;i++)
 	adc[i]=(int32_t(vadc.G[i].RES[0]&0xffff)-adc_offset[i])*adc_scale[i];
-    vservo=(0xffff-dsd.ch[dsd_channel(MDAT)].RESM)*servo_factor;
+    vservo=dsd.ch[dsd_ch_ns::channel(MDAT)].RESM*servo_factor;
 
     float current[3];
     current[0]=adc[0];
@@ -384,25 +384,30 @@ void init_adc(void)
 
 void init_voltage_measurement(void)
 {
-    XMC_DSD_Init(DSD);
+    using namespace dsd_ch_ns;
+
+    XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_DSD);
+    XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_DSD);
+    dsd.CLC=0;
     dsd.GLOBCFG=1;
-    constexpr int ch=dsd_channel(MDAT);
-    dsd.ch[ch].MODCFG=dsd_ch_ns::modcfg_t({{
+
+    constexpr int ch=channel(MDAT);
+    dsd.ch[ch].MODCFG=modcfg_t({{
 	.divm=15,
 	.dwc=1
     }}).raw;
-    dsd.ch[ch].DICFG=dsd_ch_ns::dicfg_t({{
-	.dsrc=dsd_dsrc(MDAT),	// data not inverted
-	.dswc=1,		// Enable dsrc update
-	.itrmode=0,		// integrator bypassed
-	.tstrmode=0,		// No timestamp trigger
-	.trsel=0,		// Don't care, trigger not used
-	.trwc=1,		// Write Control for Trigger Parameters
-	.csrc=15, 		// Internal clock
-	.strobe=1,		// sample trigger is generated at each rising clock edge
-	.scwc=1			// write control
+    dsd.ch[ch].DICFG=dicfg_t({{
+	.dsrc=not_dsrc(MDAT), // data inverted because input is swapped
+	.dswc=1,	// Enable dsrc update
+	.itrmode=0,	// integrator bypassed
+	.tstrmode=0,	// No timestamp trigger
+	.trsel=0,	// Don't care, trigger not used
+	.trwc=1,	// Write Control for Trigger Parameters
+	.csrc=15, 	// Internal clock
+	.strobe=1,	// sample trigger is generated at each rising clock edge
+	.scwc=1		// write control
     }}).raw;
-    dsd.ch[ch].FCFGC=dsd_ch_ns::fcfgc_t({{
+    dsd.ch[ch].FCFGC=fcfgc_t({{
 	.cfmdf=63,	// decimate by 256
 	.cfmc=2,	// 3rd order
 	.cfen=1,	// enable CIC

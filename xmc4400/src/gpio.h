@@ -191,7 +191,7 @@ type_conversion(XMC_ETH_MAC_PORT_CTRL_MDIO,1,11);
 #undef type_conversion
 
 #include "gpio_output_conversions"
+}
 
 #include "input_conversions.h"
-}
 #endif
