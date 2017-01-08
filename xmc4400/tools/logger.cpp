@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <string.h>
+#include <stdlib.h>
 
 
 int main(int argc, char **argv)
@@ -32,23 +33,42 @@ int main(int argc, char **argv)
 
     send(s,"xxx",3,0);
 
-    for(;;) {
+    std::cout << "#   seq    encoder adc0 adc1 adc2 adc3 crc\n";
+
+    int count=9000;
+    if(argc>1)
+	count=atoi(argv[1]);
+    while(--count>0) {
 	union {
 	    char buffer[1000];
 	    struct {
 		uint32_t counter;
+		float adc[4];
 		uint32_t encoder;
+		float Irotor[2];
+		float Vrotor[2];
+		float angle;
+		float output[3];
 		uint8_t enc_raw[9];
 	    };
 	} d;
 	int  len=recv(s,&d,sizeof(d),0);
-	std::cout << "ack " << std::dec << len << " " << d.counter << " " << std::setw(5) << d.encoder;
-	std::cout << std::hex;
-	uint16_t checksum=0xff;
+	std::cout << std::dec << len << " "
+	    << d.counter << " " << std::setw(6) << d.encoder 
+	    << std::setprecision(3) << std::fixed;
+	for(int i=0;i<4;i++)
+	    std::cout << " " << std::setw(8) << d.adc[i];
+	std::cout   << " " << d.Vrotor[0] << " " << d.Vrotor[1]
+		    << " " << d.Irotor[0] << " " << d.Irotor[1];
+
+	uint16_t checksum=0;
 	for(int i=0;i<sizeof(d.enc_raw);i++) {
-	    std::cout << " 0x" << std::setw(2) << int(d.enc_raw[i]);
+	    std::cout << " " << std::setw(3) << int(d.enc_raw[i]);
 	    checksum^=d.enc_raw[i];
 	}
-	std::cout << " checksum=" << checksum << std::endl;
+	std::cout <<  " " << checksum << " " << d.angle ;
+	for(int i=0;i<3;i++)
+	    std::cout << " " << std::setw(8) << d.output[i];
+	std::cout << std::endl;
     }
 }
