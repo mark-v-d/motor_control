@@ -10,7 +10,6 @@ enum { rx_buffer_count=4 };
 std::array<Ethernet::descriptor,rx_buffer_count> Ethernet::rxd __attribute__((section ("ETH_RAM")));
 std::array<packet,rx_buffer_count> Ethernet::rxp __attribute__((section ("ETH_RAM")));
 
-
 enum PHY_stuff {
     PHY_ID1=0x0022,
     PHY_ID2_KSZ8081RNA=0x1560,
@@ -80,10 +79,20 @@ void Ethernet::SetManagmentClockDivider(void)
     }
 }
 
-void Ethernet::SetAddress(uint64_t addr)
+void Ethernet::SetAddress(void)
 {
-  ETH0->MAC_ADDRESS0_HIGH = (uint32_t)(addr >> 32);
-  ETH0->MAC_ADDRESS0_LOW = (uint32_t)addr;
+    uint32_t a=g_chipid[4];
+    a<<=8;
+    a|=g_chipid[5];
+    ETH0->MAC_ADDRESS0_HIGH=a;
+    
+    for(int i=0;i<4; i++) { 
+	a<<=8;
+	a|=g_chipid[i];
+    }
+    a<<=2;	// not multicast
+    a|=2;	// locally administered
+    ETH0->MAC_ADDRESS0_LOW=a;
 }
 
 uint16_t Ethernet::ReadPhy(uint8_t reg_addr)
@@ -150,7 +159,7 @@ void Ethernet::FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control)
 
     SetManagmentClockDivider();
 
-    SetAddress(mac_addr);
+    SetAddress();
 
     ETH0->MAC_CONFIGURATION = (uint32_t)ETH_MAC_CONFIGURATION_IPC_Msk;
 

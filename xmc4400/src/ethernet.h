@@ -128,7 +128,6 @@ private:
     static Ethernet *instance;
     friend void ETH0_0_IRQHandler(uint32_t event);
 
-    uint64_t mac_addr;
     uint8_t phy_addr;
 
     enum { tx_buffer_count=4 };
@@ -144,7 +143,6 @@ private:
 public:
     template <int a,int b,int c,int d,int e,int f,int g,int h,int i, int j>
     Ethernet(
-	uint64_t ma,
 	uint8_t pa,
 	XMC_ETH_MAC_PORT_CTRL_RXD0 RXD0, 
 	XMC_ETH_MAC_PORT_CTRL_RXD1 RXD1,
@@ -173,7 +171,7 @@ public:
 private:
     void FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control);
     void SetManagmentClockDivider(void);
-    void SetAddress(uint64_t addr);
+    void SetAddress();
 
     void PHY_Init(void);
     void WritePhy(uint8_t reg_addr, uint16_t data);
@@ -185,7 +183,6 @@ private:
 
 template <int a,int b,int c,int d,int e,int f,int g,int h,int i, int j>
 Ethernet::Ethernet(
-    uint64_t ma,
     uint8_t pa,
     XMC_ETH_MAC_PORT_CTRL_RXD0 RXD0, 
     XMC_ETH_MAC_PORT_CTRL_RXD1 RXD1,
@@ -200,7 +197,7 @@ Ethernet::Ethernet(
     iopin::ETH0_MDO<i,j> MDO,
 
     Receiver *icmp
-):mac_addr(ma), phy_addr(pa), rx_get(0), icmpHandler(icmp), tx_put(0)
+):phy_addr(pa), rx_get(0), icmpHandler(icmp), tx_put(0)
 {
     TXD0.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
     TXD1.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
