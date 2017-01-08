@@ -81,16 +81,16 @@ void Ethernet::SetManagmentClockDivider(void)
 
 void Ethernet::SetAddress(void)
 {
-    uint32_t a=g_chipid[4];
+    uint32_t a=g_chipid[5];
     a<<=8;
-    a|=g_chipid[5];
+    a|=g_chipid[4];
     ETH0->MAC_ADDRESS0_HIGH=a;
     
-    for(int i=0;i<4; i++) { 
+    for(int i=3;i>=0; i--) { 
 	a<<=8;
 	a|=g_chipid[i];
     }
-    a<<=2;	// not multicast
+    a&=~1;	// not multicast
     a|=2;	// locally administered
     ETH0->MAC_ADDRESS0_LOW=a;
 }
