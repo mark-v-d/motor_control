@@ -5,5 +5,5 @@ sleep 1
 modprobe rtudp
 modprobe rt_e1000e
 rtifconfig rteth0 up 192.168.0.2
-rtroute add 192.168.0.4 2e:40:00:04:60:13 dev rteth0
-rtroute add 192.168.0.5 32:14:00:06:60:13 dev rteth0
+rtroute add 192.168.0.4 82:80:05:0c:13:60 dev rteth0
+rtroute add 192.168.0.5 82:00:10:0b:13:60 dev rteth0
