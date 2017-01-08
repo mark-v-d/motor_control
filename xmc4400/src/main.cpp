@@ -35,6 +35,9 @@ float adc[4];
 float adc_scale[4]={0.0010819,0.0010819,1.0,1.0};
 int32_t adc_offset[4];
 
+constexpr float servo_factor=0.00185805929607582;
+float vservo;
+
 float Istator[2];
 float Irotor[2];
 float I[2];
@@ -45,6 +48,7 @@ float Vstator[2];
 float lim=0.85;
 float output_scale;
 float output[3];
+float angle;
 
 enum {
     STARTUP,
@@ -57,8 +61,6 @@ enum {
 } state;
 
 float manual_angle;
-float vservo;
-constexpr float servo_factor=0.00185805929607582;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
@@ -116,7 +118,6 @@ extern "C" void CCU80_0_IRQHandler(void)
 	    HBEN=0;
 	}
     } else {
-	float angle;
 	if(state!=MANUAL_ANGLE)
 	    angle=encoder->angle();
 	else
@@ -182,9 +183,11 @@ extern "C" void CCU80_0_IRQHandler(void)
 /* This interrupt is used to trigger the encoder */
 extern "C" void CCU80_1_IRQHandler(void)
 {
+    LED3=0;
     static_assert(HB0.module==0, "Wrong interrupt handler for HB0");
     encoder->trigger();
     sleep_counter++;
+    LED3=1;
 }
 
 /* Receive interrupt channel 1 (full-duplex serial) */
@@ -224,12 +227,12 @@ int main()
     pwm_3phase pwm(HB0,HB1,HB2,4*trigger_HZ);
     output_scale=pwm.period();
 
-    init_voltage_measurement();
-    init_encoder();
-
     PPB->SCR=1;
 
     XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
+
+    init_voltage_measurement();
+    init_encoder();
 
     for(;;)
 	;

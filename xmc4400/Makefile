@@ -85,3 +85,9 @@ src/gpio_output_conversions: ./XMC_Peripheral_Library_v2.1.6p1/XMCLib/inc/xmc4_g
 
 tools/convert_header: tools/convert_header.cpp
 	make -C tools convert_header
+
+set_bmi.o: set_bmi.cpp
+	$(CXX) $(CXXFLAGS) -DMAC=$(MAC) -DIPV4=$(IPV4) $(CPPFLAGS) -c $<
+
+set_bmi.elf: startup_$(DEVICE).o system_$(DEVICE).o set_bmi.o symbols.ld
+	$(CXX) $(LDFLAGS) -T $(LDSCRIPT) -T symbols.ld $+ -o $@

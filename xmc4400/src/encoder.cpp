@@ -198,7 +198,7 @@ int mitsubishi_encoder_t::detect(void)
 
     XMC_UART_CH_Init(ENC_TXD, &uart_config);
     XMC_UART_CH_SetInputSource(ENC_TXD,
-	XMC_UART_CH_INPUT_RXD, rxd_num(ENC_RXD));
+	XMC_UART_CH_INPUT_RXD, usic_ch_ns::dx0(ENC_RXD));
     XMC_UART_CH_EnableEvent(ENC_TXD, XMC_UART_CH_EVENT_FRAME_FINISHED );
     XMC_UART_CH_SelectInterruptNodePointer(ENC_TXD,
 	XMC_UART_CH_INTERRUPT_NODE_POINTER_PROTOCOL, 1);
@@ -392,7 +392,7 @@ int hiperface_t::detect(void)
 
     XMC_UART_CH_Init(ENC_TXD, &uart_config);
     XMC_UART_CH_SetInputSource(ENC_TXD,
-	XMC_UART_CH_INPUT_RXD, rxd_num(ENC_RXD));
+	XMC_UART_CH_INPUT_RXD, usic_ch_ns::dx0(ENC_RXD));
     XMC_UART_CH_EnableEvent(ENC_TXD, XMC_UART_CH_EVENT_FRAME_FINISHED );
     XMC_UART_CH_SelectInterruptNodePointer(ENC_TXD,
 	XMC_UART_CH_INTERRUPT_NODE_POINTER_PROTOCOL, 1);
