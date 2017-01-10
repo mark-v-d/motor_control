@@ -1,0 +1,5 @@
+Work in progress.
+
+Servo motor controller. Currently supporting Mitsubishi HC-PQ[23]4,
+HC-MFS13 and motors with a Hiperface encoder. Communication with ethernet
+and the controller is intended to be used with linuxcnc.
