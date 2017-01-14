@@ -12,6 +12,7 @@
 #include "udp_poker.h"
 #include "bitfields.h"
 #include "encoder.h"
+#include <arpa/inet.h>
 
 std::atomic<uint32_t> sleep_counter(0);
 
@@ -193,34 +194,33 @@ extern "C" void CCU80_1_IRQHandler(void)
 /* Receive interrupt channel 1 (full-duplex serial) */
 extern "C" void USIC1_0_IRQHandler(void)
 {
-    LED3=0;
+    // LED3=0;
     encoder->full_duplex();
-    LED3=1;
+    // LED3=1;
 }
 
 /* Mapped to Frame finished (half-duplex serial) */
 extern "C" void USIC0_1_IRQHandler(void)
 {
     // static_assert(ENC_TXD.uart_number()==0, "Wrong encoder handler");
-    LED0=0;
+    // LED0=0;
     encoder->half_duplex();
-    LED0=1;
+    // LED0=1;
 }
 
 extern "C" void VADC0_G0_0_IRQHandler(void)
 {
-    LED1=0;
+    // LED1=0;
     vadc.G[0].REFCLR=vadc.G[0].REFLAG;
-    LED1=1;
+    // LED1=1;
 }
 
-extern ETH_GLOBAL_TypeDef eth_debug;
 void init_adc(void);
 void init_voltage_measurement(void);
 int main()
 {
-    eth0.add_udp_receiver(&logger,1);
-    eth0.add_udp_receiver(&poker,2);
+    eth0.add_udp_receiver(&logger,ntohs(1));
+    eth0.add_udp_receiver(&poker,ntohs(2));
 
     // SysTick_Config(SystemCoreClock/1000);
     init_adc();

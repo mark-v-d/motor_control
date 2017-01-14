@@ -4,6 +4,7 @@
 #include <chrono>
 #include <atomic>
 #include <stdint.h>
+#include "gpio.h"
 
 constexpr float trigger_HZ=4500.0;
 

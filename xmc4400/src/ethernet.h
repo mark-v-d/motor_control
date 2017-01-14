@@ -19,8 +19,8 @@ public:
 	descriptor *next;
 	uint32_t ext_status;
 	uint32_t reserved;
-	uint32_t seconds;     
 	uint32_t nanoseconds;
+	uint32_t seconds;     
 	Transmitter *txp;
     public: // types
 	enum protocol_t {
@@ -179,6 +179,7 @@ private:
 
     void receiveIRQ(void);
     void transmitIRQ(void);
+    void TimestampInit(void);
 };
 
 template <int a,int b,int c,int d,int e,int f,int g,int h,int i, int j>

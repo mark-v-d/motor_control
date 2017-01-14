@@ -57,6 +57,7 @@ extern CCU4_complete_t ccu41;
 extern CCU4_complete_t ccu42;
 extern CCU4_complete_t ccu43;
 extern DSD_complete_t dsd;
+extern ETH_GLOBAL_TypeDef eth;
 
 namespace iopin {
 

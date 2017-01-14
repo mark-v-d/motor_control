@@ -1183,8 +1183,6 @@ F 3 "" H 4300 9550 60  0000 C CNN
 	1    4300 9550
 	1    0    0    1   
 $EndComp
-Text Notes 7400 3250 0    60   ~ 0
-FIXME:\n\n1. Debugging pins\n2. reset circuit\n3. pinning xmc4500 checken.\n
 $Comp
 L XMC4400-F64x512 U1
 U 1 1 57A72402
