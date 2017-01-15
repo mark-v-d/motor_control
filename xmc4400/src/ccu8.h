@@ -204,6 +204,58 @@ union SRS_t {
     operator uint32_t() const { return raw; }
 };
 
+
+#define BASE__FUNCTION(name, type) 			\
+template <int port, int pin> 				\
+constexpr type name(iopin::pinBase<port,pin> const &i)	\
+{ 							\
+    static_assert(port==-1, "Invalid pin");		\
+    return type(0);					\
+}
+
+#define SPECIALISATION(name, type, port, pin, value)		\
+template<>							\
+constexpr type name<port,pin>(iopin::pinBase<port,pin> const &i)	\
+{								\
+    return value;						\
+}
+
+
+BASE__FUNCTION(unit, int);
+SPECIALISATION(unit, int, 0, 3, 0);
+SPECIALISATION(unit, int, 0, 5, 0);
+SPECIALISATION(unit, int, 0, 6, 0);
+
+BASE__FUNCTION(slice, int);
+SPECIALISATION(slice, int, 0, 3, 2);
+SPECIALISATION(slice, int, 0, 5, 0);
+SPECIALISATION(slice, int, 0, 6, 3);
+
+BASE__FUNCTION(out, int);
+SPECIALISATION(out, int, 0, 3, 0);
+SPECIALISATION(out, int, 0, 5, 0);
+SPECIALISATION(out, int, 0, 6, 0);
+
+template <int u,int i> constexpr IRQn_Type irq_num() { static_assert(u==-1,"Oops");}
+template <> constexpr IRQn_Type irq_num<0,0>() { return CCU80_0_IRQn; }
+template <> constexpr IRQn_Type irq_num<0,1>() { return CCU80_1_IRQn; }
+template <> constexpr IRQn_Type irq_num<0,2>() { return CCU80_2_IRQn; }
+template <> constexpr IRQn_Type irq_num<0,3>() { return CCU80_3_IRQn; }
+template <> constexpr IRQn_Type irq_num<1,0>() { return CCU81_0_IRQn; }
+template <> constexpr IRQn_Type irq_num<1,1>() { return CCU81_1_IRQn; }
+template <> constexpr IRQn_Type irq_num<1,2>() { return CCU81_2_IRQn; }
+template <> constexpr IRQn_Type irq_num<1,3>() { return CCU81_3_IRQn; }
+
+
+template <int i, class T>
+constexpr IRQn_Type irq(T const &o)
+{
+    return irq_num<unit(o),i>();
+}
+
+#undef BASE__FUNCTION
+#undef SPECIALISATION
+
 }
 
 #endif

@@ -1,40 +1,36 @@
 #include <array>
 #include <xmc_scu.h>
 #include <xmc_vadc.h>
+#include "meta.h"
 
 class pwm_3phase {
     uint32_t pwm_period;
-    int module;
-    int internal_slice;
 public:
     template <typename A, typename B, typename C>
     pwm_3phase(A &HB0, B& HB1, C &HB2, unsigned frequency);
     uint32_t period(void) { return pwm_period; }
 };
 
-template <typename A, typename B, typename C>
-pwm_3phase::pwm_3phase(A &HB0, B& HB1, C &HB2, unsigned frequency)
+template <class A, class B, class C>
+constexpr int spare_slice(A const &a, B const &b, C const &c)
 {
     using namespace ccu8_ns;
-    static_assert(
-	int(HB0.module)==int(HB1.module) && int(HB1.module)==int(HB2.module),
-	"All pins on the pwm_3phase object should belong to the same module\n"
-    );
-    static_assert(
-	int(HB0.slice)!=int(HB1.slice) && 
-	int(HB1.slice)!=int(HB2.slice) && 
-	int(HB2.slice)!=int(HB0.slice),
-	"Three different slices are required for pwm_3phase"
-    ); 
+    static_assert(unit(a)==unit(b) && unit(b)==unit(c),
+	"All pins should belong to the same ccu8 unit");
+    constexpr int t=(15 & ~(1<<slice(a)) & ~(1<<slice(b)) & ~(1<<slice(c)));
+    static_assert(bitcount(t), "Three different slices are required");
+    return find_lsb(t);
+}
 
-    module=HB0.module;
-    pwm_period=SystemCoreClock/2/frequency;
-    {	
-	int t=(15 & ~(1<<HB0.slice) & ~(1<<HB1.slice) & ~(1<<HB2.slice));
-	internal_slice=0;
-	while(!(internal_slice&1))
-	    internal_slice++;
-    }
+template <typename A, typename B, typename C>
+pwm_3phase::pwm_3phase(A &HB0, B &HB1, C &HB2, unsigned frequency)
+{
+    using namespace ccu8_ns;
+
+    constexpr int module=unit(HB0);
+    constexpr int internal_slice=spare_slice(HB0,HB1,HB2);
+
+    pwm_period=XMC_SCU_CLOCK_GetCcuClockFrequency()/2/frequency;
 
     XMC_CCU8_SetModuleClock(HB0, XMC_CCU8_CLOCK_SCU);
     XMC_CCU8_EnableModule(HB0);
@@ -89,24 +85,15 @@ pwm_3phase::pwm_3phase(A &HB0, B& HB1, C &HB2, unsigned frequency)
     }
 
     // Start timers and enable interrupt.
-    if(!module) {
-	uint32_t group=NVIC_GetPriorityGrouping();
-	uint32_t encode=NVIC_EncodePriority(group, 63, 0);
-	NVIC_SetPriority(CCU80_1_IRQn, encode);
-	NVIC_SetPriority(CCU80_0_IRQn, encode);
-	NVIC_EnableIRQ(CCU80_1_IRQn);
-	NVIC_EnableIRQ(CCU80_0_IRQn);
+    NVIC_SetPriority(irq<1>(HB0), 0);
+    NVIC_SetPriority(irq<0>(HB0), 0);
+    NVIC_EnableIRQ(irq<1>(HB0));
+    NVIC_EnableIRQ(irq<0>(HB0));
+    if(!module){
 	SCU_GENERAL->CCUCON|=SCU_GENERAL_CCUCON_GSC80_Msk;
 	SCU_GENERAL->CCUCON&=~SCU_GENERAL_CCUCON_GSC80_Msk;
     } else {
-	NVIC_SetPriority(CCU81_1_IRQn, 
-	    NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 63, 0));
-	// NVIC_EnableIRQ(CCU80_1_IRQn);
-	NVIC_SetPriority(CCU81_0_IRQn, 
-	    NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 63, 0));
-	NVIC_EnableIRQ(CCU80_0_IRQn);
 	SCU_GENERAL->CCUCON|=SCU_GENERAL_CCUCON_GSC81_Msk;
 	SCU_GENERAL->CCUCON&=~SCU_GENERAL_CCUCON_GSC81_Msk;
     }
-
 }
