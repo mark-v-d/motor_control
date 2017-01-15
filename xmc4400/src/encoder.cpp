@@ -184,6 +184,7 @@ void mitsubishi_PQ_t::trigger(void)
 int mitsubishi_encoder_t::detect(void)
 {
     using namespace std::chrono;
+    using namespace usic_ch_ns;
     mitsubishi_encoder_t *p=new mitsubishi_encoder_t;
     encoder=std::unique_ptr<mitsubishi_encoder_t>(p);
 
@@ -196,18 +197,18 @@ int mitsubishi_encoder_t::detect(void)
 	.parity_mode=XMC_USIC_CH_PARITY_MODE_NONE
     };
 
-    XMC_UART_CH_Init(ENC_TXD, &uart_config);
-    XMC_UART_CH_SetInputSource(ENC_TXD,
-	XMC_UART_CH_INPUT_RXD, usic_ch_ns::dx0(ENC_RXD));
-    XMC_UART_CH_EnableEvent(ENC_TXD, XMC_UART_CH_EVENT_FRAME_FINISHED );
-    XMC_UART_CH_SelectInterruptNodePointer(ENC_TXD,
-	XMC_UART_CH_INTERRUPT_NODE_POINTER_PROTOCOL, 1);
-    XMC_UART_CH_Start(ENC_TXD);
+    constexpr XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
+    XMC_UART_CH_Init(channel, &uart_config);
+    XMC_UART_CH_SetInputSource(channel,
+	XMC_UART_CH_INPUT_RXD, dx0(ENC_RXD));
+    XMC_UART_CH_EnableEvent(channel, XMC_UART_CH_EVENT_FRAME_FINISHED );
+    XMC_UART_CH_SelectInterruptNodePointer(channel,
+	XMC_UART_CH_INTERRUPT_NODE_POINTER_PROTOCOL, hd_irq);
+    XMC_UART_CH_Start(channel);
     // Protocol interrupt
-    NVIC_SetPriority(USIC0_1_IRQn,  0);
-    NVIC_ClearPendingIRQ(USIC0_1_IRQn);
-    NVIC_EnableIRQ(USIC0_1_IRQn);
-
+    NVIC_SetPriority(irq<hd_irq>(ENC_TXD),  0);
+    NVIC_ClearPendingIRQ(irq<hd_irq>(ENC_TXD));
+    NVIC_EnableIRQ(irq<hd_irq>(ENC_TXD));
 
     // Powerup and wait
     p->serial_tx(0x1a);
@@ -222,22 +223,22 @@ int mitsubishi_encoder_t::detect(void)
     }
 
     // We don't need to disable the transmitter in full-duplex
-    XMC_UART_CH_DisableEvent(ENC_TXD, XMC_UART_CH_EVENT_FRAME_FINISHED );
-    NVIC_DisableIRQ(USIC0_1_IRQn);
+    XMC_UART_CH_DisableEvent(ENC_TXD, XMC_UART_CH_EVENT_FRAME_FINISHED);
+    NVIC_DisableIRQ(irq<hd_irq>(ENC_TXD));
 
-    XMC_UART_CH_Init(XMC_UART1_CH1, &uart_config);
-    XMC_UART_CH_SetInputSource(XMC_UART1_CH1,
-	XMC_UART_CH_INPUT_RXD, USIC1_C1_DX0_P0_0);
-    XMC_UART_CH_EnableInputInversion(XMC_UART1_CH1,XMC_UART_CH_INPUT_RXD);
-    XMC_UART_CH_EnableEvent(XMC_UART1_CH1,
-	XMC_UART_CH_EVENT_STANDARD_RECEIVE);
-    XMC_UART_CH_SelectInterruptNodePointer(XMC_UART1_CH1,
-	XMC_UART_CH_INTERRUPT_NODE_POINTER_RECEIVE, 0);
-    XMC_UART_CH_Start(XMC_UART1_CH1);
-    // Receive on channel 1
-    NVIC_SetPriority(USIC1_0_IRQn,  0);
-    NVIC_ClearPendingIRQ(USIC1_0_IRQn);
-    NVIC_EnableIRQ(USIC1_0_IRQn);
+    // FIXME, hardware fix re-route everything to a single uart
+    constexpr XMC_USIC_CH_t *rx_channel=xmc_channel(ENC_RXD2);
+    XMC_UART_CH_Init(rx_channel, &uart_config);
+    XMC_UART_CH_SetInputSource(rx_channel,XMC_UART_CH_INPUT_RXD, dx0(ENC_RXD2));
+    XMC_UART_CH_EnableInputInversion(rx_channel,XMC_UART_CH_INPUT_RXD);
+    XMC_UART_CH_EnableEvent(rx_channel, XMC_UART_CH_EVENT_STANDARD_RECEIVE);
+    XMC_UART_CH_SelectInterruptNodePointer(rx_channel,
+	XMC_UART_CH_INTERRUPT_NODE_POINTER_RECEIVE, fd_irq);
+    XMC_UART_CH_Start(rx_channel);
+    // Receive interrupt
+    NVIC_SetPriority(irq<fd_irq>(ENC_RXD2),  0);
+    NVIC_ClearPendingIRQ(irq<fd_irq>(ENC_RXD2));
+    NVIC_EnableIRQ(irq<fd_irq>(ENC_RXD2));
 
     p->serial_tx(0x1a);
     if(p->putp!=9) {
@@ -312,14 +313,16 @@ void hiperface_t::half_duplex(void)
 
 void posif_init(uint32_t position)
 {
-    static_assert(posif_unit(ENC_COS)==posif_unit(ENC_SIN),
+    using namespace posif_ns;
+
+    static_assert(unit(ENC_COS)==unit(ENC_SIN),
 	"ENC_COS and ENC_SIN must be part of the same POSIF unit");
-    auto p=&posif[posif_unit(ENC_COS)];
+    auto p=&posif[unit(ENC_COS)];
 
     XMC_POSIF_CONFIG_t PCONF({{{
 	.mode=XMC_POSIF_MODE_QD,
-	.input0=posif_pinA(ENC_SIN),
-	.input1=posif_pinB(ENC_COS),
+	.input0=pinA(ENC_SIN),
+	.input1=pinB(ENC_COS),
 	.input2=0,
 	.filter=7
     }}});
@@ -377,6 +380,7 @@ void posif_init(uint32_t position)
 int hiperface_t::detect(void)
 {
     using namespace std::chrono;
+    using namespace usic_ch_ns;
 
     hiperface_t *p=new hiperface_t;
     encoder=std::unique_ptr<hiperface_t>(p);
@@ -390,17 +394,17 @@ int hiperface_t::detect(void)
 	.parity_mode=XMC_USIC_CH_PARITY_MODE_EVEN
     };
 
-    XMC_UART_CH_Init(ENC_TXD, &uart_config);
-    XMC_UART_CH_SetInputSource(ENC_TXD,
-	XMC_UART_CH_INPUT_RXD, usic_ch_ns::dx0(ENC_RXD));
-    XMC_UART_CH_EnableEvent(ENC_TXD, XMC_UART_CH_EVENT_FRAME_FINISHED );
-    XMC_UART_CH_SelectInterruptNodePointer(ENC_TXD,
-	XMC_UART_CH_INTERRUPT_NODE_POINTER_PROTOCOL, 1);
-    XMC_UART_CH_Start(ENC_TXD);
+    constexpr XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
+    XMC_UART_CH_Init(channel, &uart_config);
+    XMC_UART_CH_SetInputSource(channel, XMC_UART_CH_INPUT_RXD, dx0(ENC_RXD));
+    XMC_UART_CH_EnableEvent(channel, XMC_UART_CH_EVENT_FRAME_FINISHED );
+    XMC_UART_CH_SelectInterruptNodePointer(channel,
+	XMC_UART_CH_INTERRUPT_NODE_POINTER_PROTOCOL, hd_irq);
+    XMC_UART_CH_Start(channel);
     // Protocol interrupt
-    NVIC_SetPriority(USIC0_1_IRQn,  0);
-    NVIC_ClearPendingIRQ(USIC0_1_IRQn);
-    NVIC_EnableIRQ(USIC0_1_IRQn);
+    NVIC_SetPriority(irq<hd_irq>(ENC_TXD),  0);
+    NVIC_ClearPendingIRQ(irq<hd_irq>(ENC_TXD));
+    NVIC_EnableIRQ(irq<hd_irq>(ENC_TXD));
 
     // Powerup and wait
     ENC_12V=1;

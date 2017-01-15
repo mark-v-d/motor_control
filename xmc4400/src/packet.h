@@ -5,7 +5,6 @@ struct __attribute__ ((__packed__)) ethernet_t {
     uint8_t src_mac[6];
     uint16_t type;
 
-    void return_to_src(void) { std::swap(src_mac,dst_mac); }
 };
 
 struct __attribute__ ((__packed__)) ipv4_header_t {

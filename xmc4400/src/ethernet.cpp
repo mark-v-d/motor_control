@@ -170,8 +170,8 @@ void Ethernet::TimestampInit(void)
     }});
     eth.TIMESTAMP_CONTROL=control.raw;
     uint32_t clk=XMC_SCU_CLOCK_GetSystemClockFrequency();
-    uint32_t ssi=ceil(1.0e9/clk);
-    uint32_t addend=roundf(1.0e9*pow(2,32)/(ssi*clk));
+    uint32_t ssi=uint32_t(floorf(1.0e9F/clk))+1;
+    uint32_t addend=roundf(1.0e9F*powf(2,32)/(ssi*clk));
     eth.SUB_SECOND_INCREMENT=ssi;
     do {
 	control.raw=eth.TIMESTAMP_CONTROL;

@@ -69,7 +69,6 @@ extern "C" void CCU80_0_IRQHandler(void)
     static uint32_t counter;
 
     LED2=0;
-    // assert this is the correct handler
     for(int i=0;i<4;i++)
 	adc[i]=(int32_t(vadc.G[i].RES[0]&0xffff)-adc_offset[i])*adc_scale[i];
     vservo=dsd.ch[dsd_ch_ns::channel(MDAT)].RESM*servo_factor;
@@ -195,6 +194,8 @@ extern "C" void CCU80_1_IRQHandler(void)
 extern "C" void USIC1_0_IRQHandler(void)
 {
     // LED3=0;
+    static_assert(encoder_t::fd_irq==0, "Full duplex should be mapped to IRQ0");
+    static_assert(usic_ch_ns::unit(ENC_RXD2)==1, "Invalid unit mapping");
     encoder->full_duplex();
     // LED3=1;
 }
@@ -202,8 +203,9 @@ extern "C" void USIC1_0_IRQHandler(void)
 /* Mapped to Frame finished (half-duplex serial) */
 extern "C" void USIC0_1_IRQHandler(void)
 {
-    // static_assert(ENC_TXD.uart_number()==0, "Wrong encoder handler");
     // LED0=0;
+    static_assert(encoder_t::hd_irq==1, "Half duplex should be mapped to IRQ1");
+    static_assert(usic_ch_ns::unit(ENC_TXD)==0, "Invalid unit mapping");
     encoder->half_duplex();
     // LED0=1;
 }

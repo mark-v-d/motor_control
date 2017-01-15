@@ -11,14 +11,11 @@ void icmpProcessing::Received(
     pkt=desc.buffer->icmp_echo;
     switch(pkt.type) {
     case icmp_t::ECHO:
-	// swap(pkt.dst_mac,pkt.src_mac);
+	eth->set_ipv4_address(pkt.dst_ip); 
+	memcpy(pkt.dst_mac,pkt.src_mac,sizeof(pkt.src_mac));
+	memcpy(pkt.dst_ip,pkt.src_ip,sizeof(pkt.src_ip));
+	eth->set_saddr(&pkt);
 
-	memcpy(pkt.dst_mac,pkt.src_mac,6);
-	memcpy(pkt.src_mac,g_chipid,6);
-	pkt.src_mac[0]&=~1;
-	pkt.src_mac[0]|=2;
-
-	swap(pkt.dst_ip,pkt.src_ip); 
 	pkt.type=0; // ICMP_ECHO_REPLY;
 	pkt.ipv4_checksum=0;
 	pkt.icmp_checksum=0;

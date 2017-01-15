@@ -124,6 +124,7 @@ public:
     std::map<uint16_t,Transmitter*> udp_tx;
 
 private:
+    uint8_t src_ip[4];
 
     static Ethernet *instance;
     friend void ETH0_0_IRQHandler(uint32_t event);
@@ -168,6 +169,12 @@ public:
 	    udp_tx[port]->Unreachable(this); 
     }
 
+    void set_saddr(ethernet_t *p);
+    void set_saddr(ipv4_t *p);
+    void set_ipv4_address(uint8_t s[4]) { 
+	if(src_ip[3]==0 && s[3]!=255)
+	    memcpy(src_ip,s,sizeof(src_ip)); 
+    }
 private:
     void FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control);
     void SetManagmentClockDivider(void);
@@ -217,6 +224,21 @@ Ethernet::Ethernet(
     port_control.mdio = XMC_ETH_MAC_PORT_CTRL_MDIO(MDO);
 
     FinishInit(port_control);
+}
+
+
+inline void Ethernet::set_saddr(ethernet_t *p)
+{
+    // memcpy(p->dst_mac,p->src_mac,sizeof(p->dst_mac));
+    memcpy(p->src_mac,g_chipid,sizeof(p->src_mac));
+    p->src_mac[0]&=~1;
+    p->src_mac[0]|=2;
+}
+
+inline void Ethernet::set_saddr(ipv4_t *p)
+{
+    set_saddr((ethernet_t*)p);
+    memcpy(p->src_ip,src_ip,sizeof(src_ip));
 }
 
 #endif

@@ -9,7 +9,7 @@
 
 #define BASE__FUNCTION(name, type) 			\
 template <int port, int pin> 				\
-constexpr type name(iopin::input<port,pin> const &i)	\
+constexpr type name(iopin::pinBase<port,pin> const &i)	\
 { 							\
     static_assert(port==-1, "Invalid pin");		\
     return type(0);					\
@@ -17,7 +17,7 @@ constexpr type name(iopin::input<port,pin> const &i)	\
 
 #define SPECIALISATION(name, type, port, pin, value)		\
 template<>							\
-constexpr type name<port,pin>(iopin::input<port,pin> const &i)	\
+constexpr type name<port,pin>(iopin::pinBase<port,pin> const &i)	\
 {								\
     return value;						\
 }
@@ -69,23 +69,56 @@ SPECIALISATION(rxd, int, 1, 5, USIC0_C0_DX0_P1_5);
 SPECIALISATION(rxd_num, int, 5, 0, USIC0_C0_DX0_P5_0);
 #endif
 
-BASE__FUNCTION(irq1, IRQn_Type);
-SPECIALISATION(irq1, IRQn_Type, 1, 5, USIC0_1_IRQn);
+template <int port, int pin>
+constexpr inline XMC_USIC_CH_t *xmc_channel(iopin::pinBase<port,pin> const &i)
+{
+    return unit(i)? 
+	(channel(i)? XMC_UART1_CH1:XMC_UART1_CH0):
+	(channel(i)? XMC_UART0_CH1:XMC_UART0_CH0);
 }
 
-BASE__FUNCTION(posif_unit, int);
-SPECIALISATION(posif_unit, int, 14, 6, 0);
-SPECIALISATION(posif_unit, int, 14, 7, 0);
+template <int unit, int irq>
+constexpr IRQn_Type irq_num(void) {
+    static_assert(unit==-1, "unit or irq number not valid");
+    return 0;
+}
 
-BASE__FUNCTION(posif_pinZ, int);
-BASE__FUNCTION(posif_pinB, int);
-BASE__FUNCTION(posif_pinA, int);
-SPECIALISATION(posif_pinZ, int,  2, 3, 0);
-SPECIALISATION(posif_pinB, int,  2, 4, 0);
-SPECIALISATION(posif_pinA, int,  2, 5, 0);
-SPECIALISATION(posif_pinZ, int, 14, 5, 1);
-SPECIALISATION(posif_pinB, int, 14, 6, 1);
-SPECIALISATION(posif_pinA, int, 14, 7, 1);
+template<> constexpr IRQn_Type irq_num<0,0>(void) { return USIC0_0_IRQn; }
+template<> constexpr IRQn_Type irq_num<0,1>(void) { return USIC0_1_IRQn; }
+template<> constexpr IRQn_Type irq_num<0,2>(void) { return USIC0_2_IRQn; }
+template<> constexpr IRQn_Type irq_num<0,3>(void) { return USIC0_3_IRQn; }
+template<> constexpr IRQn_Type irq_num<0,4>(void) { return USIC0_4_IRQn; }
+template<> constexpr IRQn_Type irq_num<0,5>(void) { return USIC0_5_IRQn; }
+template<> constexpr IRQn_Type irq_num<1,0>(void) { return USIC1_0_IRQn; }
+template<> constexpr IRQn_Type irq_num<1,1>(void) { return USIC1_1_IRQn; }
+template<> constexpr IRQn_Type irq_num<1,2>(void) { return USIC1_2_IRQn; }
+template<> constexpr IRQn_Type irq_num<1,3>(void) { return USIC1_3_IRQn; }
+template<> constexpr IRQn_Type irq_num<1,4>(void) { return USIC1_4_IRQn; }
+template<> constexpr IRQn_Type irq_num<1,5>(void) { return USIC1_5_IRQn; }
+
+template <int innum,int port, int pin>
+constexpr inline IRQn_Type irq(iopin::pinBase<port,pin> const &i)
+{
+    return irq_num<unit(i),innum>();
+}
+
+}
+
+namespace posif_ns {
+BASE__FUNCTION(unit, int);
+SPECIALISATION(unit, int, 14, 6, 0);
+SPECIALISATION(unit, int, 14, 7, 0);
+
+BASE__FUNCTION(pinZ, int);
+BASE__FUNCTION(pinB, int);
+BASE__FUNCTION(pinA, int);
+SPECIALISATION(pinZ, int,  2, 3, 0);
+SPECIALISATION(pinB, int,  2, 4, 0);
+SPECIALISATION(pinA, int,  2, 5, 0);
+SPECIALISATION(pinZ, int, 14, 5, 1);
+SPECIALISATION(pinB, int, 14, 6, 1);
+SPECIALISATION(pinA, int, 14, 7, 1);
+}
 
 namespace dsd_ch_ns {
 // Get channel number from MDAT pin

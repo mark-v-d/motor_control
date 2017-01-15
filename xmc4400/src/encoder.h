@@ -13,6 +13,9 @@ public:
     virtual void trigger(void)=0;
     virtual void half_duplex(void)=0;
     virtual void full_duplex(void)=0;
+
+    static constexpr int hd_irq=1; // half duplex irq/SR output
+    static constexpr int fd_irq=0; // full duplex irq/SR output
 };
 
 extern std::unique_ptr<encoder_t> encoder;
