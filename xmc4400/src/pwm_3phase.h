@@ -1,4 +1,3 @@
-#include <array>
 #include <xmc_scu.h>
 #include <xmc_vadc.h>
 #include "meta.h"

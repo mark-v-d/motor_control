@@ -10,6 +10,7 @@
 #include "pwm_3phase.h"
 #include "udp_logger.h"
 #include "udp_poker.h"
+#include "udp_sync.h"
 #include "bitfields.h"
 #include "encoder.h"
 #include <arpa/inet.h>
@@ -25,6 +26,7 @@ Ethernet eth0(
 
 udp_logger logger __attribute__((section ("ETH_RAM")));
 udp_poker poker __attribute__((section ("ETH_RAM")));
+udp_sync syncer __attribute__((section ("ETH_RAM")));
 
 extern "C" void SysTick_Handler(void)
 {
@@ -223,6 +225,7 @@ int main()
 {
     eth0.add_udp_receiver(&logger,ntohs(1));
     eth0.add_udp_receiver(&poker,ntohs(2));
+    eth0.add_udp_receiver(&syncer,ntohs(3));
 
     // SysTick_Config(SystemCoreClock/1000);
     init_adc();
