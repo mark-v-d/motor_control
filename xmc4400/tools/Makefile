@@ -1,4 +1,4 @@
-CXXFLAGS=-std=c++14 -g
+CXXFLAGS=-std=c++14 -g $(shell xeno-config --posix --cflags --ldflags)
 
 convert_header: convert_header.cpp
 
