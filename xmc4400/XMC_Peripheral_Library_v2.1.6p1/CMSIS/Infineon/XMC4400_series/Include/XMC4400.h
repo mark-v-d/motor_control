@@ -1213,8 +1213,8 @@ typedef struct {                                    /*!< (@ 0x5000C000) ETH Stru
   __IO uint32_t  SUB_SECOND_INCREMENT;              /*!< (@ 0x5000C704) Sub-Second Increment Register                          */
   __I  uint32_t  SYSTEM_TIME_SECONDS;               /*!< (@ 0x5000C708) System Time - Seconds Register                         */
   __I  uint32_t  SYSTEM_TIME_NANOSECONDS;           /*!< (@ 0x5000C70C) System Time Nanoseconds Register                       */
-  __IO uint32_t  SYSTEM_TIME_SECONDS_UPDATE;        /*!< (@ 0x5000C710) System Time - Seconds Update Register                  */
-  __IO uint32_t  SYSTEM_TIME_NANOSECONDS_UPDATE;    /*!< (@ 0x5000C714) System Time Nanoseconds Update Register                */
+  __IO int32_t  SYSTEM_TIME_SECONDS_UPDATE;        /*!< (@ 0x5000C710) System Time - Seconds Update Register                  */
+  __IO int32_t  SYSTEM_TIME_NANOSECONDS_UPDATE;    /*!< (@ 0x5000C714) System Time Nanoseconds Update Register                */
   __IO uint32_t  TIMESTAMP_ADDEND;                  /*!< (@ 0x5000C718) Timestamp Addend Register                              */
   __IO uint32_t  TARGET_TIME_SECONDS;               /*!< (@ 0x5000C71C) Target Time Seconds Register                           */
   __IO uint32_t  TARGET_TIME_NANOSECONDS;           /*!< (@ 0x5000C720) Target Time Nanoseconds Register                       */

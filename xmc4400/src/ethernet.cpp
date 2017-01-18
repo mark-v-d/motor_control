@@ -143,45 +143,6 @@ void Ethernet::PHY_Init(void)
     } // else hope for the best
 }
 
-void Ethernet::TimestampInit(void)
-{
-    using namespace eth_ns;
-    // ETH_GLOBAL_TypeDef
-    eth.SYSTEM_TIME_NANOSECONDS_UPDATE=100;
-    eth.SYSTEM_TIME_SECONDS_UPDATE=11;
-    timestamp_control_t control({{
-	.tsena=1,	// enable timestamp
-	.tscfupdt=0,	// Coarse update
-	.tsinit=1,	// Try to init 
-	.tsupdt=0,	// Nothing to update
-	.tstrig=0,	// No interrupt
-	.tsaddreg=0,	// Don't update addend
-
-	.tsenall=1,	// Timestamp on all frames
-	.tsctrlssr=1,	// digital rollover (1ns resolution)
-	.tsver2ena=1,	// FIXME, not sure what difference this makes
-	.tsipena=0,	// No PTP over raw ethernet
-	.tsipv6ena=0,	// No ipv6
-	.tsipv4ena=1,	// Enable ipv4 processing
-	.tsevntena=0,	// Only event messages
-	.tsmstrena=0,	// Only master messages
-	.snaptypsel=0,	// FIXME, what does this button do?
-	.tsenmacaddr=0	// No mac filtering
-    }});
-    eth.TIMESTAMP_CONTROL=control.raw;
-    uint32_t clk=XMC_SCU_CLOCK_GetSystemClockFrequency();
-    uint32_t ssi=uint32_t(floorf(1.0e9F/clk))+1;
-    uint32_t addend=roundf(1.0e9F*powf(2,32)/(ssi*clk));
-    eth.SUB_SECOND_INCREMENT=ssi;
-    do {
-	control.raw=eth.TIMESTAMP_CONTROL;
-    } while(control.tsinit);
-    control.tscfupdt=1;
-    control.tsaddreg=1;
-    eth.TIMESTAMP_ADDEND=addend;
-    eth.TIMESTAMP_CONTROL=control.raw;
-}
-
 void Ethernet::FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control)
 {
     ETH0_CON->CON = (uint32_t)port_control.raw;
@@ -252,8 +213,6 @@ void Ethernet::FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control)
 	ETH_OPERATION_MODE_SR_Msk | ETH_OPERATION_MODE_ST_Msk;
     ETH0->MAC_CONFIGURATION|=
 	ETH_MAC_CONFIGURATION_RE_Msk | ETH_MAC_CONFIGURATION_TE_Msk;
-
-    TimestampInit();
 }
 
 void Ethernet::receiveIRQ(void)

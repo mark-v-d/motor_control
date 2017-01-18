@@ -2,7 +2,7 @@
 #define META_H
 
 template <class T>
-constexpr inline int bitcount(T i)
+constexpr int bitcount(T i)
 {
     int count=0;
     for(count=0;i;i>>=1)
@@ -11,7 +11,7 @@ constexpr inline int bitcount(T i)
 }
 
 template <class T>
-constexpr inline int find_lsb(T i)
+constexpr int find_lsb(T i)
 {
     for(int count=0;i;count++, i>>=1)
 	if(i&1)

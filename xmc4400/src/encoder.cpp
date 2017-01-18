@@ -331,7 +331,8 @@ void posif_init(uint32_t position)
     XMC_POSIF_QD_CONFIG_t qd;
     qd.phase_a=0;
     qd.phase_b=0;       /**< Phase-B active level configuration */
-    qd.phase_leader=0;  /**< Which of the two phase signals[Phase A or Phase B] leads the other? */
+    qd.phase_leader=0;  /**< Which of the two phase signals[Phase A or Phase B]
+			    leads the other? */
     qd.index=XMC_POSIF_QD_INDEX_GENERATION_NEVER;
     XMC_POSIF_QD_Init(p, &qd);
 
@@ -420,7 +421,10 @@ int hiperface_t::detect(void)
 	return 0;
     }
 
-    uint32_t position=p->rx_buffer[5]+0x100L*p->rx_buffer[4]+0x10000L*p->rx_buffer[3]+0x1000000L*p->rx_buffer[2];
+    uint32_t position=p->rx_buffer[5]
+	+0x100L*p->rx_buffer[4]
+	+0x10000L*p->rx_buffer[3]
+	+0x1000000L*p->rx_buffer[2];
     posif_init(position);
 
     return 1;

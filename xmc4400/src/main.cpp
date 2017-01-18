@@ -67,7 +67,7 @@ float manual_angle;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
-    static_assert(HB0.module==0, "Wrong interrupt handler for HB0");
+    static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
     static uint32_t counter;
 
     LED2=0;
@@ -186,7 +186,7 @@ extern "C" void CCU80_0_IRQHandler(void)
 extern "C" void CCU80_1_IRQHandler(void)
 {
     LED3=0;
-    static_assert(HB0.module==0, "Wrong interrupt handler for HB0");
+    static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
     encoder->trigger();
     sleep_counter++;
     LED3=1;

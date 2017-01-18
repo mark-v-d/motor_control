@@ -220,7 +220,6 @@ constexpr type name<port,pin>(iopin::pinBase<port,pin> const &i)	\
     return value;						\
 }
 
-
 BASE__FUNCTION(unit, int);
 SPECIALISATION(unit, int, 0, 3, 0);
 SPECIALISATION(unit, int, 0, 5, 0);
@@ -236,7 +235,8 @@ SPECIALISATION(out, int, 0, 3, 0);
 SPECIALISATION(out, int, 0, 5, 0);
 SPECIALISATION(out, int, 0, 6, 0);
 
-template <int u,int i> constexpr IRQn_Type irq_num() { static_assert(u==-1,"Oops");}
+template <int u,int i> constexpr IRQn_Type irq_num() 
+{ static_assert(u==-1,"Oops");}
 template <> constexpr IRQn_Type irq_num<0,0>() { return CCU80_0_IRQn; }
 template <> constexpr IRQn_Type irq_num<0,1>() { return CCU80_1_IRQn; }
 template <> constexpr IRQn_Type irq_num<0,2>() { return CCU80_2_IRQn; }
@@ -245,7 +245,6 @@ template <> constexpr IRQn_Type irq_num<1,0>() { return CCU81_0_IRQn; }
 template <> constexpr IRQn_Type irq_num<1,1>() { return CCU81_1_IRQn; }
 template <> constexpr IRQn_Type irq_num<1,2>() { return CCU81_2_IRQn; }
 template <> constexpr IRQn_Type irq_num<1,3>() { return CCU81_3_IRQn; }
-
 
 template <int i, class T>
 constexpr IRQn_Type irq(T const &o)

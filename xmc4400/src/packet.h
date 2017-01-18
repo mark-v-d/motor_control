@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <arpa/inet.h>
 
 struct __attribute__ ((__packed__)) ethernet_t {
     uint8_t dst_mac[6];

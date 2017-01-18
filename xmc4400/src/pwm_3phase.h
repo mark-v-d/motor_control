@@ -17,7 +17,7 @@ constexpr int spare_slice(A const &a, B const &b, C const &c)
     static_assert(unit(a)==unit(b) && unit(b)==unit(c),
 	"All pins should belong to the same ccu8 unit");
     constexpr int t=(15 & ~(1<<slice(a)) & ~(1<<slice(b)) & ~(1<<slice(c)));
-    static_assert(bitcount(t), "Three different slices are required");
+    static_assert(bitcount(t)==1, "Three different slices are required");
     return find_lsb(t);
 }
 
@@ -70,7 +70,8 @@ pwm_3phase::pwm_3phase(A &HB0, B &HB1, C &HB2, unsigned frequency)
 	    }};	
 	    cc.CR1S=SystemCoreClock/22000; // Encoder data should have arrived
 	} else {
-	    if((internal_slice==0 && i==1) || i==0) {
+	    cc.PRS=pwm_period-1;
+	    if(i==slice(HB0)) { 
 		cc.INTE=INTE_t{{
 		    .PERIOD_MATCH=0,
 		    .ONE_MATCH=1,		// Trigger ADC
@@ -79,7 +80,6 @@ pwm_3phase::pwm_3phase(A &HB0, B &HB1, C &HB2, unsigned frequency)
 		    .POSR=2,      // Match to CC8ySR2 (route to ADC)
 		}};	
 	    }
-	    cc.PRS=pwm_period-1;
 	}
     }
 
