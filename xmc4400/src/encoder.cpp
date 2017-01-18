@@ -372,7 +372,7 @@ void posif_init(uint32_t position)
 	.mos=0,
 	.tce=0 
     }}).raw; 
-    ccu40.cc[0].PRS=0xffff;	// 16-bit period
+    ccu40.cc[0].PRS=0x0fff;	// 12-bit period (overflow somewhere)
     ccu40.GCSS=1;		// transfer enable (to load period)
     ccu40.cc[0].TIMER=(position/8)&0xffff; 
     ccu40.cc[0].TCSET=1;	// timer ON
