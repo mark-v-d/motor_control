@@ -235,6 +235,9 @@ SPECIALISATION(out, int, 0, 3, 0);
 SPECIALISATION(out, int, 0, 5, 0);
 SPECIALISATION(out, int, 0, 6, 0);
 
+#undef BASE__FUNCTION
+#undef SPECIALISATION
+
 template <int u,int i> constexpr IRQn_Type irq_num() 
 { static_assert(u==-1,"Oops");}
 template <> constexpr IRQn_Type irq_num<0,0>() { return CCU80_0_IRQn; }
@@ -251,9 +254,6 @@ constexpr IRQn_Type irq(T const &o)
 {
     return irq_num<unit(o),i>();
 }
-
-#undef BASE__FUNCTION
-#undef SPECIALISATION
 
 }
 

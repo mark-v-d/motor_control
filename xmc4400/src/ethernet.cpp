@@ -2,6 +2,7 @@
 #include "hardware.h"
 #include "xmc_scu.h"
 #include "bitfields.h"
+#include "pwm_3phase.h"
 
 Ethernet *Ethernet::instance=0;
 
@@ -202,7 +203,8 @@ void Ethernet::FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control)
 
     ETH0->STATUS = 0xFFFFFFFFUL;
     ETH0->INTERRUPT_ENABLE=
-	XMC_ETH_MAC_EVENT_RECEIVE|ETH_INTERRUPT_ENABLE_NIE_Msk;
+	ETH_INTERRUPT_ENABLE_RIE_Msk |	// receive
+	ETH_INTERRUPT_ENABLE_NIE_Msk;
 
     NVIC_SetPriority(ETH0_0_IRQn, 
 	NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 63, 0));
@@ -264,6 +266,12 @@ void Ethernet::erase_udp_transmitter(Transmitter *tx,int16_t port)
 
 inline void ETH0_0_IRQHandler(uint32_t event)
 {
+    if(eth.TIMESTAMP_STATUS&0x2) {
+	LED1^=1;
+	using namespace ccu8_ns;
+	Ethernet::instance->timestamp=
+	    ccu8[unit(HB0)].cc[spare_slice(HB0,HB1,HB2)].TIMER;
+    }
     if(event&XMC_ETH_MAC_EVENT_RECEIVE) {
 	Ethernet::instance->receiveIRQ();
     }
@@ -275,7 +283,8 @@ inline void ETH0_0_IRQHandler(uint32_t event)
 extern "C" void ETH0_0_IRQHandler(void)
 {
     LED0=0;
-    ETH0_0_IRQHandler(ETH0->STATUS);
-    ETH0->STATUS = 0xFFFFFFFFUL;
+    uint32_t event=ETH0->STATUS;
+    ETH0_0_IRQHandler(event);
+    ETH0->STATUS = event;
     LED0=1;
 }

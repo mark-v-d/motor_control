@@ -49,7 +49,7 @@ float Iset[2];
 float Vrotor[2];
 float Vstator[2];
 float lim=0.85;
-float output_scale;
+uint32_t output_scale;
 float output[3];
 float angle;
 
@@ -65,10 +65,37 @@ enum {
 
 float manual_angle;
 
+float pwm_kP=0.5;
+float pwm_kI=1e-3;
+float pwm_integrator=0;
+
 extern "C" void CCU80_0_IRQHandler(void)
 {
     static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
+    static_assert(pwm_3phase::control_irq==0, "Wrong handler");
     static uint32_t counter;
+
+    float error=eth0.get_timestamp();
+    if(error>8*output_scale/2)
+	error-=8*output_scale;
+    if(error>10)
+	error=10;
+    else if(error<-10)
+	error=-10;
+    pwm_integrator+=error*pwm_kI;
+    if(pwm_integrator>10)
+	pwm_integrator=10;
+    else if(pwm_integrator<-10)
+	pwm_integrator=-10;
+    int speed=error*pwm_kP+pwm_integrator;
+    if(speed) {
+	using namespace ccu8_ns;
+	uint32_t nt=output_scale+speed;
+	ccu8[unit(HB0)].cc[slice(HB0)].PRS=nt-1;
+	ccu8[unit(HB0)].cc[slice(HB1)].PRS=nt-1;
+	ccu8[unit(HB0)].cc[slice(HB2)].PRS=nt-1;
+	ccu8[unit(HB0)].cc[spare_slice(HB0,HB1,HB2)].PRS=8*nt-1;
+    }
 
     LED2=0;
     for(int i=0;i<4;i++)
@@ -178,7 +205,8 @@ extern "C" void CCU80_0_IRQHandler(void)
     logger.SetOutput(output);
     logger.transmit(&eth0);
 
-    static_cast<XMC_CCU8_MODULE_t*>(HB0)->GCSS=0x1111;
+    ccu8[ccu8_ns::unit(HB0)].GCSS=0x1111;
+    // static_cast<XMC_CCU8_MODULE_t*>(HB0)->GCSS=0x1111;
     LED2=1;
 }
 
@@ -187,6 +215,7 @@ extern "C" void CCU80_1_IRQHandler(void)
 {
     LED3=0;
     static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
+    static_assert(pwm_3phase::encoder_irq==1, "Wrong handler");
     encoder->trigger();
     sleep_counter++;
     LED3=1;
@@ -357,9 +386,12 @@ void init_adc(void)
 		.extr=1,
 		
 	    }}).raw;
+	    // FIXME, make the xtsel mapping automatic
+	    static_assert(ccu8_ns::unit(HB0)==0, "Wrong timer for ADC trigger");
+	    static_assert(pwm_3phase::adc_irq==2, "Wrong ADC trigger");
 	    vadc.G[i].QCTRL0=vadc_g_ns::qctrl0_t({{
 		.srcresreg=0,	// Use CHCTR.resreg
-		.xtsel=8, 	// CCU80::SR2
+		.xtsel=8, 	// CCU80::SR2 (See asserts)
 		.xtlvl=0,
 		.xtmode=1,
 		.xtwc=1,
