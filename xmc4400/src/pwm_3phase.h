@@ -9,8 +9,8 @@
 
 class pwm_3phase {
     uint32_t period;
-    static constexpr float kP=0.2;
-    static constexpr float kI=5e-3;
+    float kP=0.2;
+    float kI=5e-3;
     float integrator, remaining;
 public:
     template <class A, class B, class C>
@@ -22,6 +22,7 @@ public:
     static int constexpr control_irq=0;
     static int constexpr encoder_irq=1;
     static int constexpr adc_irq=2;
+    static int constexpr transfer_irq=3;
 };
 
 template <class A, class B, class C>
@@ -63,7 +64,7 @@ pwm_3phase::pwm_3phase(A &HB0, B &HB1, C &HB2, unsigned frequency)
     for(int i: {slice(HB0), slice(HB1), slice(HB2)}) {
 	auto &cc=ccu8[module].cc[i];
 	cc.TC=ccu8_cc8_ns::tc_t({{
-	    .tcm=1,
+	    .tcm=1,		// center aligned
 	    .tssm=0,
 	    .clst=0,
 	    .cmod=0,
@@ -124,13 +125,17 @@ pwm_3phase::pwm_3phase(A &HB0, B &HB1, C &HB2, unsigned frequency)
 	cc.INTE=INTE_t{{
 	    .PERIOD_MATCH=1,	// Encoder transmit
 	    .ONE_MATCH=0,
-	    .COMPARE1_MATCH_UP=1 // Control loop
+	    .COMPARE1_MATCH_UP=1, // Control loop
+	    .COMPARE1_MATCH_DOWN=0,
+	    .COMPARE2_MATCH_UP=1 // transfer
 	}};
 	cc.SRS=SRS_t{{
 	    .POSR=encoder_irq,
-	    .CM1SR=control_irq
+	    .CM1SR=control_irq,
+	    .CM2SR=transfer_irq
 	}};
 	cc.CR1S=SystemCoreClock/22000; // Encoder data should have arrived
+	cc.CR2S=8*period/2-2*period/3; // Transfer shadow registers
     }
 }
 
@@ -141,8 +146,10 @@ inline void pwm_3phase::start(void)
     // Start timers and enable interrupts.
     NVIC_SetPriority(irq<control_irq>(HB0), 0);
     NVIC_SetPriority(irq<encoder_irq>(HB0), 0);
+    NVIC_SetPriority(irq<transfer_irq>(HB0), 0);
     NVIC_EnableIRQ(irq<control_irq>(HB0));
     NVIC_EnableIRQ(irq<encoder_irq>(HB0));
+    NVIC_EnableIRQ(irq<transfer_irq>(HB0));
     if(!unit(HB0)){
 	SCU_GENERAL->CCUCON|=SCU_GENERAL_CCUCON_GSC80_Msk;
 	SCU_GENERAL->CCUCON&=~SCU_GENERAL_CCUCON_GSC80_Msk;
@@ -157,7 +164,7 @@ inline void pwm_3phase::adjust(float error)
     using namespace ccu8_ns; 
     integrator+=kI*error;
     remaining+=integrator+kP*error;
-    constexpr float limit=15;
+    constexpr float limit=10;
     if(remaining>limit) {
 	remaining=limit;
 	integrator-=kI*error;

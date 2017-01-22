@@ -189,11 +189,6 @@ extern "C" void CCU80_0_IRQHandler(void)
     logger.SetOutput(output);
     logger.transmit(&eth0);
 
-    constexpr uint32_t shadow_transfer=0x1111
-	| (2<<4*ccu8_ns::slice(HB0))
-	| (2<<4*ccu8_ns::slice(HB1))
-	| (2<<4*ccu8_ns::slice(HB2));
-    ccu8[ccu8_ns::unit(HB0)].GCSS=shadow_transfer;
     LED2=1;
 }
 
@@ -206,6 +201,20 @@ extern "C" void CCU80_1_IRQHandler(void)
     encoder->trigger();
     sleep_counter++;
     LED3=1;
+}
+
+/* This interrupt is used to transfer the data */
+extern "C" void CCU80_3_IRQHandler(void)
+{
+    LED2=0;
+    static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
+    static_assert(pwm_3phase::transfer_irq==3, "Wrong handler");
+    constexpr uint32_t shadow_transfer=0x1111
+	| (2<<4*ccu8_ns::slice(HB0))
+	| (2<<4*ccu8_ns::slice(HB1))
+	| (2<<4*ccu8_ns::slice(HB2));
+    ccu8[ccu8_ns::unit(HB0)].GCSS=shadow_transfer;
+    LED2=1;
 }
 
 /* Receive interrupt channel 1 (full-duplex serial) */
