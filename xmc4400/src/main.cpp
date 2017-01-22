@@ -27,6 +27,7 @@ Ethernet eth0(
 udp_logger logger __attribute__((section ("ETH_RAM")));
 udp_poker poker __attribute__((section ("ETH_RAM")));
 udp_sync syncer __attribute__((section ("ETH_RAM")));
+pwm_3phase pwm(HB0,HB1,HB2,4*trigger_HZ);
 
 extern "C" void SysTick_Handler(void)
 {
@@ -49,7 +50,6 @@ float Iset[2];
 float Vrotor[2];
 float Vstator[2];
 float lim=0.85;
-uint32_t output_scale;
 float output[3];
 float angle;
 
@@ -65,37 +65,21 @@ enum {
 
 float manual_angle;
 
-float pwm_kP=0.5;
-float pwm_kI=1e-3;
-float pwm_integrator=0;
-
 extern "C" void CCU80_0_IRQHandler(void)
 {
     static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
     static_assert(pwm_3phase::control_irq==0, "Wrong handler");
     static uint32_t counter;
+    uint32_t output_scale=pwm.get_period();
 
-    float error=eth0.get_timestamp();
+    float error=eth0.get_timestamp()+100;
     if(error>8*output_scale/2)
 	error-=8*output_scale;
     if(error>10)
 	error=10;
     else if(error<-10)
 	error=-10;
-    pwm_integrator+=error*pwm_kI;
-    if(pwm_integrator>10)
-	pwm_integrator=10;
-    else if(pwm_integrator<-10)
-	pwm_integrator=-10;
-    int speed=error*pwm_kP+pwm_integrator;
-    if(speed) {
-	using namespace ccu8_ns;
-	uint32_t nt=output_scale+speed;
-	ccu8[unit(HB0)].cc[slice(HB0)].PRS=nt-1;
-	ccu8[unit(HB0)].cc[slice(HB1)].PRS=nt-1;
-	ccu8[unit(HB0)].cc[slice(HB2)].PRS=nt-1;
-	ccu8[unit(HB0)].cc[spare_slice(HB0,HB1,HB2)].PRS=8*nt-1;
-    }
+    pwm.adjust(error);
 
     LED2=0;
     for(int i=0;i<4;i++)
@@ -205,8 +189,11 @@ extern "C" void CCU80_0_IRQHandler(void)
     logger.SetOutput(output);
     logger.transmit(&eth0);
 
-    ccu8[ccu8_ns::unit(HB0)].GCSS=0x1111;
-    // static_cast<XMC_CCU8_MODULE_t*>(HB0)->GCSS=0x1111;
+    constexpr uint32_t shadow_transfer=0x1111
+	| (2<<4*ccu8_ns::slice(HB0))
+	| (2<<4*ccu8_ns::slice(HB1))
+	| (2<<4*ccu8_ns::slice(HB2));
+    ccu8[ccu8_ns::unit(HB0)].GCSS=shadow_transfer;
     LED2=1;
 }
 
@@ -255,11 +242,10 @@ int main()
     eth0.add_udp_receiver(&logger,ntohs(1));
     eth0.add_udp_receiver(&poker,ntohs(2));
     eth0.add_udp_receiver(&syncer,ntohs(3));
+    pwm.start();
 
     // SysTick_Config(SystemCoreClock/1000);
     init_adc();
-    pwm_3phase pwm(HB0,HB1,HB2,4*trigger_HZ);
-    output_scale=pwm.period();
 
     PPB->SCR=1;
 

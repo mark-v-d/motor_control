@@ -1,3 +1,6 @@
+#ifndef BITFIELDS_H
+#define BITFIELDS_H
+
 namespace can_ns {
 union id_t {
     struct {
@@ -6895,3 +6898,5 @@ union id_t {
     uint32_t raw;
 };
 }
+
+#endif

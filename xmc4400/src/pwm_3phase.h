@@ -1,14 +1,23 @@
+#ifndef PWM_3PHASE_H
+#define PWM_3PHASE_H
+
 #include <xmc_scu.h>
 #include <xmc_vadc.h>
 #include "ccu8.h"
 #include "meta.h"
+#include "bitfields.h"
 
 class pwm_3phase {
-    uint32_t pwm_period;
+    uint32_t period;
+    static constexpr float kP=0.2;
+    static constexpr float kI=5e-3;
+    float integrator, remaining;
 public:
-    template <typename A, typename B, typename C>
+    template <class A, class B, class C>
     pwm_3phase(A &HB0, B& HB1, C &HB2, unsigned frequency);
-    uint32_t period(void) { return pwm_period; }
+    uint32_t get_period(void) { return period; }
+    void adjust(float error);
+    void start(void);
 
     static int constexpr control_irq=0;
     static int constexpr encoder_irq=1;
@@ -33,7 +42,7 @@ pwm_3phase::pwm_3phase(A &HB0, B &HB1, C &HB2, unsigned frequency)
 
     constexpr int module=unit(HB0);
 
-    pwm_period=XMC_SCU_CLOCK_GetCcuClockFrequency()/2/frequency;
+    period=XMC_SCU_CLOCK_GetCcuClockFrequency()/2/frequency;
 
     XMC_CCU8_SetModuleClock(HB0, XMC_CCU8_CLOCK_SCU);
     XMC_CCU8_EnableModule(HB0);
@@ -53,18 +62,26 @@ pwm_3phase::pwm_3phase(A &HB0, B &HB1, C &HB2, unsigned frequency)
     }
     for(int i: {slice(HB0), slice(HB1), slice(HB2)}) {
 	auto &cc=ccu8[module].cc[i];
-	cc.TC=TC_t{{
-	    .CENTER_ALIGNED=1,
-	    .TSSM=0,
-	    .CLST=0,
-	    .CMOD=0,
-	    .ECM=0,
-	    .CAPC=0,
-	    .TLS=0,
-	    .ENDM=0,
-	    .STRM=1	// External start also clears the counter
-	}};
-	cc.PRS=pwm_period-1;
+	cc.TC=ccu8_cc8_ns::tc_t({{
+	    .tcm=1,
+	    .tssm=0,
+	    .clst=0,
+	    .cmod=0,
+	    .ecm=0,
+	    .capc=0,
+	    .tls=0,
+	    .endm=0,
+	    .strm=1,	// External start also clears the counter
+	    .sce=0,		// Equal Capture Event enable
+	    .ccs=0,		// Continuous Capture Enable
+	    .dithe=1,		// Dither Enable on period
+	    .dim=0		// Dither input selector
+	}}).raw;
+	cc.STC=ccu8_cc8_ns::stc_t({{
+	    .cse=0,
+	    .stm=0
+	}}).raw;
+	cc.PRS=period-1;
     }
 
     {
@@ -103,7 +120,7 @@ pwm_3phase::pwm_3phase(A &HB0, B &HB1, C &HB2, unsigned frequency)
 	    .DITHE=0,		// Dither Enable
 	    .DIM=0		// Dither input selector
 	}};
-	cc.PRS=8*pwm_period-1;
+	cc.PRS=8*period-1;
 	cc.INTE=INTE_t{{
 	    .PERIOD_MATCH=1,	// Encoder transmit
 	    .ONE_MATCH=0,
@@ -115,13 +132,18 @@ pwm_3phase::pwm_3phase(A &HB0, B &HB1, C &HB2, unsigned frequency)
 	}};
 	cc.CR1S=SystemCoreClock/22000; // Encoder data should have arrived
     }
+}
 
-    // Start timers and enable interrupt.
-    NVIC_SetPriority(irq<1>(HB0), 0);
-    NVIC_SetPriority(irq<0>(HB0), 0);
-    NVIC_EnableIRQ(irq<1>(HB0));
-    NVIC_EnableIRQ(irq<0>(HB0));
-    if(!module){
+inline void pwm_3phase::start(void)
+{
+    using namespace ccu8_ns;
+
+    // Start timers and enable interrupts.
+    NVIC_SetPriority(irq<control_irq>(HB0), 0);
+    NVIC_SetPriority(irq<encoder_irq>(HB0), 0);
+    NVIC_EnableIRQ(irq<control_irq>(HB0));
+    NVIC_EnableIRQ(irq<encoder_irq>(HB0));
+    if(!unit(HB0)){
 	SCU_GENERAL->CCUCON|=SCU_GENERAL_CCUCON_GSC80_Msk;
 	SCU_GENERAL->CCUCON&=~SCU_GENERAL_CCUCON_GSC80_Msk;
     } else {
@@ -129,3 +151,37 @@ pwm_3phase::pwm_3phase(A &HB0, B &HB1, C &HB2, unsigned frequency)
 	SCU_GENERAL->CCUCON&=~SCU_GENERAL_CCUCON_GSC81_Msk;
     }
 }
+
+inline void pwm_3phase::adjust(float error)
+{
+    using namespace ccu8_ns; 
+    integrator+=kI*error;
+    remaining+=integrator+kP*error;
+    constexpr float limit=15;
+    if(remaining>limit) {
+	remaining=limit;
+	integrator-=kI*error;
+    } else if(remaining<-limit){ 
+	remaining=-limit;
+	integrator-=kI*error;
+    }
+
+    int delta=remaining;
+    remaining-=delta;
+
+    uint32_t timer=8*period+2*delta-1;
+    int32_t timer_dit=delta%4*4;
+    uint32_t timer_hr=period+delta/4-1;
+    if(timer_dit<0) {
+	timer_dit+=16;
+	timer_hr-=1;
+    }
+
+    for(int i: {slice(HB0), slice(HB1), slice(HB2)}) {
+	ccu8[unit(HB0)].cc[i].PRS=timer_hr;
+	ccu8[unit(HB0)].cc[i].DITS=timer_dit;
+    }
+    ccu8[unit(HB0)].cc[spare_slice(HB0,HB1,HB2)].PRS=timer;
+}
+
+#endif

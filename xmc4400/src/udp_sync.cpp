@@ -112,7 +112,3 @@ void udp_sync::Unreachable(Ethernet *eth)
     eth->erase_udp_transmitter(this,pkt.dst_port);
     pkt.length=0;
 }
-
-void eru_init(void)
-{
-}
