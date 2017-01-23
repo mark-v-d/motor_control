@@ -7,47 +7,54 @@
 #include "meta.h"
 #include "bitfields.h"
 
+template <typename A, typename B, typename C>
 class pwm_3phase {
     uint32_t period;
     float kP=0.2;
     float kI=5e-3;
     float integrator, remaining;
+    uint32_t timestamp;
 public:
-    template <class A, class B, class C>
-    pwm_3phase(A &HB0, B& HB1, C &HB2, unsigned frequency);
+    pwm_3phase(unsigned frequency);
     uint32_t get_period(void) { return period; }
-    void adjust(float error);
     void start(void);
+
+    void set_timestamp(void);
+    uint32_t get_timestamp(void) { return timestamp; }
 
     static int constexpr control_irq=0;
     static int constexpr encoder_irq=1;
     static int constexpr adc_irq=2;
     static int constexpr transfer_irq=3;
+
+private:
+    constexpr int spare_slice(void);
+    static constexpr int module=ccu8_ns::unit<A>();
 };
 
-template <class A, class B, class C>
-constexpr int spare_slice(A const &a, B const &b, C const &c)
+template <typename A, typename B, typename C>
+constexpr int pwm_3phase<A,B,C>::spare_slice(void)
 {
     using namespace ccu8_ns;
-    static_assert(unit(a)==unit(b) && unit(b)==unit(c),
+    static_assert(unit<A>()==unit<B>() && unit<B>()==unit<C>(),
 	"All pins should belong to the same ccu8 unit");
-    constexpr int t=(15 & ~(1<<slice(a)) & ~(1<<slice(b)) & ~(1<<slice(c)));
+    constexpr int t=
+	(15 & ~(1<<slice<A>()) & ~(1<<slice<B>()) & ~(1<<slice<C>()));
     static_assert(bitcount(t)==1, "Three different slices are required");
     return find_lsb(t);
 }
 
 template <typename A, typename B, typename C>
-pwm_3phase::pwm_3phase(A &HB0, B &HB1, C &HB2, unsigned frequency)
+pwm_3phase<A,B,C>::pwm_3phase(unsigned frequency)
 {
     using namespace ccu8_ns;
 
-    constexpr int module=unit(HB0);
-
     period=XMC_SCU_CLOCK_GetCcuClockFrequency()/2/frequency;
 
-    XMC_CCU8_SetModuleClock(HB0, XMC_CCU8_CLOCK_SCU);
-    XMC_CCU8_EnableModule(HB0);
-    XMC_CCU8_Init(HB0, XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+    auto xmc=reinterpret_cast<XMC_CCU8_MODULE_t*>(&ccu8[module]);
+    XMC_CCU8_SetModuleClock(xmc, XMC_CCU8_CLOCK_SCU);
+    XMC_CCU8_EnableModule(xmc);
+    XMC_CCU8_Init(xmc, XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
 
     ccu8[module].GIDLC=GIDLC_t{{.CC0=1, .CC1=1, .CC2=1, .CC3=1, .PRESCALER=1}};
     for(int i=0;i<4; i++) {
@@ -61,7 +68,7 @@ pwm_3phase::pwm_3phase(A &HB0, B &HB1, C &HB2, unsigned frequency)
 	cc.CMC=CMC_t{{.EXTERNAL_START=1}};  // use EVENT0 to start
 	cc.TCCLR=TCCLR_t{{.TIMER_STOP=1, .TIMER_CLEAR=1}};
     }
-    for(int i: {slice(HB0), slice(HB1), slice(HB2)}) {
+    for(int i: {slice<A>(), slice<B>(), slice<C>()}) {
 	auto &cc=ccu8[module].cc[i];
 	cc.TC=ccu8_cc8_ns::tc_t({{
 	    .tcm=1,		// center aligned
@@ -86,7 +93,7 @@ pwm_3phase::pwm_3phase(A &HB0, B &HB1, C &HB2, unsigned frequency)
     }
 
     {
-	auto &cc=ccu8[module].cc[slice(HB0)];
+	auto &cc=ccu8[module].cc[slice<A>()];
 	cc.INTE=INTE_t{{
 	    .PERIOD_MATCH=0,
 	    .ONE_MATCH=1,		// Trigger ADC
@@ -97,7 +104,7 @@ pwm_3phase::pwm_3phase(A &HB0, B &HB1, C &HB2, unsigned frequency)
     }
 
     {
-	auto &cc=ccu8[module].cc[spare_slice(HB0,HB1,HB2)];
+	auto &cc=ccu8[module].cc[spare_slice()];
 	cc.INS=INS_t{{
 	    .EVENT0_INPUT=CCU80_IN0_SCU_GSC80, // GSC8x from SCU_GENERAL.CCUCON
 	    .EVENT1_INPUT=0,
@@ -139,18 +146,19 @@ pwm_3phase::pwm_3phase(A &HB0, B &HB1, C &HB2, unsigned frequency)
     }
 }
 
-inline void pwm_3phase::start(void)
+template <typename A, typename B, typename C>
+inline void pwm_3phase<A,B,C>::start(void)
 {
     using namespace ccu8_ns;
 
     // Start timers and enable interrupts.
-    NVIC_SetPriority(irq<control_irq>(HB0), 0);
-    NVIC_SetPriority(irq<encoder_irq>(HB0), 0);
-    NVIC_SetPriority(irq<transfer_irq>(HB0), 0);
-    NVIC_EnableIRQ(irq<control_irq>(HB0));
-    NVIC_EnableIRQ(irq<encoder_irq>(HB0));
-    NVIC_EnableIRQ(irq<transfer_irq>(HB0));
-    if(!unit(HB0)){
+    NVIC_SetPriority(irq<module,control_irq>(), 0);
+    NVIC_SetPriority(irq<module,encoder_irq>(), 0);
+    NVIC_SetPriority(irq<module,transfer_irq>(), 0);
+    NVIC_EnableIRQ(irq<module,control_irq>());
+    NVIC_EnableIRQ(irq<module,encoder_irq>());
+    NVIC_EnableIRQ(irq<module,transfer_irq>());
+    if(!module){
 	SCU_GENERAL->CCUCON|=SCU_GENERAL_CCUCON_GSC80_Msk;
 	SCU_GENERAL->CCUCON&=~SCU_GENERAL_CCUCON_GSC80_Msk;
     } else {
@@ -159,9 +167,20 @@ inline void pwm_3phase::start(void)
     }
 }
 
-inline void pwm_3phase::adjust(float error)
+template <typename A, typename B, typename C>
+inline void pwm_3phase<A,B,C>::set_timestamp(void)
 {
-    using namespace ccu8_ns; 
+    using namespace ccu8_ns;
+    timestamp=ccu8[unit<A>()].cc[spare_slice()].TIMER;
+
+    int32_t error=timestamp+100; 
+    if(error>8*period/2)
+	error-=8*period;
+    if(error>10)
+	error=10;
+    else if(error<-10)
+	error=-10;
+
     integrator+=kI*error;
     remaining+=integrator+kP*error;
     constexpr float limit=10;
@@ -184,11 +203,12 @@ inline void pwm_3phase::adjust(float error)
 	timer_hr-=1;
     }
 
-    for(int i: {slice(HB0), slice(HB1), slice(HB2)}) {
-	ccu8[unit(HB0)].cc[i].PRS=timer_hr;
-	ccu8[unit(HB0)].cc[i].DITS=timer_dit;
+    for(int i: {slice<A>(), slice<B>(), slice<C>()}) {
+	ccu8[unit<A>()].cc[i].PRS=timer_hr;
+	ccu8[unit<A>()].cc[i].DITS=timer_dit;
     }
-    ccu8[unit(HB0)].cc[spare_slice(HB0,HB1,HB2)].PRS=timer;
+    ccu8[unit<A>()].cc[spare_slice()].PRS=timer;
 }
 
+extern pwm_3phase<decltype(HB0),decltype(HB1),decltype(HB2)> pwm;
 #endif

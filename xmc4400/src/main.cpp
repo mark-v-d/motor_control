@@ -27,7 +27,7 @@ Ethernet eth0(
 udp_logger logger __attribute__((section ("ETH_RAM")));
 udp_poker poker __attribute__((section ("ETH_RAM")));
 udp_sync syncer __attribute__((section ("ETH_RAM")));
-pwm_3phase pwm(HB0,HB1,HB2,4*trigger_HZ);
+pwm_3phase <decltype(HB0),decltype(HB1),decltype(HB2)>pwm(4*trigger_HZ);
 
 extern "C" void SysTick_Handler(void)
 {
@@ -68,18 +68,10 @@ float manual_angle;
 extern "C" void CCU80_0_IRQHandler(void)
 {
     static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
-    static_assert(pwm_3phase::control_irq==0, "Wrong handler");
+    static_assert(pwm.control_irq==0, "Wrong handler");
     static uint32_t counter;
     uint32_t output_scale=pwm.get_period();
 
-    float error=eth0.get_timestamp()+100;
-    if(error>8*output_scale/2)
-	error-=8*output_scale;
-    if(error>10)
-	error=10;
-    else if(error<-10)
-	error=-10;
-    pwm.adjust(error);
 
     LED2=0;
     for(int i=0;i<4;i++)
@@ -197,7 +189,7 @@ extern "C" void CCU80_1_IRQHandler(void)
 {
     LED3=0;
     static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
-    static_assert(pwm_3phase::encoder_irq==1, "Wrong handler");
+    static_assert(pwm.encoder_irq==1, "Wrong handler");
     encoder->trigger();
     sleep_counter++;
     LED3=1;
@@ -208,7 +200,7 @@ extern "C" void CCU80_3_IRQHandler(void)
 {
     LED2=0;
     static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
-    static_assert(pwm_3phase::transfer_irq==3, "Wrong handler");
+    static_assert(pwm.transfer_irq==3, "Wrong handler");
     constexpr uint32_t shadow_transfer=0x1111
 	| (2<<4*ccu8_ns::slice(HB0))
 	| (2<<4*ccu8_ns::slice(HB1))
@@ -383,7 +375,7 @@ void init_adc(void)
 	    }}).raw;
 	    // FIXME, make the xtsel mapping automatic
 	    static_assert(ccu8_ns::unit(HB0)==0, "Wrong timer for ADC trigger");
-	    static_assert(pwm_3phase::adc_irq==2, "Wrong ADC trigger");
+	    static_assert(pwm.adc_irq==2, "Wrong ADC trigger");
 	    vadc.G[i].QCTRL0=vadc_g_ns::qctrl0_t({{
 		.srcresreg=0,	// Use CHCTR.resreg
 		.xtsel=8, 	// CCU80::SR2 (See asserts)

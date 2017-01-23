@@ -122,7 +122,6 @@ public:
 
     std::map<uint16_t,Receiver*> udp;
     std::map<uint16_t,Transmitter*> udp_tx;
-    uint32_t timestamp;
 
 private:
     uint8_t src_ip[4];
@@ -177,7 +176,6 @@ public:
 	    memcpy(src_ip,s,sizeof(src_ip)); 
     }
 
-    uint32_t get_timestamp(void) { return timestamp; }
 private:
     void FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control);
     void SetManagmentClockDivider(void);

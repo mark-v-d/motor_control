@@ -11,7 +11,7 @@ extern struct ccu8_t:public CCU8_GLOBAL_TypeDef {
     struct cc8:public CCU8_CC8_TypeDef {
 	const uint32_t RESERVED2[18];
     } cc[4];
-} ccu8[4];
+} ccu8[2];
 
 namespace ccu8_ns {
 union GCTRL_t {
@@ -225,10 +225,28 @@ SPECIALISATION(unit, int, 0, 3, 0);
 SPECIALISATION(unit, int, 0, 5, 0);
 SPECIALISATION(unit, int, 0, 6, 0);
 
+template <int port, int pin>
+constexpr int unit(void) { static_assert(port==-1, "Invalid pin");}
+template<> constexpr int unit<0,3>() { return 0; }
+template<> constexpr int unit<0,5>() { return 0; }
+template<> constexpr int unit<0,6>() { return 0; }
+
+template <class T>
+constexpr int unit(void) { return unit<T::PORT,T::PIN>(); }
+
 BASE__FUNCTION(slice, int);
 SPECIALISATION(slice, int, 0, 3, 2);
 SPECIALISATION(slice, int, 0, 5, 0);
 SPECIALISATION(slice, int, 0, 6, 3);
+
+template <int port, int pin>
+constexpr int slice(void) { static_assert(port==-1, "Invalid pin");}
+template<> constexpr int slice<0,3>() { return 2; }
+template<> constexpr int slice<0,5>() { return 0; }
+template<> constexpr int slice<0,6>() { return 3; }
+
+template <class T>
+constexpr int slice(void) { return slice<T::PORT,T::PIN>(); }
 
 BASE__FUNCTION(out, int);
 SPECIALISATION(out, int, 0, 3, 0);
@@ -238,21 +256,21 @@ SPECIALISATION(out, int, 0, 6, 0);
 #undef BASE__FUNCTION
 #undef SPECIALISATION
 
-template <int u,int i> constexpr IRQn_Type irq_num() 
+template <int u,int i> constexpr IRQn_Type irq() 
 { static_assert(u==-1,"Oops");}
-template <> constexpr IRQn_Type irq_num<0,0>() { return CCU80_0_IRQn; }
-template <> constexpr IRQn_Type irq_num<0,1>() { return CCU80_1_IRQn; }
-template <> constexpr IRQn_Type irq_num<0,2>() { return CCU80_2_IRQn; }
-template <> constexpr IRQn_Type irq_num<0,3>() { return CCU80_3_IRQn; }
-template <> constexpr IRQn_Type irq_num<1,0>() { return CCU81_0_IRQn; }
-template <> constexpr IRQn_Type irq_num<1,1>() { return CCU81_1_IRQn; }
-template <> constexpr IRQn_Type irq_num<1,2>() { return CCU81_2_IRQn; }
-template <> constexpr IRQn_Type irq_num<1,3>() { return CCU81_3_IRQn; }
+template <> constexpr IRQn_Type irq<0,0>() { return CCU80_0_IRQn; }
+template <> constexpr IRQn_Type irq<0,1>() { return CCU80_1_IRQn; }
+template <> constexpr IRQn_Type irq<0,2>() { return CCU80_2_IRQn; }
+template <> constexpr IRQn_Type irq<0,3>() { return CCU80_3_IRQn; }
+template <> constexpr IRQn_Type irq<1,0>() { return CCU81_0_IRQn; }
+template <> constexpr IRQn_Type irq<1,1>() { return CCU81_1_IRQn; }
+template <> constexpr IRQn_Type irq<1,2>() { return CCU81_2_IRQn; }
+template <> constexpr IRQn_Type irq<1,3>() { return CCU81_3_IRQn; }
 
 template <int i, class T>
 constexpr IRQn_Type irq(T const &o)
 {
-    return irq_num<unit(o),i>();
+    return irq<unit(o),i>();
 }
 
 }

@@ -268,9 +268,7 @@ inline void ETH0_0_IRQHandler(uint32_t event)
 {
     if(eth.TIMESTAMP_STATUS&0x2) {
 	LED1^=1;
-	using namespace ccu8_ns;
-	Ethernet::instance->timestamp=
-	    ccu8[unit(HB0)].cc[spare_slice(HB0,HB1,HB2)].TIMER;
+	pwm.set_timestamp();
     }
     if(event&XMC_ETH_MAC_EVENT_RECEIVE) {
 	Ethernet::instance->receiveIRQ();
