@@ -24,7 +24,10 @@ Ethernet eth0(
     &icmp
 );
 
-udp_logger logger __attribute__((section ("ETH_RAM")));
+udp_logger::input_t in;
+udp_logger::output_t out;
+
+udp_logger logger __attribute__((section ("ETH_RAM"))) (&in);
 udp_poker poker __attribute__((section ("ETH_RAM")));
 udp_sync syncer __attribute__((section ("ETH_RAM")));
 pwm_3phase <decltype(HB0),decltype(HB1),decltype(HB2)>pwm(4*trigger_HZ);
@@ -40,18 +43,6 @@ float adc_scale[4]={0.0010819,0.0010819,1.0,1.0};
 int32_t adc_offset[4];
 
 constexpr float servo_factor=0.00185805929607582;
-float vservo;
-
-float Istator[2];
-float Irotor[2];
-float I[2];
-float kP[2], kI[2];
-float Iset[2];
-float Vrotor[2];
-float Vstator[2];
-float lim=0.85;
-float output[3];
-float angle;
 
 enum {
     STARTUP,
@@ -75,12 +66,12 @@ extern "C" void CCU80_0_IRQHandler(void)
 
     LED2=0;
     for(int i=0;i<4;i++)
-	adc[i]=(int32_t(vadc.G[i].RES[0]&0xffff)-adc_offset[i])*adc_scale[i];
-    vservo=dsd.ch[dsd_ch_ns::channel(MDAT)].RESM*servo_factor;
+	out.adc[i]=(int32_t(vadc.G[i].RES[0]&0xffff)-adc_offset[i])*adc_scale[i];
+    out.vservo=dsd.ch[dsd_ch_ns::channel(MDAT)].RESM*servo_factor;
 
     float current[3];
-    current[0]=adc[0];
-    current[1]=adc[1];
+    current[0]=out.adc[0];
+    current[1]=out.adc[1];
     current[2]=-current[0]-current[1];
 
     switch(state) {
@@ -123,37 +114,43 @@ extern "C" void CCU80_0_IRQHandler(void)
 	    HBEN=0;
 	}
     } else {
+	float angle;
 	if(state!=MANUAL_ANGLE)
 	    angle=encoder->angle();
 	else
 	    angle=manual_angle;
+	float Istator[2];
 	Istator[0]=float(3.0/2)*current[0];
 	Istator[1]=float(sqrt(3))*current[1]+float(sqrt(3)/2)*current[0];
-	Irotor[0]= cosf(angle)*Istator[0]+sinf(angle)*Istator[1];
-	Irotor[1]=-sinf(angle)*Istator[0]+cosf(angle)*Istator[1];
+	out.Irotor[0]= cosf(angle)*Istator[0]+sinf(angle)*Istator[1];
+	out.Irotor[1]=-sinf(angle)*Istator[0]+cosf(angle)*Istator[1];
+	out.angle=angle;
 
 	switch(state) {
 	case MANUAL_ANGLE:
 	case CURRENT:
 	    for(int i=0;i<2;i++) {
-		float err=Iset[i]-Irotor[i];
-		I[i]+=kI[i]*err;
-		Vrotor[i]=err*kP[i]+I[i];
+		float err=in.Iset[i]-out.Irotor[i];
+		out.I[i]+=in.kI[i]*err;
+		out.Vrotor[i]=err*in.kP[i]+out.I[i];
 	    }
 	    // Intentionally no break
 	case VOLTAGE:
 	    HBEN=1;
-	    float sq_len=Vrotor[0]*Vrotor[0]+Vrotor[1]*Vrotor[1];
-	    if(sq_len>float(lim*lim)) {
-		Vrotor[0]*=lim/sqrtf(sq_len);
-		Vrotor[1]*=lim/sqrtf(sq_len);
-		I[0]*=lim/sqrtf(sq_len);
-		I[1]*=lim/sqrtf(sq_len);
+	    float sq_len=out.Vrotor[0]*out.Vrotor[0]
+		+out.Vrotor[1]*out.Vrotor[1];
+	    if(sq_len>float(in.lim*in.lim)) {
+		out.Vrotor[0]*=in.lim/sqrtf(sq_len);
+		out.Vrotor[1]*=in.lim/sqrtf(sq_len);
+		out.I[0]*=in.lim/sqrtf(sq_len);
+		out.I[1]*=in.lim/sqrtf(sq_len);
 	    }
 
-	    Vstator[0]=cosf(angle)*Vrotor[0]-sinf(angle)*Vrotor[1];
-	    Vstator[1]=sinf(angle)*Vrotor[0]+cosf(angle)*Vrotor[1];
+	    float Vstator[2];
+	    Vstator[0]=cosf(angle)*out.Vrotor[0]-sinf(angle)*out.Vrotor[1];
+	    Vstator[1]=sinf(angle)*out.Vrotor[0]+cosf(angle)*out.Vrotor[1];
 
+	    float output[3];
 	    if(	(output[0]=float(sqrt(3)/3)*Vstator[1]+Vstator[0])>=0 &&
 		(output[1]=float(2/sqrt(3))*Vstator[1])>=0
 	    ) {
@@ -168,6 +165,8 @@ extern "C" void CCU80_0_IRQHandler(void)
 		output[1]=0;
 		output[2]=-float(2/sqrt(3))*Vstator[1];
 	    }
+	    for(int i=0;i<3;i++)
+		out.output[i]=output[i];
 	    HB0=output_scale*output[0];
 	    HB1=output_scale*output[1];
 	    HB2=output_scale*output[2];
@@ -175,11 +174,7 @@ extern "C" void CCU80_0_IRQHandler(void)
 	}
     }
 
-    logger.SetADC(adc[0],adc[1],adc[2],adc[3]);
-    logger.SetEncoder(encoder->position(),encoder->angle());
-    logger.SetRotor(Vrotor,Irotor);
-    logger.SetOutput(output);
-    logger.transmit(&eth0);
+    logger.transmit(&eth0,out);
 
     LED2=1;
 }

@@ -8,3 +8,5 @@ rtifconfig rteth0 up 192.168.0.2
 rtroute add 192.168.0.4 82:80:05:0c:13:60 dev rteth0
 rtroute add 192.168.0.5 82:00:10:0b:13:60 dev rteth0
 modprobe analogy_parport
+rtping -c 1  192.168.0.4
+rtping -c 1  192.168.0.5

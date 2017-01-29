@@ -1,61 +1,76 @@
 #include "ethernet.h"
 
 class udp_logger:public Ethernet::Transmitter, public Ethernet::Receiver {
-    struct __attribute__ ((__packed__)) logger_t:public udp_t {
-	uint32_t counter;
-	float adc[4];
-	uint32_t encoder;
-	float Irotor[2];
-	float Vrotor[2];
-	float angle;
-	float output[3];
-	uint8_t enc_raw[9];
-
-	logger_t operator =(udp_t const &o) { udp_t::operator=(o); }
-    } pkt;
 public:
     virtual void Transmitted(Ethernet*,Ethernet::descriptor const&);
     virtual void Received(Ethernet*,Ethernet::descriptor const&);
     virtual void Unreachable(Ethernet*);
 
-    udp_logger(void) { pkt.length=0; }
-    void SetEncoder(uint32_t i, float a) { pkt.encoder=i; pkt.angle=a; }
-    void SetADC(float a, float b, float c, float d)
-    {
-	pkt.adc[0]=a;
-	pkt.adc[1]=b;
-	pkt.adc[2]=c;
-	pkt.adc[3]=d;
-    }
-    void SetRotor(float V[2], float I[2])
-    {
-	pkt.Vrotor[0]=V[0];
-	pkt.Vrotor[1]=V[1];
-	pkt.Irotor[0]=I[0];
-	pkt.Irotor[1]=I[1];
-    }
-    void SetOutput(float output[3])
-    {
-	for(int i=0;i<3;i++)
-	    pkt.output[i]=output[i];
-    }
-    void EncoderPacket(uint8_t *p) { memcpy(pkt.enc_raw,p,sizeof(pkt.enc_raw));}
-    void transmit(Ethernet *eth);
+    struct  __attribute__ ((__packed__)) output_t {
+	uint32_t counter;
+	float adc[4];
+	uint32_t encoder;
+	float Irotor[2];
+	float Vrotor[2];
+	float I[2];
+	float angle;
+	float output[3];
+	float vservo;
+    };
+
+    struct  __attribute__ ((__packed__)) input_t {
+	float Iset[2];
+	float kP[2], kI[2];
+	float lim;
+    };
+
+    udp_logger(struct input_t*);
+    void transmit(Ethernet *eth, output_t const &d);
+
+
+private:
+    struct  __attribute__ ((__packed__)) pkt_in_t:public udp_t {
+	input_t input;
+    };
+
+    struct  __attribute__ ((__packed__)) pkt_out_t:public udp_t {
+	output_t output;
+    } pkt;
+
+    struct input_t *data;
 };
 
+udp_logger::udp_logger(struct input_t *rx)
+{
+    data=rx;
+}
 
 void udp_logger::Received(
-    Ethernet*eth,
+    Ethernet *eth,
     Ethernet::descriptor const &desc
 ) {
-    eth->erase_udp_transmitter(this, pkt.dst_port);
-    pkt=desc.buffer->udp;			// copy everything
-    std::swap(pkt.dst_mac,pkt.src_mac);
-    std::swap(pkt.dst_ip,pkt.src_ip); 
-    pkt.dst_port=desc.buffer->udp.src_port;
+    pkt_in_t *p=reinterpret_cast<pkt_in_t*>(desc.buffer);
+
+    // Set packet source
+    eth->set_saddr(&pkt);
     pkt.src_port=desc.buffer->udp.dst_port;
+
+    // Set packet destination
+    memcpy(pkt.dst_mac,p->src_mac,sizeof(pkt.dst_mac));
+    memcpy(pkt.dst_ip,p->src_ip,sizeof(pkt.dst_ip));
+    pkt.dst_port=p->src_port;
+    pkt.type=p->type;
+
     pkt.length=hton(sizeof(pkt));
-    eth->add_udp_transmitter(this, pkt.dst_port);
+    pkt.version_headerlength=0x45;
+    pkt.services=0;
+    pkt.id=p->id;
+    pkt.flags_fragment_offset=p->flags_fragment_offset;
+    pkt.ttl=p->ttl;
+    pkt.protocol=ipv4_header_t::UDP;
+
+    if(data)
+	memcpy(data,&p->input,sizeof(p->input));
 }
 
 void udp_logger::Transmitted(
@@ -64,12 +79,12 @@ void udp_logger::Transmitted(
 ) {
 }
 
-inline void udp_logger::transmit(Ethernet *eth)
+inline void udp_logger::transmit(Ethernet *eth, output_t const &d)
 {
     pkt.ipv4_checksum=0;	// Allow ethernet MAC to fill these
     pkt.checksum=0;
     if(pkt.length) {
-	pkt.counter++;
+	memcpy(&pkt.output,&d,sizeof(d));
 	pkt.length=hton(sizeof(pkt)-sizeof(ethernet_t));
 	pkt.udp_length=hton(sizeof(pkt)-sizeof(ipv4_t));
 	eth->transmit(this,&pkt,sizeof(pkt));

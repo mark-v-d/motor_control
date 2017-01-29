@@ -26,18 +26,15 @@ MODULE_LICENSE("GPL");
 #include <netdb.h>
 #include <stdio.h>
 
-struct comp_state {
-    struct comp_state *next;
-    hal_float_t *out;
-    hal_float_t value;
-};
-struct comp_state *comp_first_inst=0, *comp_last_inst=0;
 
 
 static int udp;	// UDP socket
 
 static struct sockaddr_in sync_addr;
 
+/*******************************************************************************
+    Packets
+*******************************************************************************/
 struct sync_t {
     uint32_t tx_sec;
     uint32_t tx_nsec;
@@ -47,18 +44,72 @@ struct sync_t {
     float integrator;
 };
 
+struct output_t {
+    uint32_t counter;
+    float adc[4];
+    uint32_t encoder;
+    float Irotor[2];
+    float Vrotor[2];
+    float I[2];
+    float angle;
+    float output[3];
+    float vservo;
+};
+
+struct input_t {
+    float Iset[2];
+    float kP[2], kI[2];
+    float lim;
+};
+
+/******************************************************************************/
+struct comp_state {
+    struct comp_state *next;
+
+    // input pins
+    hal_float_t *Iset[2];
+    hal_float_t *kP[2];
+    hal_float_t *kI[2];
+    hal_float_t *lim;
+
+    // output pins
+    hal_s32_t *counter;
+    hal_float_t *adc[4];
+    hal_s32_t *encoder;
+    hal_float_t *Irotor[2];
+    hal_float_t *Vrotor[2];
+    hal_float_t *I[2];
+    hal_float_t *angle;
+    hal_float_t *output[3];
+    hal_float_t *vservo;
+
+    hal_float_t value;
+    struct sockaddr_in addr;
+};
+struct comp_state *comp_first_inst=0, *comp_last_inst=0;
+
+static inline void update_output_pins(struct comp_state *dest, 
+    struct output_t *pkt)
+{
+    *(dest->counter)=pkt->counter;
+    *(dest->encoder)=pkt->encoder;
+    *(dest->angle)=pkt->angle;
+    *(dest->vservo)=pkt->vservo;
+
+    int i;
+    for(i=0;i<4;i++)
+	*(dest->adc[i])=pkt->adc[i];
+    for(i=0;i<3;i++)
+	*(dest->output[i])=pkt->output[i];
+    for(i=0;i<2;i++) {
+	*(dest->Irotor[i])=pkt->Irotor[i];
+	*(dest->Vrotor[i])=pkt->Vrotor[i];
+	*(dest->I[i])=pkt->I[i];
+    }
+}
+
 static void send_sync(void *p, long period)
 {
-    int r;
-    do {
-	uint8_t buffer[1024];
-	struct sockaddr src;
-	socklen_t src_len;
-	r=recvfrom(udp, buffer, sizeof(buffer),
-	    MSG_DONTWAIT,
-	    &src, &src_len);
-    } while(r>=0);
-
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC,&now);
     struct {
@@ -75,47 +126,142 @@ static void send_sync(void *p, long period)
 	n.next_nsec-=1000000000;
     }
     sendto(udp,&n,sizeof(n),0,&sync_addr,sizeof(sync_addr));
+
+    int r;
+    do {
+	uint8_t buffer[1024];
+	struct sockaddr_in src;
+	socklen_t src_len;
+	r=recvfrom(udp, buffer, sizeof(buffer),
+	    MSG_DONTWAIT,
+	    &src, &src_len);
+	struct sync_t *p=(struct sync_t*)buffer;
+	struct comp_state *lp;
+	for(lp=comp_first_inst; lp;lp=lp->next) {
+	    if(src.sin_family!=AF_INET)
+		continue;
+	    if(!memcmp(&src.sin_addr,&lp->addr.sin_addr,
+		sizeof(lp->addr.sin_addr))
+	    ) { 
+		switch(ntohs(src.sin_port)) {
+		case 1: update_output_pins(lp,(struct output_t*)buffer); break;
+		}
+		break;
+	    }
+	}
+    } while(r>=0);
 }
 
-static int export(char *prefix, long extra_arg) 
+static void send_control(void *p, long period)
+{
+    struct comp_state *lp;
+    for(lp=comp_first_inst; lp;lp=lp->next) {
+	struct input_t in;
+	in.Iset[0]=*(lp->Iset[0]);
+	in.Iset[1]=*(lp->Iset[1]);
+	in.kP[0]=*(lp->kP[0]);
+	in.kP[1]=*(lp->kP[1]);
+	in.kI[0]=*(lp->kI[0]);
+	in.kI[1]=*(lp->kI[1]);
+	in.lim=*(lp->lim);
+	sendto(udp,&in,sizeof(in),0,&lp->addr,sizeof(lp->addr));
+    }
+}
+
+static int default_count=1, count=0;
+static char *names[16] = {0,};
+static char *ipaddr[16]= {0,};
+static char *bcast="192.168.0.255";
+
+RTAPI_MP_INT(count, "number of etherdrive");
+RTAPI_MP_STRING(bcast, "broadcast address");
+RTAPI_MP_ARRAY_STRING(names, 16, "names of etherdrive");
+RTAPI_MP_ARRAY_STRING(ipaddr, 16, "ip address of drives");
+
+
+#define FP_IN(n,name) \
+    r = hal_pin_float_newf(HAL_IN, &(inst->n), comp_id, "%s." #name, prefix); \
+    if(r) \
+	return r;
+#define S32_IN(n,name) \
+    r = hal_pin_s32_newf(HAL_IN, &(inst->n), comp_id, "%s." #name, prefix); \
+    if(r) \
+	return r;
+#define FP_OUT(n,name) \
+    r = hal_pin_float_newf(HAL_OUT, &(inst->n), comp_id, "%s." #name, prefix); \
+    if(r) \
+	return r;
+#define S32_OUT(n,name) \
+    r = hal_pin_s32_newf(HAL_OUT, &(inst->n), comp_id, "%s." #name, prefix); \
+    if(r) \
+	return r;
+
+static int export(char *prefix, long index) 
 {
     char buf[HAL_NAME_LEN + 1];
     int r = 0;
     int sz = sizeof(struct comp_state);
     struct comp_state *inst = hal_malloc(sz);
     memset(inst, 0, sz);
-    r = hal_pin_float_newf(HAL_OUT, &(inst->out), comp_id,
-        "%s.out", prefix);
-    if(r != 0) return r;
-    r = hal_param_float_newf(HAL_RO, &(inst->value), comp_id,
-        "%s.value", prefix);
-    inst->value = 1.0;
-    if(r != 0) return r;
 
-    if(comp_last_inst) comp_last_inst->next = inst;
+    FP_IN(Iset[0],Iset-0);
+    FP_IN(Iset[1],Iset-1);
+    FP_IN(kP[0],kP-0);
+    FP_IN(kP[1],kP-1);
+    FP_IN(kI[0],kI-0);
+    FP_IN(kI[1],kI-1);
+    FP_IN(lim,lim);
+
+    S32_OUT(counter,counter);
+    FP_OUT(adc[0],adc-0);
+    FP_OUT(adc[1],adc-1);
+    FP_OUT(adc[2],adc-2);
+    FP_OUT(adc[3],adc-3);
+    S32_OUT(encoder,encoder);
+    FP_OUT(Irotor[0],Irotor-0);
+    FP_OUT(Irotor[1],Irotor-1);
+    FP_OUT(Vrotor[0],Vrotor-0);
+    FP_OUT(Vrotor[1],Vrotor-1);
+    FP_OUT(I[0],I-0);
+    FP_OUT(I[1],I-1);
+    FP_OUT(angle,angle);
+    FP_OUT(output[0],output-0);
+    FP_OUT(output[1],output-1);
+    FP_OUT(output[2],output-2);
+    FP_OUT(vservo,vservo);
+
+    r=hal_param_float_newf(HAL_RO, &(inst->value), comp_id, "%s.value", prefix);
+    inst->value = 1.0;
+    if(r) 
+	return r;
+
+    inst->addr.sin_family=AF_INET;
+    inst->addr.sin_port=htons(1);
+    struct hostent *hp=gethostbyname(ipaddr[index]);
+    memcpy((void*) &inst->addr.sin_addr, hp->h_addr_list[0], hp->h_length);
+
+    if(comp_last_inst) 
+	comp_last_inst->next = inst;
     comp_last_inst = inst;
-    if(!comp_first_inst) comp_first_inst = inst;
+    if(!comp_first_inst) 
+	comp_first_inst = inst;
     return 0;
 }
-
-static int default_count=1, count=0;
-char *names[16] = {0,};
-
-RTAPI_MP_INT(count, "number of etherdrive");
-RTAPI_MP_ARRAY_STRING(names, 16, "names of etherdrive");
 
 int rtapi_app_main(void) 
 {
     int r = 0;
     int i;
     comp_id = hal_init("etherdrive");
-    if(comp_id < 0) return comp_id;
+    if(comp_id < 0) 
+	return comp_id;
     if(count && names[0]) {
         rtapi_print_msg(RTAPI_MSG_ERR,
 	    "count= and names= are mutually exclusive\n");
         return -EINVAL;
     }
-    if(!count && !names[0]) count = default_count;
+    if(!count && !names[0]) 
+	count = default_count;
     if(count) {
         for(i=0; i<count; i++) {
             char buf[HAL_NAME_LEN + 1];
@@ -141,13 +287,17 @@ int rtapi_app_main(void)
     udp=socket(AF_INET, SOCK_DGRAM, 0);
     sync_addr.sin_family=AF_INET;
     sync_addr.sin_port=htons(3);
-    struct hostent *hp=gethostbyname("192.168.0.5");
+    struct hostent *hp=gethostbyname(bcast);
     memcpy((void*) &sync_addr.sin_addr, hp->h_addr_list[0], hp->h_length);
 
     // Export the send-sync function
     if(!r) 
-	r = hal_export_funct("etherdrive.send-sync", 
+	r = hal_export_funct("etherdrive.sync", 
 	    send_sync, 
+	    NULL, 1, 0, comp_id);
+    if(!r) 
+	r = hal_export_funct("etherdrive.control", 
+	    send_control, 
 	    NULL, 1, 0, comp_id);
 
     if(r) {
