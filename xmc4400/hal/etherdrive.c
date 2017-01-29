@@ -18,13 +18,6 @@ MODULE_INFO(linuxcnc, "license:GPL");
 MODULE_LICENSE("GPL");
 #endif // MODULE_INFO
 
-struct __comp_state {
-    struct __comp_state *_next;
-    hal_float_t *out;
-    hal_float_t value;
-};
-struct __comp_state *__comp_first_inst=0, *__comp_last_inst=0;
-
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/types.h>
@@ -33,9 +26,17 @@ struct __comp_state *__comp_first_inst=0, *__comp_last_inst=0;
 #include <netdb.h>
 #include <stdio.h>
 
-int udp;	// UDP socket
+struct comp_state {
+    struct comp_state *next;
+    hal_float_t *out;
+    hal_float_t value;
+};
+struct comp_state *comp_first_inst=0, *comp_last_inst=0;
 
-struct sockaddr_in sync_addr;
+
+static int udp;	// UDP socket
+
+static struct sockaddr_in sync_addr;
 
 struct sync_t {
     uint32_t tx_sec;
@@ -44,58 +45,44 @@ struct sync_t {
     uint32_t rx_nsec;
     uint32_t timer; 
     float integrator;
-
-    /*
-    sync_t(void) {}
-    sync_t(uint8_t *p) {
-	sync_t *src=reinterpret_cast<sync_t*>(p);
-	*this=*src;
-    }
-    */
 };
 
-static void send_sync(struct __comp_state *__comp_inst, long period)
+static void send_sync(void *p, long period)
 {
-/*
-	struct itimerspec nxt;
-	timer_gettime(tid, &nxt);
-	n.next_sec=now.tv_sec;
-	n.next_nsec=now.tv_nsec+nxt.it_value.tv_nsec;
-	if(n.next_nsec>1'000'000'000) {
-	    n.next_sec++;
-	    n.next_nsec-=1'000'000'000;
-	}
-*/
-	if(udp>0) {
-		struct timespec now;
-		clock_gettime(CLOCK_MONOTONIC,&now);
-		struct {
-		    uint32_t now_sec;
-		    uint32_t now_nsec;
-		    uint32_t next_sec;
-		    uint32_t next_nsec;
-		} n;
-		n.now_sec=now.tv_sec;
-		n.now_nsec=now.tv_nsec;
-		sendto(udp,&n,sizeof(n),0,&sync_addr,sizeof(sync_addr));
-	} else {
-		printf("Etherdrive init\n");
-		udp=socket(AF_INET, SOCK_DGRAM, 0);
-		sync_addr.sin_family=AF_INET;
-		sync_addr.sin_port=htons(3);
-		struct hostent *hp=gethostbyname("192.168.0.5");
-		memcpy((void*) &sync_addr.sin_addr, hp->h_addr_list[0], 
-			hp->h_length);
-	}
+    int r;
+    do {
+	uint8_t buffer[1024];
+	struct sockaddr src;
+	socklen_t src_len;
+	r=recvfrom(udp, buffer, sizeof(buffer),
+	    MSG_DONTWAIT,
+	    &src, &src_len);
+    } while(r>=0);
 
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC,&now);
+    struct {
+	uint32_t now_sec;
+	uint32_t now_nsec;
+	uint32_t next_sec;
+	uint32_t next_nsec;
+    } n;
+    n.next_sec=n.now_sec=now.tv_sec;
+    n.next_nsec=n.now_nsec=now.tv_nsec;
+    n.next_nsec+=period;
+    if(n.next_nsec>1000000000) {
+	n.next_sec++;
+	n.next_nsec-=1000000000;
+    }
+    sendto(udp,&n,sizeof(n),0,&sync_addr,sizeof(sync_addr));
 }
 
 static int export(char *prefix, long extra_arg) 
 {
     char buf[HAL_NAME_LEN + 1];
     int r = 0;
-    int sz = sizeof(struct __comp_state);
-    struct __comp_state *inst = hal_malloc(sz);
+    int sz = sizeof(struct comp_state);
+    struct comp_state *inst = hal_malloc(sz);
     memset(inst, 0, sz);
     r = hal_pin_float_newf(HAL_OUT, &(inst->out), comp_id,
         "%s.out", prefix);
@@ -105,14 +92,9 @@ static int export(char *prefix, long extra_arg)
     inst->value = 1.0;
     if(r != 0) return r;
 
-    rtapi_snprintf(buf, sizeof(buf), "%s.send-sync", prefix);
-    r = hal_export_funct(buf, (void(*)(void *inst, long))send_sync, 
-	inst, 1, 0, comp_id);
-
-    if(r != 0) return r;
-    if(__comp_last_inst) __comp_last_inst->_next = inst;
-    __comp_last_inst = inst;
-    if(!__comp_first_inst) __comp_first_inst = inst;
+    if(comp_last_inst) comp_last_inst->next = inst;
+    comp_last_inst = inst;
+    if(!comp_first_inst) comp_first_inst = inst;
     return 0;
 }
 
@@ -154,6 +136,20 @@ int rtapi_app_main(void)
             if(r != 0) break;
        }
     }
+
+    // Initialise socket and destination address for sync
+    udp=socket(AF_INET, SOCK_DGRAM, 0);
+    sync_addr.sin_family=AF_INET;
+    sync_addr.sin_port=htons(3);
+    struct hostent *hp=gethostbyname("192.168.0.5");
+    memcpy((void*) &sync_addr.sin_addr, hp->h_addr_list[0], hp->h_length);
+
+    // Export the send-sync function
+    if(!r) 
+	r = hal_export_funct("etherdrive.send-sync", 
+	    send_sync, 
+	    NULL, 1, 0, comp_id);
+
     if(r) {
         hal_exit(comp_id);
     } else {

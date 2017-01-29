@@ -12,5 +12,4 @@ clean:
 	rm etherdrive.o etherdrive.so 
 
 link:
-	rm -f /usr/src/linuxcnc/rtlib/etherdrive.so
-	ln etherdrive.so /usr/src/linuxcnc/rtlib/etherdrive.so
+	ln -f etherdrive.so /usr/src/linuxcnc/rtlib/etherdrive.so
