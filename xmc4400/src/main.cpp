@@ -278,6 +278,7 @@ void __gnu_cxx::__verbose_terminate_handler(void)
 
 void init_adc(void)
 {
+    using namespace vadc_g_ns;
     /*
 	Only channel 0 of the ADCs is used. Group 0 is used in queued mode
 	only and triggered by the timer at the PWM zero crossing.
@@ -298,7 +299,7 @@ void init_adc(void)
 	.dp_cal3=0,
 	.sucal=0
     }}).raw;
-    vadc.GLOBICLASS[0]=vadc_g_ns::iclass_t({{
+    vadc.GLOBICLASS[0]=iclass_t({{
 	.stcs=0,	// no additional cycles
 	.cms=0,		// 12-bit conversion
 	.stce=0,	// dnc
@@ -307,7 +308,7 @@ void init_adc(void)
 
     for(int i=0;i<4;i++) {
 	// Channel control
-	vadc.G[i].CHCTR[0]=vadc_g_ns::chctr_t({{
+	vadc.G[i].CHCTR[0]=chctr_t({{
 	    .iclsel=2,		// global class 0
 	    .bndsell=0,		// dnc
 	    .bndselu=0,		// dnc
@@ -321,14 +322,14 @@ void init_adc(void)
 	    .bwden=0
 	}}).raw;
 	// Accumulate 4 results
-	vadc.G[i].RCR[1]=vadc_g_ns::rcr_t({{
+	vadc.G[i].RCR[1]=rcr_t({{
 	    .drctr=3,	// 4 results
 	    .dmm=0,	// accumulation 
 	    .wfr=0,	// overwrite
 	    .fen=0,	// top of fifo
 	    .srgen=uint32_t(i==0? 1:0)	// no service request
 	}}).raw;
-	vadc.G[i].RCR[0]=vadc_g_ns::rcr_t({{
+	vadc.G[i].RCR[0]=rcr_t({{
 	    .drctr=0,	// 4 results
 	    .dmm=0,	// accumulation 
 	    .wfr=0,	// overwrite
@@ -337,7 +338,7 @@ void init_adc(void)
 	}}).raw;
 	if(i) {
 	    // slave
-	    vadc.G[i].SYNCTR=vadc_g_ns::synctr_t({{
+	    vadc.G[i].SYNCTR=synctr_t({{
 		.stsel=1,	// synchronise to G0
 		.evalr1=0,
 		.evalr2=0,
@@ -346,7 +347,7 @@ void init_adc(void)
 	} else { 
 	    // master
 	    // Arbiter, only queued mode is enabled
-	    vadc.G[i].ARBPR=vadc_g_ns::arbpr_t({{
+	    vadc.G[i].ARBPR=arbpr_t({{
 		.prio0=3,
 		.csm0=1,
 		.prio1=0,
@@ -357,7 +358,7 @@ void init_adc(void)
 		.asen1=0,
 		.asen2=0
 	    }}).raw;
-	    vadc.G[i].QMR0=vadc_g_ns::qmr0_t({{
+	    vadc.G[i].QMR0=qmr0_t({{
 		.engt=1,
 		.entr=1,
 		.clrv=0,
@@ -366,7 +367,7 @@ void init_adc(void)
 		.cev=0,
 		.rptdis=0
 	    }}).raw;
-	    vadc.G[i].QINR0=vadc_g_ns::qinr0_t({{
+	    vadc.G[i].QINR0=qinr0_t({{
 		.reqchnr=0,
 		.rf=1,
 		.ensi=0,
@@ -376,7 +377,7 @@ void init_adc(void)
 	    // FIXME, make the xtsel mapping automatic
 	    static_assert(ccu8_ns::unit(HB0)==0, "Wrong timer for ADC trigger");
 	    static_assert(pwm.adc_irq==2, "Wrong ADC trigger");
-	    vadc.G[i].QCTRL0=vadc_g_ns::qctrl0_t({{
+	    vadc.G[i].QCTRL0=qctrl0_t({{
 		.srcresreg=0,	// Use CHCTR.resreg
 		.xtsel=8, 	// CCU80::SR2 (See asserts)
 		.xtlvl=0,
@@ -388,7 +389,7 @@ void init_adc(void)
 		.tmen=0,	// Uncertain
 		.tmwc=1
 	    }}).raw;
-	    vadc.G[i].SYNCTR=vadc_g_ns::synctr_t({{
+	    vadc.G[i].SYNCTR=synctr_t({{
 		.stsel=0,	// Master
 		.evalr1=1,
 		.evalr2=1,
@@ -396,15 +397,17 @@ void init_adc(void)
 	    }}).raw;
 	}
     }
-    vadc.G[0].ARBCFG=vadc_g_ns::arbcfg_t({{
+    vadc.G[0].ARBCFG=arbcfg_t({{
 	.anonc=3,	// permanently on (master/standalone mode)
 	.arbrnd=0,	// 4 slots per round
 	.arbm=0,	// arbiter runs permanently
 	.anons=3	// G0 is the master
     }}).raw;
+#if 0
     NVIC_SetPriority(VADC0_G0_0_IRQn,  0);
     NVIC_ClearPendingIRQ(VADC0_G0_0_IRQn);
     NVIC_EnableIRQ(VADC0_G0_0_IRQn);
+#endif
 }
 
 #include "xmc_dsd.h"

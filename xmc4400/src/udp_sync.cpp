@@ -98,7 +98,8 @@ void udp_sync::Received(Ethernet *p_eth, Ethernet::descriptor const &desc)
     eth.TIMESTAMP_CONTROL=control.raw;
     pkt.integrator=integrator;
 
-    transmit(p_eth);
+    if(p->dst_ip[3]!=255)
+	transmit(p_eth);
 }
 
 void udp_sync::Transmitted(

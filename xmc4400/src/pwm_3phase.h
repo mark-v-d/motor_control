@@ -173,7 +173,7 @@ inline void pwm_3phase<A,B,C>::set_timestamp(void)
     using namespace ccu8_ns;
     timestamp=ccu8[unit<A>()].cc[spare_slice()].TIMER;
 
-    int32_t error=timestamp+100; 
+    int32_t error=timestamp+200;
     if(error>8*period/2)
 	error-=8*period;
     if(error>10)
