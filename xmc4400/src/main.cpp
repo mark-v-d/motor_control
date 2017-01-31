@@ -74,6 +74,8 @@ extern "C" void CCU80_0_IRQHandler(void)
     current[1]=out.adc[1];
     current[2]=-current[0]-current[1];
 
+    out.encoder=encoder->position();
+
     switch(state) {
     case STARTUP:
 	HBEN=0;

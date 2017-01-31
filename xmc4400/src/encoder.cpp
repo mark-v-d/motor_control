@@ -263,12 +263,13 @@ class hiperface_t:public encoder_t {
     uint8_t rx_buffer[8];
     uint8_t tx_buffer[8];
     volatile int rx_put, tx_get, tx_len;
+    int32_t timer;
 public:
-    virtual uint32_t position(void) { return CCU40_CC40->TIMER; }
-    virtual float angle(void) { return conv*ccu40.cc[0].TIMER+offset; }
+    virtual uint32_t position(void) { return timer; }
+    virtual float angle(void) { return conv*(timer&0xfff)+offset; }
     virtual bool valid(void) { return true; }
 
-    virtual void trigger(void) { }
+    virtual void trigger(void);
     virtual void half_duplex(void);
     virtual void full_duplex(void) {}
 
@@ -291,6 +292,19 @@ private:
 	sleep(20ms);
     }
 };
+
+void hiperface_t::trigger(void)
+{
+    int32_t nt=ccu40.cc[0].TIMER;
+    int32_t ot=timer&0xffff;
+
+    if(nt-ot>4000)
+	timer-=0x10000;
+    if(ot-nt>4000)
+	timer+=0x10000;
+    timer&=0xffff0000;
+    timer|=nt;
+}
 
 void hiperface_t::half_duplex(void)
 {
@@ -372,7 +386,7 @@ void posif_init(uint32_t position)
 	.mos=0,
 	.tce=0 
     }}).raw; 
-    ccu40.cc[0].PRS=0x0fff;	// 12-bit period (overflow somewhere)
+    ccu40.cc[0].PRS=0xffff;	// 12-bit period (overflow somewhere)
     ccu40.GCSS=1;		// transfer enable (to load period)
     ccu40.cc[0].TIMER=(position/8)&0xffff; 
     ccu40.cc[0].TCSET=1;	// timer ON
