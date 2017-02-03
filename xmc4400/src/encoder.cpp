@@ -19,7 +19,7 @@ class dummy_encoder_t:public encoder_t {
 public:
     dummy_encoder_t(void);
 
-    virtual uint32_t position(void) { return 0;}
+    virtual int32_t position(void) { return 0;}
     virtual float angle(void) { return 0.0;}
     virtual bool valid(void) { return false;}
 
@@ -33,19 +33,70 @@ dummy_encoder_t::dummy_encoder_t(void)
     // Turn encoder power off
     ENC_5V=0;
     ENC_12V=0;
+    ENC_TXD.set(XMC_GPIO_MODE_INPUT_TRISTATE);
     ENC_DIR=0;
 
     // disable all encoder peripherals and interrupts
-    // FIXME
-    XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC0);
-    XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC1);
-    XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC0);
-    XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC1);
-    NVIC_DisableIRQ(USIC1_0_IRQn);
-    NVIC_DisableIRQ(USIC0_1_IRQn);
+    // FIXME, posif and CCU40 missing
+    if(usic_ch_ns::channel(ENC_TXD)) {
+	XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC1);
+	XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC1);
+	NVIC_DisableIRQ(USIC1_0_IRQn);
+	NVIC_DisableIRQ(USIC1_1_IRQn);
+    } else {
+	XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC0);
+	XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC0);
+	NVIC_DisableIRQ(USIC0_0_IRQn);
+	NVIC_DisableIRQ(USIC0_1_IRQn);
+    }
 }
 
 std::unique_ptr<encoder_t> encoder(new dummy_encoder_t);
+
+void encoder_t::init_half_duplex(
+    XMC_UART_CH_CONFIG_t const &uart_config)
+{
+    using namespace usic_ch_ns;
+    constexpr XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
+
+    XMC_UART_CH_DisableEvent(ENC_TXD, XMC_UART_CH_EVENT_STANDARD_RECEIVE);
+    NVIC_DisableIRQ(irq<fd_irq>(ENC_TXD));
+
+    XMC_UART_CH_Init(channel, &uart_config);
+    XMC_UART_CH_SetInputSource(channel, XMC_UART_CH_INPUT_RXD, dx0(ENC_TXD));
+    XMC_UART_CH_EnableEvent(channel, XMC_UART_CH_EVENT_FRAME_FINISHED );
+    XMC_UART_CH_SelectInterruptNodePointer(channel,
+	XMC_UART_CH_INTERRUPT_NODE_POINTER_PROTOCOL, hd_irq);
+    XMC_UART_CH_Start(channel);
+
+    // Protocol interrupt
+    NVIC_SetPriority(irq<hd_irq>(ENC_TXD),  0);
+    NVIC_ClearPendingIRQ(irq<hd_irq>(ENC_TXD));
+    NVIC_EnableIRQ(irq<hd_irq>(ENC_TXD));
+}
+
+void encoder_t::init_full_duplex(
+    XMC_UART_CH_CONFIG_t const &uart_config)
+{
+    using namespace usic_ch_ns;
+    constexpr XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
+
+    XMC_UART_CH_DisableEvent(ENC_TXD, XMC_UART_CH_EVENT_FRAME_FINISHED);
+    NVIC_DisableIRQ(irq<hd_irq>(ENC_TXD));
+
+    XMC_UART_CH_Init(channel, &uart_config);
+    XMC_UART_CH_SetInputSource(channel, XMC_UART_CH_INPUT_RXD, dx0(ENC_RXD));
+    XMC_UART_CH_EnableEvent(channel, XMC_UART_CH_EVENT_STANDARD_RECEIVE);
+    XMC_UART_CH_SelectInterruptNodePointer(channel,
+	XMC_UART_CH_INTERRUPT_NODE_POINTER_RECEIVE, fd_irq);
+    XMC_UART_CH_EnableInputInversion(channel,XMC_UART_CH_INPUT_RXD);
+    XMC_UART_CH_Start(channel);
+
+    // Protocol interrupt
+    NVIC_SetPriority(irq<fd_irq>(ENC_TXD),  0);
+    NVIC_ClearPendingIRQ(irq<fd_irq>(ENC_TXD));
+    NVIC_EnableIRQ(irq<fd_irq>(ENC_TXD));
+}
 
 /*******************************************************************************
     Mitsubishi base class
@@ -55,7 +106,7 @@ protected:
     int putp;
     uint8_t rx_buffer[16];
 public:
-    virtual uint32_t position(void) { return 0; }
+    virtual int32_t position(void) { return 0; }
     virtual float angle(void) { return 0.0F; }
     virtual bool valid(void) { return false; }
 
@@ -70,25 +121,30 @@ private:
 
 void mitsubishi_encoder_t::half_duplex(void)
 {
+    using namespace usic_ch_ns;
+    ENC_TXD.set(XMC_GPIO_MODE_INPUT_TRISTATE);
     ENC_DIR=0;
-    XMC_USIC_CH_t *usic=ENC_TXD;
-    uint32_t reason=usic->PSR;
+
+    XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
+    uint32_t reason=channel->PSR;
     if(reason & USIC_CH_PSR_ASCMode_RFF_Msk)
-	rx_buffer[putp++]=usic->RBUF;
-    usic->PSCR=reason;
+	rx_buffer[putp++]=channel->RBUF;
+    channel->PSCR=reason;
 }
 
 void mitsubishi_encoder_t::full_duplex(void)
 {
-    // static_assert(uart_number(ENC_RXD2)==1, "FIXME");
-    u1c1.PSCR=u1c1.PSR;
-    rx_buffer[putp++]=u1c1.RBUF;
+    using namespace usic_ch_ns;
+    XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
+    channel->PSCR=channel->PSR;
+    rx_buffer[putp++]=channel->RBUF;
 }
 
 void mitsubishi_encoder_t::serial_tx(uint8_t data)
 {
     using namespace std::chrono;
     ENC_DIR=1;
+    ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL | XMC_GPIO_MODE_OUTPUT_ALT2));
     putp=0;
     ENC_TXD=data;
     sleep(1ms);
@@ -101,7 +157,7 @@ class mitsubishi_MFS13_t:public mitsubishi_encoder_t
     constexpr static int increments_per_revolution=(1<<20);
     constexpr static float conv=2.0*PI*poles/increments_per_revolution;
 public:
-    virtual uint32_t position(void);
+    virtual int32_t position(void);
     virtual float angle(void);
     virtual bool valid(void);
 
@@ -114,7 +170,7 @@ float mitsubishi_MFS13_t::angle(void)
     return conv*float(encoder);
 }
 
-uint32_t mitsubishi_MFS13_t::position(void)
+int32_t mitsubishi_MFS13_t::position(void)
 {
     return rx_buffer[2]+(1<<8)*rx_buffer[3]+(1<<16)*rx_buffer[4]
 	+(1<<20)*rx_buffer[5]+(1<<28)*(rx_buffer[6]*0x0f);
@@ -133,6 +189,7 @@ bool mitsubishi_MFS13_t::valid(void)
 void mitsubishi_MFS13_t::trigger(void)
 {
     ENC_DIR=1;
+    ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL | XMC_GPIO_MODE_OUTPUT_ALT2));
     putp=0;
     ENC_TXD=0x1a;
 }
@@ -144,7 +201,7 @@ class mitsubishi_PQ_t:public mitsubishi_encoder_t
     constexpr static int increments_per_revolution=(1<<12);
     constexpr static float conv=2.0*PI*poles/increments_per_revolution;
 public:
-    virtual uint32_t position(void);
+    virtual int32_t position(void);
     virtual float angle(void);
     virtual bool valid(void);
 
@@ -157,7 +214,7 @@ float mitsubishi_PQ_t::angle(void)
     return conv*float(encoder);
 }
 
-uint32_t mitsubishi_PQ_t::position(void)
+int32_t mitsubishi_PQ_t::position(void)
 {
     return rx_buffer[2]+(1<<8)*rx_buffer[3]
 	+(1<<12)*rx_buffer[5]+(1<<20)*rx_buffer[6]+(1<<28)*rx_buffer[7];
@@ -176,6 +233,7 @@ bool mitsubishi_PQ_t::valid(void)
 void mitsubishi_PQ_t::trigger(void)
 {
     ENC_DIR=1;
+    ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL | XMC_GPIO_MODE_OUTPUT_ALT2));
     putp=0;
     ENC_TXD=0x1a;
 }
@@ -184,7 +242,6 @@ void mitsubishi_PQ_t::trigger(void)
 int mitsubishi_encoder_t::detect(void)
 {
     using namespace std::chrono;
-    using namespace usic_ch_ns;
     mitsubishi_encoder_t *p=new mitsubishi_encoder_t;
     encoder=std::unique_ptr<mitsubishi_encoder_t>(p);
 
@@ -197,18 +254,7 @@ int mitsubishi_encoder_t::detect(void)
 	.parity_mode=XMC_USIC_CH_PARITY_MODE_NONE
     };
 
-    constexpr XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
-    XMC_UART_CH_Init(channel, &uart_config);
-    XMC_UART_CH_SetInputSource(channel,
-	XMC_UART_CH_INPUT_RXD, dx0(ENC_RXD));
-    XMC_UART_CH_EnableEvent(channel, XMC_UART_CH_EVENT_FRAME_FINISHED );
-    XMC_UART_CH_SelectInterruptNodePointer(channel,
-	XMC_UART_CH_INTERRUPT_NODE_POINTER_PROTOCOL, hd_irq);
-    XMC_UART_CH_Start(channel);
-    // Protocol interrupt
-    NVIC_SetPriority(irq<hd_irq>(ENC_TXD),  0);
-    NVIC_ClearPendingIRQ(irq<hd_irq>(ENC_TXD));
-    NVIC_EnableIRQ(irq<hd_irq>(ENC_TXD));
+    init_half_duplex(uart_config);
 
     // Powerup and wait
     p->serial_tx(0x1a);
@@ -222,23 +268,7 @@ int mitsubishi_encoder_t::detect(void)
 	return 1;
     }
 
-    // We don't need to disable the transmitter in full-duplex
-    XMC_UART_CH_DisableEvent(ENC_TXD, XMC_UART_CH_EVENT_FRAME_FINISHED);
-    NVIC_DisableIRQ(irq<hd_irq>(ENC_TXD));
-
-    // FIXME, hardware fix re-route everything to a single uart
-    constexpr XMC_USIC_CH_t *rx_channel=xmc_channel(ENC_RXD2);
-    XMC_UART_CH_Init(rx_channel, &uart_config);
-    XMC_UART_CH_SetInputSource(rx_channel,XMC_UART_CH_INPUT_RXD, dx0(ENC_RXD2));
-    XMC_UART_CH_EnableInputInversion(rx_channel,XMC_UART_CH_INPUT_RXD);
-    XMC_UART_CH_EnableEvent(rx_channel, XMC_UART_CH_EVENT_STANDARD_RECEIVE);
-    XMC_UART_CH_SelectInterruptNodePointer(rx_channel,
-	XMC_UART_CH_INTERRUPT_NODE_POINTER_RECEIVE, fd_irq);
-    XMC_UART_CH_Start(rx_channel);
-    // Receive interrupt
-    NVIC_SetPriority(irq<fd_irq>(ENC_RXD2),  0);
-    NVIC_ClearPendingIRQ(irq<fd_irq>(ENC_RXD2));
-    NVIC_EnableIRQ(irq<fd_irq>(ENC_RXD2));
+    init_full_duplex(uart_config);
 
     p->serial_tx(0x1a);
     if(p->putp!=9) {
@@ -263,9 +293,9 @@ class hiperface_t:public encoder_t {
     uint8_t rx_buffer[8];
     uint8_t tx_buffer[8];
     volatile int rx_put, tx_get, tx_len;
-    int32_t timer;
+    int32_t timer=0;
 public:
-    virtual uint32_t position(void) { return timer; }
+    virtual int32_t position(void);
     virtual float angle(void) { return conv*(timer&0xfff)+offset; }
     virtual bool valid(void) { return true; }
 
@@ -279,6 +309,7 @@ private:
     {
 	using namespace std::chrono;
 	ENC_DIR=1;
+	ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL | XMC_GPIO_MODE_OUTPUT_ALT2));
 	uint8_t crc=0;
 	tx_len=0;
 	for(auto x: msg) {
@@ -306,19 +337,41 @@ void hiperface_t::trigger(void)
     timer|=nt;
 }
 
+int32_t hiperface_t::position(void) 
+{ 
+    int32_t ch0=vadc.G[1].RES[0]&0xffff; ch0-=2047;
+    int32_t ch1=vadc.G[2].RES[0]&0xffff; ch1-=2047;
+    constexpr float c=0.5/PI;
+    int32_t ang=1023.0F*(c*atan2f(-ch1,ch0)+0.5F);
+    uint32_t t=timer;
+    if(ang>>8==3)
+	t--;
+    if(ang>>8==0)
+	t++;
+    t&=0xfffffffc;
+    return t<<8 | ang;
+}
+
+
 void hiperface_t::half_duplex(void)
 {
     LED2=0;
     XMC_USIC_CH_t *usic=ENC_TXD;
     uint32_t reason=usic->PSR;
+    if(reason & USIC_CH_PSR_ASCMode_RFF_Msk) {
+	if(ENC_DIR)
+	    usic->RBUF;
+	else
+	    rx_buffer[rx_put++]=usic->RBUF;
+    }
     if(reason & USIC_CH_PSR_ASCMode_TFF_Msk) {
 	if(tx_get<tx_len)
 	    ENC_TXD=tx_buffer[tx_get++];
-	else
+	else {
+	    ENC_TXD.set(XMC_GPIO_MODE_INPUT_TRISTATE);
 	    ENC_DIR=0;
-    } else if(reason & USIC_CH_PSR_ASCMode_RFF_Msk) {
-	rx_buffer[rx_put++]=usic->RBUF;
-    }
+	}
+    } 
     usic->PSCR=reason;
     LED2=1;
 }
@@ -395,7 +448,6 @@ void posif_init(uint32_t position)
 int hiperface_t::detect(void)
 {
     using namespace std::chrono;
-    using namespace usic_ch_ns;
 
     hiperface_t *p=new hiperface_t;
     encoder=std::unique_ptr<hiperface_t>(p);
@@ -409,17 +461,7 @@ int hiperface_t::detect(void)
 	.parity_mode=XMC_USIC_CH_PARITY_MODE_EVEN
     };
 
-    constexpr XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
-    XMC_UART_CH_Init(channel, &uart_config);
-    XMC_UART_CH_SetInputSource(channel, XMC_UART_CH_INPUT_RXD, dx0(ENC_RXD));
-    XMC_UART_CH_EnableEvent(channel, XMC_UART_CH_EVENT_FRAME_FINISHED );
-    XMC_UART_CH_SelectInterruptNodePointer(channel,
-	XMC_UART_CH_INTERRUPT_NODE_POINTER_PROTOCOL, hd_irq);
-    XMC_UART_CH_Start(channel);
-    // Protocol interrupt
-    NVIC_SetPriority(irq<hd_irq>(ENC_TXD),  0);
-    NVIC_ClearPendingIRQ(irq<hd_irq>(ENC_TXD));
-    NVIC_EnableIRQ(irq<hd_irq>(ENC_TXD));
+    init_half_duplex(uart_config);
 
     // Powerup and wait
     ENC_12V=1;

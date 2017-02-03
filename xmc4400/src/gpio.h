@@ -71,6 +71,14 @@ public:
 	"Illegal port, should be 0..15");
     }
 
+    operator int(void) {
+	return (gpio_port[port].IN>>pin)&1;
+    }
+
+    operator bool(void) {
+	return (gpio_port[port].IN>>pin)&1;
+    }
+
     void set(XMC_GPIO_MODE m) { 
 	// Isn't this byte adressable?
 	gpio_port[port].IOCR[pin/4]&=~(255<<8*(pin%4)); 

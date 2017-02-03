@@ -39,8 +39,8 @@ extern "C" void SysTick_Handler(void)
 
 uint32_t hb[3];
 float adc[4];
-float adc_scale[4]={0.0010819,0.0010819,1.0,1.0};
-int32_t adc_offset[4];
+float adc_scale[4]={0.0010819,1.0,1.0,0.0010819};
+int32_t adc_offset[4]={0,2047,2047,0};
 
 constexpr float servo_factor=0.00185805929607582;
 
@@ -71,10 +71,10 @@ extern "C" void CCU80_0_IRQHandler(void)
 
     float current[3];
     current[0]=out.adc[0];
-    current[1]=out.adc[1];
+    current[1]=out.adc[3];
     current[2]=-current[0]-current[1];
 
-    out.encoder=encoder->position();
+    out.position=encoder->position();
 
     switch(state) {
     case STARTUP:
@@ -89,16 +89,16 @@ extern "C" void CCU80_0_IRQHandler(void)
 	if(++counter>=1000) {
 	    state=OFFSET_CALIBRATE;
 	    counter=0;
-	    adc_offset[0]=adc_offset[1]=adc_offset[2]=0;
+	    adc_offset[0]=adc_offset[3]=0;
 	}
 	break;
     case OFFSET_CALIBRATE:
 	if(++counter>=256) {
 	    state=CURRENT;
-	    for(int i=0;i<4;i++)
+	    for(int i:{0,3})
 		adc_offset[i]/=counter;
 	} else {
-	    for(int i=0;i<4;i++)
+	    for(int i:{0,3})
 		adc_offset[i]+=vadc.G[i].RES[0]&0xffff;
 	}
 	break;
@@ -206,12 +206,12 @@ extern "C" void CCU80_3_IRQHandler(void)
     LED2=1;
 }
 
-/* Receive interrupt channel 1 (full-duplex serial) */
-extern "C" void USIC1_0_IRQHandler(void)
+/* Receive interrupt (full-duplex serial) */
+extern "C" void USIC0_0_IRQHandler(void)
 {
     // LED3=0;
     static_assert(encoder_t::fd_irq==0, "Full duplex should be mapped to IRQ0");
-    static_assert(usic_ch_ns::unit(ENC_RXD2)==1, "Invalid unit mapping");
+    static_assert(usic_ch_ns::unit(ENC_RXD)==0, "Invalid unit mapping");
     encoder->full_duplex();
     // LED3=1;
 }
@@ -277,10 +277,17 @@ void init_adc(void)
 {
     using namespace vadc_g_ns;
     /*
+	FIXME, no checks or automation.
+
 	Only channel 0 of the ADCs is used. Group 0 is used in queued mode
 	only and triggered by the timer at the PWM zero crossing.
 	4 results are accumulated in result 1, and put in a fifo to
 	be read at result 0.
+
+	   G0CH0	master CUR0
+	   G1CH6	ENC_SIN (alias)
+	   G2CH0	ENC_COS
+	   G3CH2	CUR1 (alias)
     */
     XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_VADC);
     XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_VADC);
@@ -303,6 +310,9 @@ void init_adc(void)
 	.cme=0		// dnc
     }}).raw;
 
+    vadc.G[1].ALIAS=alias_t({{.alias0=6}}).raw;
+    vadc.G[3].ALIAS=alias_t({{.alias0=2}}).raw;
+
     for(int i=0;i<4;i++) {
 	// Channel control
 	vadc.G[i].CHCTR[0]=chctr_t({{
@@ -319,13 +329,25 @@ void init_adc(void)
 	    .bwden=0
 	}}).raw;
 	// Accumulate 4 results
-	vadc.G[i].RCR[1]=rcr_t({{
-	    .drctr=3,	// 4 results
-	    .dmm=0,	// accumulation 
-	    .wfr=0,	// overwrite
-	    .fen=0,	// top of fifo
-	    .srgen=uint32_t(i==0? 1:0)	// no service request
-	}}).raw;
+	if(i==0 || i==3) {
+	    // Current measurement is averaged
+	    vadc.G[i].RCR[1]=rcr_t({{
+		.drctr=3,	// 4 results
+		.dmm=0,	// accumulation 
+		.wfr=0,	// overwrite
+		.fen=0,	// top of fifo
+		.srgen=uint32_t(i==0? 1:0)	// no service request
+	    }}).raw;
+	} else {
+	    vadc.G[i].RCR[1]=rcr_t({{
+		// sincos is not averaged
+		.drctr=0,// 1 results
+		.dmm=0,	// accumulation 
+		.wfr=0,	// overwrite
+		.fen=0,	// top of fifo
+		.srgen=uint32_t(i==0? 1:0)	// no service request
+	    }}).raw;
+	}
 	vadc.G[i].RCR[0]=rcr_t({{
 	    .drctr=0,	// 4 results
 	    .dmm=0,	// accumulation 

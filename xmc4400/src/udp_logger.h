@@ -8,8 +8,8 @@ public:
 
     struct  __attribute__ ((__packed__)) output_t {
 	uint32_t counter;
+	int32_t position;
 	float adc[4];
-	uint32_t encoder;
 	float Irotor[2];
 	float Vrotor[2];
 	float I[2];
@@ -50,6 +50,8 @@ void udp_logger::Received(
     Ethernet::descriptor const &desc
 ) {
     pkt_in_t *p=reinterpret_cast<pkt_in_t*>(desc.buffer);
+
+    eth->set_ipv4_address(p->dst_ip); 
 
     // Set packet source
     eth->set_saddr(&pkt);

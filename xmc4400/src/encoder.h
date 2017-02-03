@@ -2,11 +2,12 @@
 #define ENCODER_H
 #include <stdint.h>
 #include <memory>
+#include "xmc_uart.h"
 
 class encoder_t {
 public:
     virtual ~encoder_t(void) {}
-    virtual uint32_t position(void)=0;
+    virtual int32_t position(void)=0;
     virtual float angle(void)=0;
     virtual bool valid(void)=0;
 
@@ -16,6 +17,10 @@ public:
 
     static constexpr int hd_irq=1; // half duplex irq/SR output
     static constexpr int fd_irq=0; // full duplex irq/SR output
+
+protected:
+    static void init_full_duplex(const XMC_UART_CH_CONFIG_t &uart_config);
+    static void init_half_duplex(const XMC_UART_CH_CONFIG_t &uart_config);
 };
 
 extern std::unique_ptr<encoder_t> encoder;

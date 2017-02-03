@@ -4708,8 +4708,8 @@ Text Label 2600 9500 0    60   ~ 0
 SWDIO
 Text Label 2600 9600 0    60   ~ 0
 SWCLK
-Text Notes 4950 14000 0    60   ~ 0
-MAX3096 package too big.\nUpdate ethernet jack\nAdd pullup to ETH0_MDIO\nENC_Z and ENC_RXD2 swapped\nMake ENC_TXD bi-directional (to be tested)\nMove sincos ADC channels to G2 an G3 (to be tested)\nMCLK and MDAT swapped
+Text Notes 4950 14000 0    100  ~ 0
+MAX3096 package too big.\nUpdate ethernet jack\nAdd pullup to ETH0_MDIO\nMCLK and MDAT swapped\n\nDisconnect U1.18 from CUR2 net\nConnect U1.16 and U1.18 to each other\n\nLift U15.5 and U4.1\nConnect U15.5 to the pad of U4.1\nConnect U4.1 to U4.4
 Text Label 10100 12400 0    60   ~ 0
 ENC_TXN
 Text Label 10100 12500 0    60   ~ 0
