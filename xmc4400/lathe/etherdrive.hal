@@ -1,0 +1,17 @@
+loadrt etherdrive names=J0_drive,J1_drive ipaddr="192.168.0.5","192.168.0.4"
+
+net Xoutput => J0_drive.Iset-1
+net Xpos-fb => J0_drive.position
+
+setp J0_drive.kP-0 [JOINT_0]P_cur
+setp J0_drive.kP-1 [JOINT_0]P_cur
+setp J0_drive.kI-0 [JOINT_0]I_cur
+setp J0_drive.kI-1 [JOINT_0]I_cur
+setp J0_drive.lim 0.85
+setp J0_drive.scale [JOINT_0]SCALE
+
+# The sync function should be the first function in the servo thread
+addf etherdrive.sync servo-thread -5
+addf etherdrive.control servo-thread
+
+net estop:loop iocontrol.0.user-enable-out => iocontrol.0.emc-enable-in
