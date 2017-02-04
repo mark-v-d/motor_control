@@ -69,6 +69,22 @@ void encoder_t::init_half_duplex(
 	XMC_UART_CH_INTERRUPT_NODE_POINTER_PROTOCOL, hd_irq);
     XMC_UART_CH_Start(channel);
 
+    channel->RBCTR=rbctr_t({{
+	.dptr=0,
+	.limit=0,
+	.srbtm=0,
+	.srbten=0,
+	.srbinp=0,
+	.arbinp=0,
+	.rcim=0,
+	.size=4,	// 16 entry fifo
+	.rnm=0,
+	.lof=0,
+	.arbien=0,
+	.srbien=0,
+	.rberien=0
+    }}).raw;
+
     // Protocol interrupt
     NVIC_SetPriority(irq<hd_irq>(ENC_TXD),  0);
     NVIC_ClearPendingIRQ(irq<hd_irq>(ENC_TXD));
@@ -92,10 +108,26 @@ void encoder_t::init_full_duplex(
     XMC_UART_CH_EnableInputInversion(channel,XMC_UART_CH_INPUT_RXD);
     XMC_UART_CH_Start(channel);
 
-    // Protocol interrupt
+    channel->RBCTR=rbctr_t({{
+	.dptr=0,
+	.limit=0,
+	.srbtm=0,
+	.srbten=0,
+	.srbinp=0,
+	.arbinp=0,
+	.rcim=0,
+	.size=4,	// 16 entry fifo
+	.rnm=0,
+	.lof=0,
+	.arbien=0,
+	.srbien=0,
+	.rberien=0
+    }}).raw;
+
+    // Receive interrupt
     NVIC_SetPriority(irq<fd_irq>(ENC_TXD),  0);
     NVIC_ClearPendingIRQ(irq<fd_irq>(ENC_TXD));
-    NVIC_EnableIRQ(irq<fd_irq>(ENC_TXD));
+    // NVIC_EnableIRQ(irq<fd_irq>(ENC_TXD));
 }
 
 /*******************************************************************************
@@ -117,10 +149,25 @@ public:
     static int detect(void);
 private:
     void serial_tx(uint8_t);
+protected:
+    void read_fifo(void);
 };
+
+inline void mitsubishi_encoder_t::read_fifo(void)
+{
+    if(!putp) {
+	using namespace usic_ch_ns;
+	XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
+	trbsr_t status;
+	while(status.raw=channel->TRBSR, !status.rempty) {
+	    rx_buffer[putp++]=channel->OUTR;
+	}
+    }
+}
 
 void mitsubishi_encoder_t::half_duplex(void)
 {
+    LED2=0;
     using namespace usic_ch_ns;
     ENC_TXD.set(XMC_GPIO_MODE_INPUT_TRISTATE);
     ENC_DIR=0;
@@ -128,16 +175,19 @@ void mitsubishi_encoder_t::half_duplex(void)
     XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
     uint32_t reason=channel->PSR;
     if(reason & USIC_CH_PSR_ASCMode_RFF_Msk)
-	rx_buffer[putp++]=channel->RBUF;
+	rx_buffer[putp++]=channel->OUTR;
     channel->PSCR=reason;
+    LED2=1;
 }
 
 void mitsubishi_encoder_t::full_duplex(void)
 {
+    LED2=0;
     using namespace usic_ch_ns;
     XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
     channel->PSCR=channel->PSR;
-    rx_buffer[putp++]=channel->RBUF;
+    rx_buffer[putp++]=channel->OUTR;
+    LED2=1;
 }
 
 void mitsubishi_encoder_t::serial_tx(uint8_t data)
@@ -148,6 +198,7 @@ void mitsubishi_encoder_t::serial_tx(uint8_t data)
     putp=0;
     ENC_TXD=data;
     sleep(1ms);
+    read_fifo();
 }
 
 /* HC-MFS13-S13 motor *********************************************************/
@@ -178,6 +229,7 @@ int32_t mitsubishi_MFS13_t::position(void)
 
 bool mitsubishi_MFS13_t::valid(void)
 {
+    read_fifo();
     if(putp!=9)
 	return false;
     uint8_t crc=0;
@@ -189,7 +241,8 @@ bool mitsubishi_MFS13_t::valid(void)
 void mitsubishi_MFS13_t::trigger(void)
 {
     ENC_DIR=1;
-    ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL | XMC_GPIO_MODE_OUTPUT_ALT2));
+    ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL 
+	| XMC_GPIO_MODE_OUTPUT_ALT2));
     putp=0;
     ENC_TXD=0x1a;
 }
@@ -222,20 +275,25 @@ int32_t mitsubishi_PQ_t::position(void)
 
 bool mitsubishi_PQ_t::valid(void)
 {
+    read_fifo();
     if(putp!=9)
 	return false;
     uint8_t crc=0;
     for(int i=0;i<putp;i++)
 	crc^=rx_buffer[i];
+    LED1=crc==0;
     return crc==0;
 }
 
 void mitsubishi_PQ_t::trigger(void)
 {
+    LED2=0;
     ENC_DIR=1;
-    ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL | XMC_GPIO_MODE_OUTPUT_ALT2));
+    ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL 
+	| XMC_GPIO_MODE_OUTPUT_ALT2));
     putp=0;
     ENC_TXD=0x1a;
+    LED2=1;
 }
 
 /******************************************************************************/
@@ -360,9 +418,9 @@ void hiperface_t::half_duplex(void)
     uint32_t reason=usic->PSR;
     if(reason & USIC_CH_PSR_ASCMode_RFF_Msk) {
 	if(ENC_DIR)
-	    usic->RBUF;
+	    usic->OUTR;
 	else
-	    rx_buffer[rx_put++]=usic->RBUF;
+	    rx_buffer[rx_put++]=usic->OUTR;
     }
     if(reason & USIC_CH_PSR_ASCMode_TFF_Msk) {
 	if(tx_get<tx_len)
