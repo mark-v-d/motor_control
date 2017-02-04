@@ -6,15 +6,17 @@
 #include "rtapi_errno.h"
 #include "hal.h"
 #include "rtapi_math64.h"
+#include "../src/rtapi/rtapi_uspace.hh"
+#include "../src/rtapi/uspace_xenomai.hh"
 
 static int comp_id;
 
 #ifdef MODULE_INFO
-MODULE_INFO(linuxcnc, "component:etherdrive:");
-MODULE_INFO(linuxcnc, "pin:out:float:0:out::None:None");
-MODULE_INFO(linuxcnc, "param:value:float:0:r::1.0:None");
-MODULE_INFO(linuxcnc, "funct:send_sync:1:");
-MODULE_INFO(linuxcnc, static_cast<char*>("license:GPL"));
+MODULE_INFO(linuxcnc, const_cast<char*>("component:etherdrive:"));
+MODULE_INFO(linuxcnc, const_cast<char*>("pin:out:float:0:out::None:None"));
+MODULE_INFO(linuxcnc, const_cast<char*>("param:value:float:0:r::1.0:None"));
+MODULE_INFO(linuxcnc, const_cast<char*>("funct:send_sync:1:"));
+MODULE_INFO(linuxcnc, const_cast<char*>("license:GPL"));
 MODULE_LICENSE("GPL");
 #endif // MODULE_INFO
 
@@ -25,8 +27,6 @@ MODULE_LICENSE("GPL");
 #include <netinet/in.h>
 #include <netdb.h>
 #include <stdio.h>
-
-
 
 static int udp;	// UDP socket
 
@@ -112,22 +112,25 @@ static inline void update_output_pins(struct comp_state *dest,
 
 static void send_sync(void *p, long period)
 {
-    // auto task = ::rtapi_get_task<RtaiTask>(task_id);
+    auto task=reinterpret_cast<uspace_xenomai::RtaiTask*>(
+	pthread_getspecific(uspace_xenomai::key));
 
     struct timespec now;
-    clock_gettime(CLOCK_MONOTONIC,&now);
+    struct itimerspec nxt;
     struct {
 	uint32_t now_sec;
 	uint32_t now_nsec;
 	uint32_t next_sec;
 	uint32_t next_nsec;
     } n;
+    clock_gettime(CLOCK_MONOTONIC,&now);
+    timer_gettime(task->timer, &nxt);
     n.next_sec=n.now_sec=now.tv_sec;
     n.next_nsec=n.now_nsec=now.tv_nsec;
-    n.next_nsec+=period;
-    if(n.next_nsec>1000000000) {
+    n.next_nsec+=nxt.it_value.tv_nsec;
+    if(n.next_nsec>=1'000'000'000) {
 	n.next_sec++;
-	n.next_nsec-=1000000000;
+	n.next_nsec-=1'000'000'000;
     }
     sendto(udp,&n,sizeof(n),0,reinterpret_cast<sockaddr*>(&sync_addr),
 	sizeof(sync_addr));
@@ -140,7 +143,7 @@ static void send_sync(void *p, long period)
 	r=recvfrom(udp, buffer, sizeof(buffer),
 	    MSG_DONTWAIT,
 	    reinterpret_cast<sockaddr*>(&src), &src_len);
-	struct sync_t *p=(struct sync_t*)buffer;
+	auto *p=reinterpret_cast<struct sync_t*>(buffer);
 	struct comp_state *lp;
 	for(lp=comp_first_inst; lp;lp=lp->next) {
 	    if(src.sin_family!=AF_INET)
@@ -149,7 +152,10 @@ static void send_sync(void *p, long period)
 		sizeof(lp->addr.sin_addr))
 	    ) { 
 		switch(ntohs(src.sin_port)) {
-		case 1: update_output_pins(lp,(struct output_t*)buffer); break;
+		case 1: 
+		    update_output_pins(lp,
+			reinterpret_cast<struct output_t*>(buffer)); 
+		    break;
 		}
 		break;
 	    }
@@ -177,7 +183,7 @@ static void send_control(void *p, long period)
 static int default_count=1, count=0;
 static char *names[16] = {0,};
 static char *ipaddr[16]= {0,};
-static char *bcast="192.168.0.255";
+static char const *bcast="192.168.0.255";
 
 RTAPI_MP_INT(count, "number of etherdrive");
 RTAPI_MP_STRING(bcast, "broadcast address");

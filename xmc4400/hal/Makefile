@@ -5,15 +5,16 @@ link: etherdrive.so
 obj-m += etherdrive.o
 
 LDFLAGS=$(shell xeno-config --ldflags --posix --no-auto-init)
+LDFLAGS+=-L $(EMC2_HOME)/lib -luspace-xenomai
 
 %.o: %.cpp
 	$(ECHO) Compiling realtime $<
-	$(Q)$(CC) -o $@ $(EXTRA_CFLAGS) -c $<
+	$(Q)$(CC) -o $@ $(EXTRA_CFLAGS) -std=c++17 -c $<
 
-include /usr/src/linuxcnc/src/Makefile.modinc
+include $(EMC2_HOME)/src/Makefile.modinc
 
 clean:
 	rm etherdrive.o etherdrive.so 
 
 link:
-	ln -f etherdrive.so /usr/src/linuxcnc/rtlib/etherdrive.so
+	ln -f etherdrive.so $(EMC2_HOME)/rtlib/etherdrive.so
