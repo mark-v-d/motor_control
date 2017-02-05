@@ -88,7 +88,7 @@ void encoder_t::init_half_duplex(
     // Protocol interrupt
     NVIC_SetPriority(irq<hd_irq>(ENC_TXD),  0);
     NVIC_ClearPendingIRQ(irq<hd_irq>(ENC_TXD));
-    // NVIC_EnableIRQ(irq<hd_irq>(ENC_TXD));
+    NVIC_EnableIRQ(irq<hd_irq>(ENC_TXD));
 }
 
 void encoder_t::init_full_duplex(
@@ -323,6 +323,7 @@ int mitsubishi_encoder_t::detect(void)
     };
 
     init_half_duplex(uart_config);
+    NVIC_DisableIRQ(usic_ch_ns::irq<hd_irq>(ENC_TXD));
 
     // Powerup and wait
     p->serial_tx(0x1a);
