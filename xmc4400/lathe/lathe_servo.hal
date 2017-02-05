@@ -1,0 +1,35 @@
+# core HAL config file for servos
+
+# first load the core RT modules that will be needed
+# kinematics
+loadrt [KINS]KINEMATICS
+# motion controller, get name and thread periods from ini file
+loadrt [EMCMOT]EMCMOT servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JOINTS
+# PID module, for position loops
+loadrt pid num_chan=[KINS]JOINTS
+
+# X/joint0 position loop
+setp pid.0.Pgain [JOINT_0]P_pos
+setp pid.0.Igain [JOINT_0]I_pos
+setp pid.0.Dgain [JOINT_0]D_pos
+setp pid.0.maxoutput [JOINT_0]MAX_CURRENT
+net Xpos-fb joint.0.motor-pos-fb => pid.0.feedback
+net Xpos-cmd joint.0.motor-pos-cmd => pid.0.command
+net Xoutput <= pid.0.output
+net Xenable joint.0.amp-enable-out => pid.0.enable
+
+# Z/joint1 position loop
+setp pid.1.Pgain [JOINT_1]P_pos
+setp pid.1.Igain [JOINT_1]I_pos
+setp pid.1.Dgain [JOINT_1]D_pos
+setp pid.1.maxoutput [JOINT_1]MAX_CURRENT
+net Zpos-fb joint.1.motor-pos-fb => pid.1.feedback
+net Zpos-cmd joint.1.motor-pos-cmd => pid.1.command
+net Zoutput <= pid.1.output
+net Zenable joint.1.amp-enable-out => pid.1.enable
+
+# hook functions to realtime thread
+addf motion-command-handler servo-thread
+addf motion-controller servo-thread
+addf pid.0.do-pid-calcs servo-thread
+addf pid.1.do-pid-calcs servo-thread

@@ -6,15 +6,17 @@
 #include "rtapi_errno.h"
 #include "hal.h"
 #include "rtapi_math64.h"
+#include "../src/rtapi/rtapi_uspace.hh"
+#include "../src/rtapi/uspace_xenomai.hh"
 
 static int comp_id;
 
 #ifdef MODULE_INFO
-MODULE_INFO(linuxcnc, "component:etherdrive:");
-MODULE_INFO(linuxcnc, "pin:out:float:0:out::None:None");
-MODULE_INFO(linuxcnc, "param:value:float:0:r::1.0:None");
-MODULE_INFO(linuxcnc, "funct:send_sync:1:");
-MODULE_INFO(linuxcnc, "license:GPL");
+MODULE_INFO(linuxcnc, const_cast<char*>("component:etherdrive:"));
+MODULE_INFO(linuxcnc, const_cast<char*>("pin:out:float:0:out::None:None"));
+MODULE_INFO(linuxcnc, const_cast<char*>("param:value:float:0:r::1.0:None"));
+MODULE_INFO(linuxcnc, const_cast<char*>("funct:send_sync:1:"));
+MODULE_INFO(linuxcnc, const_cast<char*>("license:GPL"));
 MODULE_LICENSE("GPL");
 #endif // MODULE_INFO
 
@@ -25,8 +27,6 @@ MODULE_LICENSE("GPL");
 #include <netinet/in.h>
 #include <netdb.h>
 #include <stdio.h>
-
-
 
 static int udp;	// UDP socket
 
@@ -46,8 +46,8 @@ struct sync_t {
 
 struct output_t {
     uint32_t counter;
+    int32_t position;
     float adc[4];
-    uint32_t encoder;
     float Irotor[2];
     float Vrotor[2];
     float I[2];
@@ -75,7 +75,7 @@ struct comp_state {
     // output pins
     hal_s32_t *counter;
     hal_float_t *adc[4];
-    hal_s32_t *encoder;
+    hal_float_t *position;
     hal_float_t *Irotor[2];
     hal_float_t *Vrotor[2];
     hal_float_t *I[2];
@@ -83,7 +83,9 @@ struct comp_state {
     hal_float_t *output[3];
     hal_float_t *vservo;
 
-    hal_float_t value;
+    hal_float_t *scale;
+
+    // hal_float_t value;
     struct sockaddr_in addr;
 };
 struct comp_state *comp_first_inst=0, *comp_last_inst=0;
@@ -92,7 +94,7 @@ static inline void update_output_pins(struct comp_state *dest,
     struct output_t *pkt)
 {
     *(dest->counter)=pkt->counter;
-    *(dest->encoder)=pkt->encoder;
+    *(dest->position)=pkt->position**(dest->scale);
     *(dest->angle)=pkt->angle;
     *(dest->vservo)=pkt->vservo;
 
@@ -110,22 +112,28 @@ static inline void update_output_pins(struct comp_state *dest,
 
 static void send_sync(void *p, long period)
 {
+    auto task=reinterpret_cast<uspace_xenomai::RtaiTask*>(
+	pthread_getspecific(uspace_xenomai::key));
+
     struct timespec now;
-    clock_gettime(CLOCK_MONOTONIC,&now);
+    struct itimerspec nxt;
     struct {
 	uint32_t now_sec;
 	uint32_t now_nsec;
 	uint32_t next_sec;
 	uint32_t next_nsec;
     } n;
+    clock_gettime(CLOCK_MONOTONIC,&now);
+    timer_gettime(task->timer, &nxt);
     n.next_sec=n.now_sec=now.tv_sec;
     n.next_nsec=n.now_nsec=now.tv_nsec;
-    n.next_nsec+=period;
-    if(n.next_nsec>1000000000) {
+    n.next_nsec+=nxt.it_value.tv_nsec;
+    if(n.next_nsec>=1'000'000'000) {
 	n.next_sec++;
-	n.next_nsec-=1000000000;
+	n.next_nsec-=1'000'000'000;
     }
-    sendto(udp,&n,sizeof(n),0,&sync_addr,sizeof(sync_addr));
+    sendto(udp,&n,sizeof(n),0,reinterpret_cast<sockaddr*>(&sync_addr),
+	sizeof(sync_addr));
 
     int r;
     do {
@@ -134,8 +142,8 @@ static void send_sync(void *p, long period)
 	socklen_t src_len;
 	r=recvfrom(udp, buffer, sizeof(buffer),
 	    MSG_DONTWAIT,
-	    &src, &src_len);
-	struct sync_t *p=(struct sync_t*)buffer;
+	    reinterpret_cast<sockaddr*>(&src), &src_len);
+	auto *p=reinterpret_cast<struct sync_t*>(buffer);
 	struct comp_state *lp;
 	for(lp=comp_first_inst; lp;lp=lp->next) {
 	    if(src.sin_family!=AF_INET)
@@ -144,7 +152,10 @@ static void send_sync(void *p, long period)
 		sizeof(lp->addr.sin_addr))
 	    ) { 
 		switch(ntohs(src.sin_port)) {
-		case 1: update_output_pins(lp,(struct output_t*)buffer); break;
+		case 1: 
+		    update_output_pins(lp,
+			reinterpret_cast<struct output_t*>(buffer)); 
+		    break;
 		}
 		break;
 	    }
@@ -164,14 +175,15 @@ static void send_control(void *p, long period)
 	in.kI[0]=*(lp->kI[0]);
 	in.kI[1]=*(lp->kI[1]);
 	in.lim=*(lp->lim);
-	sendto(udp,&in,sizeof(in),0,&lp->addr,sizeof(lp->addr));
+	sendto(udp,&in,sizeof(in),0,
+	    reinterpret_cast<sockaddr*>(&lp->addr),sizeof(lp->addr));
     }
 }
 
 static int default_count=1, count=0;
 static char *names[16] = {0,};
 static char *ipaddr[16]= {0,};
-static char *bcast="192.168.0.255";
+static char const *bcast="192.168.0.255";
 
 RTAPI_MP_INT(count, "number of etherdrive");
 RTAPI_MP_STRING(bcast, "broadcast address");
@@ -196,12 +208,12 @@ RTAPI_MP_ARRAY_STRING(ipaddr, 16, "ip address of drives");
     if(r) \
 	return r;
 
-static int export(char *prefix, long index) 
+static int export_pins(char *prefix, long index) 
 {
     char buf[HAL_NAME_LEN + 1];
     int r = 0;
     int sz = sizeof(struct comp_state);
-    struct comp_state *inst = hal_malloc(sz);
+    struct comp_state *inst = reinterpret_cast<comp_state*>(hal_malloc(sz));
     memset(inst, 0, sz);
 
     FP_IN(Iset[0],Iset-0);
@@ -213,11 +225,11 @@ static int export(char *prefix, long index)
     FP_IN(lim,lim);
 
     S32_OUT(counter,counter);
+    FP_OUT(position,position);
     FP_OUT(adc[0],adc-0);
     FP_OUT(adc[1],adc-1);
     FP_OUT(adc[2],adc-2);
     FP_OUT(adc[3],adc-3);
-    S32_OUT(encoder,encoder);
     FP_OUT(Irotor[0],Irotor-0);
     FP_OUT(Irotor[1],Irotor-1);
     FP_OUT(Vrotor[0],Vrotor-0);
@@ -230,10 +242,15 @@ static int export(char *prefix, long index)
     FP_OUT(output[2],output-2);
     FP_OUT(vservo,vservo);
 
+    // Local settings
+    FP_IN(scale,scale);
+
+#if 0
     r=hal_param_float_newf(HAL_RO, &(inst->value), comp_id, "%s.value", prefix);
     inst->value = 1.0;
     if(r) 
 	return r;
+#endif
 
     inst->addr.sin_family=AF_INET;
     inst->addr.sin_port=htons(1);
@@ -248,7 +265,7 @@ static int export(char *prefix, long index)
     return 0;
 }
 
-int rtapi_app_main(void) 
+extern "C" int rtapi_app_main(void) 
 {
     int r = 0;
     int i;
@@ -266,7 +283,7 @@ int rtapi_app_main(void)
         for(i=0; i<count; i++) {
             char buf[HAL_NAME_LEN + 1];
             rtapi_snprintf(buf, sizeof(buf), "etherdrive.%d", i);
-            r = export(buf, i);
+            r = export_pins(buf, i);
             if(r != 0) break;
        }
     } else {
@@ -278,7 +295,7 @@ int rtapi_app_main(void)
                 r = -EINVAL;
                 break;
             }
-            r = export(names[i], i);
+            r = export_pins(names[i], i);
             if(r != 0) break;
        }
     }
@@ -308,7 +325,7 @@ int rtapi_app_main(void)
     return r;
 }
 
-void rtapi_app_exit(void) 
+extern "C" void rtapi_app_exit(void) 
 {
     hal_exit(comp_id);
 }
