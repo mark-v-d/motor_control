@@ -171,7 +171,7 @@ void mitsubishi_encoder_t::half_duplex(void)
     using namespace usic_ch_ns;
     ENC_TXD.set(XMC_GPIO_MODE_INPUT_TRISTATE);
     ENC_DIR=0;
-    // NVIC_DisableIRQ(irq<hd_irq>(ENC_TXD));
+    NVIC_DisableIRQ(irq<hd_irq>(ENC_TXD));
 
     XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
     uint32_t reason=channel->PSR;
@@ -192,10 +192,13 @@ void mitsubishi_encoder_t::full_duplex(void)
 void mitsubishi_encoder_t::serial_tx(uint8_t data)
 {
     using namespace std::chrono;
+    using namespace usic_ch_ns;
     ENC_DIR=1;
     ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL
 	| XMC_GPIO_MODE_OUTPUT_ALT2));
-    NVIC_EnableIRQ(usic_ch_ns::irq<hd_irq>(ENC_TXD));
+    xmc_channel(ENC_TXD)->PSCR=0xffffffff;
+    NVIC_ClearPendingIRQ(irq<hd_irq>(ENC_TXD));
+    NVIC_EnableIRQ(irq<hd_irq>(ENC_TXD));
     putp=0;
     ENC_TXD=data;
     sleep(1ms);
@@ -246,6 +249,8 @@ bool mitsubishi_MFS13_t::valid(void)
 void mitsubishi_MFS13_t::trigger(void)
 {
     ENC_DIR=1;
+    NVIC_ClearPendingIRQ(usic_ch_ns::irq<hd_irq>(ENC_TXD));
+    NVIC_EnableIRQ(usic_ch_ns::irq<hd_irq>(ENC_TXD));
     ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL 
 	| XMC_GPIO_MODE_OUTPUT_ALT2));
     putp=0;
@@ -274,9 +279,8 @@ float mitsubishi_PQ_t::angle(void)
 
 int32_t mitsubishi_PQ_t::position(void)
 {
-    rx_encoder=rx_buffer[2]+(1<<8)*rx_buffer[3]
+    return rx_buffer[2]+(1<<8)*rx_buffer[3]
 	+(1<<12)*rx_buffer[5]+(1<<20)*rx_buffer[6]+(1<<28)*rx_buffer[7];
-    return rx_encoder;
 }
 
 bool mitsubishi_PQ_t::valid(void)
