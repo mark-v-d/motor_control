@@ -56,7 +56,6 @@ pwm_3phase<A,B,C>::pwm_3phase(unsigned frequency)
     XMC_CCU8_EnableModule(xmc);
     XMC_CCU8_Init(xmc, XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
 
-    ccu8[module].GIDLC=GIDLC_t{{.CC0=1, .CC1=1, .CC2=1, .CC3=1, .PRESCALER=1}};
     for(int i=0;i<4; i++) {
 	auto &cc=ccu8[module].cc[i];
 	cc.INS=INS_t{{
@@ -73,13 +72,13 @@ pwm_3phase<A,B,C>::pwm_3phase(unsigned frequency)
 	cc.TC=ccu8_cc8_ns::tc_t({{
 	    .tcm=1,		// center aligned
 	    .tssm=0,
-	    .clst=0,
+	    .clst=1,		// Shadow Transfer on Clear
 	    .cmod=0,
 	    .ecm=0,
 	    .capc=0,
 	    .tls=0,
 	    .endm=0,
-	    .strm=1,	// External start also clears the counter
+	    .strm=1,		// External start also clears the counter
 	    .sce=0,		// Equal Capture Event enable
 	    .ccs=0,		// Continuous Capture Enable
 	    .dithe=1,		// Dither Enable on period
@@ -89,6 +88,7 @@ pwm_3phase<A,B,C>::pwm_3phase(unsigned frequency)
 	    .cse=0,
 	    .stm=0
 	}}).raw;
+	cc.PSL=15;
 	cc.PRS=period-1;
     }
 
@@ -113,21 +113,21 @@ pwm_3phase<A,B,C>::pwm_3phase(unsigned frequency)
 	}};
 	cc.CMC=CMC_t{{.EXTERNAL_START=1}};  // use EVENT0 to start
 	cc.TCCLR=TCCLR_t{{.TIMER_STOP=1, .TIMER_CLEAR=1}};
-	cc.TC=TC_t{{
-	    .CENTER_ALIGNED=0,
-	    .TSSM=0,
-	    .CLST=0,
-	    .CMOD=0,
-	    .ECM=0,
-	    .CAPC=0,
-	    .TLS=0,
-	    .ENDM=0,
-	    .STRM=1,		// External start also clears the counter
-	    .SCE=0,		// Equal Capture Event enable
-	    .CCS=0,		// Continuous Capture Enable
-	    .DITHE=0,		// Dither Enable
-	    .DIM=0		// Dither input selector
-	}};
+	cc.TC=ccu8_cc8_ns::tc_t({{
+	    .tcm=0,		// center aligned
+	    .tssm=0,
+	    .clst=1,
+	    .cmod=0,
+	    .ecm=0,
+	    .capc=0,
+	    .tls=0,
+	    .endm=0,
+	    .strm=1,		// External start also clears the counter
+	    .sce=0,		// Equal Capture Event enable
+	    .ccs=0,		// Continuous Capture Enable
+	    .dithe=0,		// no sither
+	    .dim=0		// Dither input selector
+	}}).raw;
 	cc.PRS=8*period-1;
 	cc.INTE=INTE_t{{
 	    .PERIOD_MATCH=1,	// Encoder transmit
@@ -144,6 +144,7 @@ pwm_3phase<A,B,C>::pwm_3phase(unsigned frequency)
 	cc.CR1S=SystemCoreClock/22000; // Encoder data should have arrived
 	cc.CR2S=8*period/2-2*period/3; // Transfer shadow registers
     }
+    ccu8[module].GIDLC=GIDLC_t{{.CC0=1, .CC1=1, .CC2=1, .CC3=1, .PRESCALER=1}};
 }
 
 template <typename A, typename B, typename C>

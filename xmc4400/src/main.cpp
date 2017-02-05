@@ -174,9 +174,9 @@ extern "C" void CCU80_0_IRQHandler(void)
 	    }
 	    for(int i=0;i<3;i++)
 		out.output[i]=output[i];
-	    HB0=output_scale*output[0];
-	    HB1=output_scale*output[1];
-	    HB2=output_scale*output[2];
+	    HB0=output_scale*(1.0001F-output[0]);
+	    HB1=output_scale*(1.0001F-output[1]);
+	    HB2=output_scale*(1.0001F-output[2]);
 	    break;
 	}
     }
@@ -233,9 +233,9 @@ extern "C" void USIC0_1_IRQHandler(void)
 
 extern "C" void VADC0_G0_0_IRQHandler(void)
 {
-    // LED1=0;
+    LED1=0;
     vadc.G[0].REFCLR=vadc.G[0].REFLAG;
-    // LED1=1;
+    LED1=1;
 }
 
 void init_adc(void);
