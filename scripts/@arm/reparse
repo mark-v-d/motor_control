@@ -21,12 +21,15 @@ awk '
 	{
 		return gensub(/.*: /,"", "1",attribute[var ".DW_AT_encoding"]);
 	}
-	function clean_addr(var,loc)
+	function clean_addr(var,loc,r)
 	{
 		loc=attribute[var ".DW_AT_location"]
 		if(loc ~ /DW_OP_addr/) {
 			print "# " loc
-			return gensub(/.*: (.*)\)/,"\\1", "1",loc);
+			r=gensub(/.*DW_OP_addr:[ \t]([a-f0-9]+).*/,"\\1", "1",loc);
+			#r=gensub(/[^a-f0-9]*\)I#.*/,"", "1",r);
+			print "## " r
+			return r;
 		}
 		return "";
 	}

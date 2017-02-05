@@ -88,7 +88,7 @@ void encoder_t::init_half_duplex(
     // Protocol interrupt
     NVIC_SetPriority(irq<hd_irq>(ENC_TXD),  0);
     NVIC_ClearPendingIRQ(irq<hd_irq>(ENC_TXD));
-    NVIC_EnableIRQ(irq<hd_irq>(ENC_TXD));
+    // NVIC_EnableIRQ(irq<hd_irq>(ENC_TXD));
 }
 
 void encoder_t::init_full_duplex(
@@ -171,11 +171,10 @@ void mitsubishi_encoder_t::half_duplex(void)
     using namespace usic_ch_ns;
     ENC_TXD.set(XMC_GPIO_MODE_INPUT_TRISTATE);
     ENC_DIR=0;
+    // NVIC_DisableIRQ(irq<hd_irq>(ENC_TXD));
 
     XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
     uint32_t reason=channel->PSR;
-    if(reason & USIC_CH_PSR_ASCMode_RFF_Msk)
-	rx_buffer[putp++]=channel->OUTR;
     channel->PSCR=reason;
     LED2=1;
 }
@@ -194,7 +193,9 @@ void mitsubishi_encoder_t::serial_tx(uint8_t data)
 {
     using namespace std::chrono;
     ENC_DIR=1;
-    ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL | XMC_GPIO_MODE_OUTPUT_ALT2));
+    ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL
+	| XMC_GPIO_MODE_OUTPUT_ALT2));
+    NVIC_EnableIRQ(usic_ch_ns::irq<hd_irq>(ENC_TXD));
     putp=0;
     ENC_TXD=data;
     sleep(1ms);
@@ -217,23 +218,27 @@ public:
 
 float mitsubishi_MFS13_t::angle(void)
 {
-    uint32_t encoder=rx_buffer[2]+(1<<8)*rx_buffer[3]+(1<<16)*rx_buffer[4];
+    uint32_t encoder=rx_buffer[3]+(1<<8)*rx_buffer[4]+(1<<16)*rx_buffer[5];
     return conv*float(encoder);
 }
 
 int32_t mitsubishi_MFS13_t::position(void)
 {
-    return rx_buffer[2]+(1<<8)*rx_buffer[3]+(1<<16)*rx_buffer[4]
-	+(1<<20)*rx_buffer[5]+(1<<28)*(rx_buffer[6]*0x0f);
+    return
+	rx_buffer[3]
+	+(1<<8)*rx_buffer[4]
+	+(1<<16)*rx_buffer[5]	// only 4 lsb
+	+(1<<20)*rx_buffer[6]
+	+(1<<28)*(rx_buffer[7]&0x0f);
 }
 
 bool mitsubishi_MFS13_t::valid(void)
 {
     read_fifo();
-    if(putp!=9)
+    if(putp!=10)
 	return false;
     uint8_t crc=0;
-    for(int i=0;i<putp;i++)
+    for(int i=1;i<putp;i++)
 	crc^=rx_buffer[i];
     return crc==0;
 }
@@ -269,8 +274,9 @@ float mitsubishi_PQ_t::angle(void)
 
 int32_t mitsubishi_PQ_t::position(void)
 {
-    return rx_buffer[2]+(1<<8)*rx_buffer[3]
+    rx_encoder=rx_buffer[2]+(1<<8)*rx_buffer[3]
 	+(1<<12)*rx_buffer[5]+(1<<20)*rx_buffer[6]+(1<<28)*rx_buffer[7];
+    return rx_encoder;
 }
 
 bool mitsubishi_PQ_t::valid(void)
@@ -321,7 +327,7 @@ int mitsubishi_encoder_t::detect(void)
 
     // First try to use half-duplex mode
     p->serial_tx(0x1a);
-    if(p->putp==9) {
+    if(p->putp==10) {
 	encoder=std::unique_ptr<mitsubishi_MFS13_t>(new mitsubishi_MFS13_t);
 	return 1;
     }
