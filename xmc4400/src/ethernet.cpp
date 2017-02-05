@@ -68,17 +68,17 @@ void Ethernet::SetManagmentClockDivider(void)
 
     uint32_t eth_mac_clk=XMC_SCU_CLOCK_GetSystemClockFrequency() >> 1U;
     if (eth_mac_clk <= 35000000UL) {
-	ETH0->GMII_ADDRESS = XMC_ETH_MAC_MDC_DIVIDER_16;
+	eth.GMII_ADDRESS = XMC_ETH_MAC_MDC_DIVIDER_16;
     } else if (eth_mac_clk <= 60000000UL) {
-	ETH0->GMII_ADDRESS = XMC_ETH_MAC_MDC_DIVIDER_26;
+	eth.GMII_ADDRESS = XMC_ETH_MAC_MDC_DIVIDER_26;
     } else if (eth_mac_clk <= 100000000UL) {
-	ETH0->GMII_ADDRESS = XMC_ETH_MAC_MDC_DIVIDER_42;
+	eth.GMII_ADDRESS = XMC_ETH_MAC_MDC_DIVIDER_42;
     } else if (eth_mac_clk <= 150000000UL) {
-	ETH0->GMII_ADDRESS = XMC_ETH_MAC_MDC_DIVIDER_62;
+	eth.GMII_ADDRESS = XMC_ETH_MAC_MDC_DIVIDER_62;
     } else if (eth_mac_clk <= 200000000UL) {
-	ETH0->GMII_ADDRESS = XMC_ETH_MAC_MDC_DIVIDER_102;
+	eth.GMII_ADDRESS = XMC_ETH_MAC_MDC_DIVIDER_102;
     } else if (eth_mac_clk <= 250000000UL) {
-	ETH0->GMII_ADDRESS = XMC_ETH_MAC_MDC_DIVIDER_124;
+	eth.GMII_ADDRESS = XMC_ETH_MAC_MDC_DIVIDER_124;
     }
 }
 
@@ -87,7 +87,7 @@ void Ethernet::SetAddress(void)
     uint32_t a=g_chipid[5];
     a<<=8;
     a|=g_chipid[4];
-    ETH0->MAC_ADDRESS0_HIGH=a;
+    eth.MAC_ADDRESS0_HIGH=a;
     
     for(int i=3;i>=0; i--) { 
 	a<<=8;
@@ -95,36 +95,36 @@ void Ethernet::SetAddress(void)
     }
     a&=~1;	// not multicast
     a|=2;	// locally administered
-    ETH0->MAC_ADDRESS0_LOW=a;
+    eth.MAC_ADDRESS0_LOW=a;
 }
 
 uint16_t Ethernet::ReadPhy(uint8_t reg_addr)
 {
-    ETH0->GMII_ADDRESS=
-	(ETH0->GMII_ADDRESS & ETH_GMII_ADDRESS_CR_Msk) |
+    eth.GMII_ADDRESS=
+	(eth.GMII_ADDRESS & ETH_GMII_ADDRESS_CR_Msk) |
 	ETH_GMII_ADDRESS_MB_Msk |
 	((uint32_t)phy_addr << ETH_GMII_ADDRESS_PA_Pos) |
 	((uint32_t)reg_addr << ETH_GMII_ADDRESS_MR_Pos);
 
     /* Poll busy bit during max PHY_TIMEOUT time */
     for(int retries=0; retries<XMC_ETH_MAC_PHY_MAX_RETRIES; retries++) {
-	if((ETH0->GMII_ADDRESS & ETH_GMII_ADDRESS_MB_Msk) == 0U) {
-	    return ETH0->GMII_DATA & ETH_GMII_DATA_MD_Msk;
+	if((eth.GMII_ADDRESS & ETH_GMII_ADDRESS_MB_Msk) == 0U) {
+	    return eth.GMII_DATA & ETH_GMII_DATA_MD_Msk;
 	}
     };
 }
 
 void Ethernet::WritePhy(uint8_t reg_addr, uint16_t data)
 {
-    ETH0->GMII_DATA=data;
-    ETH0->GMII_ADDRESS = 
-	(ETH0->GMII_ADDRESS & ETH_GMII_ADDRESS_CR_Msk) |
+    eth.GMII_DATA=data;
+    eth.GMII_ADDRESS = 
+	(eth.GMII_ADDRESS & ETH_GMII_ADDRESS_CR_Msk) |
 	ETH_GMII_ADDRESS_MB_Msk | ETH_GMII_ADDRESS_MW_Msk |
 	((uint32_t)phy_addr << ETH_GMII_ADDRESS_PA_Pos) |
 	((uint32_t)reg_addr << ETH_GMII_ADDRESS_MR_Pos);
 
     for(int retries=0; retries<XMC_ETH_MAC_PHY_MAX_RETRIES; retries++) {
-	if((ETH0->GMII_ADDRESS & ETH_GMII_ADDRESS_MB_Msk) == 0U)
+	if((eth.GMII_ADDRESS & ETH_GMII_ADDRESS_MB_Msk) == 0U)
 	    return;
     }
 }
@@ -156,25 +156,25 @@ void Ethernet::FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control)
 #endif
     XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_ETH0);
 
-    ETH0->BUS_MODE |= (uint32_t)ETH_BUS_MODE_SWR_Msk;
-    while ((ETH0->BUS_MODE & (uint32_t)ETH_BUS_MODE_SWR_Msk) != 0U)
+    eth.BUS_MODE |= (uint32_t)ETH_BUS_MODE_SWR_Msk;
+    while ((eth.BUS_MODE & (uint32_t)ETH_BUS_MODE_SWR_Msk) != 0U)
 	;
 
     SetManagmentClockDivider();
 
     SetAddress();
 
-    ETH0->MAC_CONFIGURATION = (uint32_t)ETH_MAC_CONFIGURATION_IPC_Msk;
+    eth.MAC_CONFIGURATION = (uint32_t)ETH_MAC_CONFIGURATION_IPC_Msk;
 
-    ETH0->FLOW_CONTROL = ETH_FLOW_CONTROL_DZPQ_Msk; // Disable Zero Quanta Pause
+    eth.FLOW_CONTROL = ETH_FLOW_CONTROL_DZPQ_Msk; // Disable Zero Quanta Pause
 
-    ETH0->OPERATION_MODE = (uint32_t)ETH_OPERATION_MODE_RSF_Msk |
+    eth.OPERATION_MODE = (uint32_t)ETH_OPERATION_MODE_RSF_Msk |
 			  (uint32_t)ETH_OPERATION_MODE_TSF_Msk;
 
     /* Increase enhanced descriptor to 8 WORDS, required when the Advanced
        Time-Stamp feature or Full IPC Offload Engine is enabled 
     */
-    ETH0->BUS_MODE |= (uint32_t)ETH_BUS_MODE_ATDS_Msk;
+    eth.BUS_MODE |= (uint32_t)ETH_BUS_MODE_ATDS_Msk;
 
     // Receive buffers and descriptors
     for(int i=0; i<rxp.size(); i++) {
@@ -183,7 +183,7 @@ void Ethernet::FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control)
 	rxd[i].buffer=&rxp[i];
 	rxd[i].next=&rxd[(i+1)%rxd.size()];
     }
-    ETH0->RECEIVE_DESCRIPTOR_LIST_ADDRESS=uint32_t(&rxd[0]);
+    eth.RECEIVE_DESCRIPTOR_LIST_ADDRESS=uint32_t(&rxd[0]);
 
     // Transmit descriptors
     for(int i=0; i<txd.size(); i++) {
@@ -192,17 +192,20 @@ void Ethernet::FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control)
 	txd[i].buffer=NULL;
 	txd[i].next=&txd[(i+1)%txd.size()];
     }
-    ETH0->TRANSMIT_DESCRIPTOR_LIST_ADDRESS=uint32_t(&txd[0]);
+    eth.TRANSMIT_DESCRIPTOR_LIST_ADDRESS=uint32_t(&txd[0]);
 
     PHY_Init();
 
     // Only full duplex/100Mb, no jumbo frames
-    ETH0->MAC_CONFIGURATION &= (uint32_t)~ETH_MAC_CONFIGURATION_JE_Msk;
-    ETH0->MAC_CONFIGURATION|= 
+    eth.MAC_CONFIGURATION &= (uint32_t)~ETH_MAC_CONFIGURATION_JE_Msk;
+    eth.MAC_CONFIGURATION|= 
 	ETH_MAC_CONFIGURATION_DM_Msk | ETH_MAC_CONFIGURATION_FES_Msk;
 
-    ETH0->STATUS = 0xFFFFFFFFUL;
-    ETH0->INTERRUPT_ENABLE=
+    eth.MMC_TRANSMIT_INTERRUPT_MASK=0xffffffff;
+    eth.MMC_RECEIVE_INTERRUPT_MASK=0xffffffff;
+    eth.MMC_IPC_RECEIVE_INTERRUPT_MASK=0xffffffff;
+    eth.STATUS = 0xFFFFFFFFUL;
+    eth.INTERRUPT_ENABLE=
 	ETH_INTERRUPT_ENABLE_RIE_Msk |	// receive
 	ETH_INTERRUPT_ENABLE_NIE_Msk;
 
@@ -211,9 +214,9 @@ void Ethernet::FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control)
     NVIC_ClearPendingIRQ(ETH0_0_IRQn);
     NVIC_EnableIRQ(ETH0_0_IRQn);
 
-    ETH0->OPERATION_MODE|=
+    eth.OPERATION_MODE|=
 	ETH_OPERATION_MODE_SR_Msk | ETH_OPERATION_MODE_ST_Msk;
-    ETH0->MAC_CONFIGURATION|=
+    eth.MAC_CONFIGURATION|=
 	ETH_MAC_CONFIGURATION_RE_Msk | ETH_MAC_CONFIGURATION_TE_Msk;
 }
 
@@ -251,7 +254,7 @@ int Ethernet::transmit(
     txd[bufnum].status=descriptor::OWN | descriptor::IC | descriptor::TX_LS
 	| descriptor::TX_FS | descriptor::TTSE | descriptor::CIC 
 	| descriptor::TCH;
-    ETH0->TRANSMIT_POLL_DEMAND=0;
+    eth.TRANSMIT_POLL_DEMAND=0;
 }
 
 void Ethernet::transmitIRQ(void)
@@ -284,8 +287,8 @@ inline void ETH0_0_IRQHandler(uint32_t event)
 extern "C" void ETH0_0_IRQHandler(void)
 {
     LED0=0;
-    uint32_t event=ETH0->STATUS;
+    uint32_t event=eth.STATUS;
     ETH0_0_IRQHandler(event);
-    ETH0->STATUS = event;
+    eth.STATUS = event;
     LED0=1;
 }
