@@ -318,7 +318,7 @@ void init_adc(void)
     vadc.G[1].ALIAS=alias_t({{.alias0=6}}).raw;
     vadc.G[3].ALIAS=alias_t({{.alias0=2}}).raw;
 
-    for(int i=0;i<4;i++) {
+    for(int i=0;i<4;i++) { // All channels
 	// Channel control
 	vadc.G[i].CHCTR[0]=chctr_t({{
 	    .iclsel=2,		// global class 0
@@ -333,26 +333,6 @@ void init_adc(void)
 	    .bwdch=0,
 	    .bwden=0
 	}}).raw;
-	// Accumulate 4 results
-	if(i==0 || i==3) {
-	    // Current measurement is averaged
-	    vadc.G[i].RCR[1]=rcr_t({{
-		.drctr=3,	// 4 results
-		.dmm=0,	// accumulation 
-		.wfr=0,	// overwrite
-		.fen=0,	// top of fifo
-		.srgen=uint32_t(i==0? 1:0)	// no service request
-	    }}).raw;
-	} else {
-	    vadc.G[i].RCR[1]=rcr_t({{
-		// sincos is not averaged
-		.drctr=0,// 1 results
-		.dmm=0,	// accumulation 
-		.wfr=0,	// overwrite
-		.fen=0,	// top of fifo
-		.srgen=uint32_t(i==0? 1:0)	// no service request
-	    }}).raw;
-	}
 	vadc.G[i].RCR[0]=rcr_t({{
 	    .drctr=0,	// 4 results
 	    .dmm=0,	// accumulation 
@@ -360,66 +340,88 @@ void init_adc(void)
 	    .fen=1,	// part of fifo
 	    .srgen=0	// no service request
 	}}).raw;
-	if(i) {
-	    // slave
-	    vadc.G[i].SYNCTR=synctr_t({{
-		.stsel=1,	// synchronise to G0
-		.evalr1=0,
-		.evalr2=0,
-		.evalr3=0
-	    }}).raw;
-	} else { 
-	    // master
-	    // Arbiter, only queued mode is enabled
-	    vadc.G[i].ARBPR=arbpr_t({{
-		.prio0=3,
-		.csm0=1,
-		.prio1=0,
-		.csm1=0,
-		.prio2=0,
-		.csm2=0,
-		.asen0=1,
-		.asen1=0,
-		.asen2=0
-	    }}).raw;
-	    vadc.G[i].QMR0=qmr0_t({{
-		.engt=1,
-		.entr=1,
-		.clrv=0,
-		.trev=0,
-		.flush=0,
-		.cev=0,
-		.rptdis=0
-	    }}).raw;
-	    vadc.G[i].QINR0=qinr0_t({{
-		.reqchnr=0,
-		.rf=1,
-		.ensi=0,
-		.extr=1,
-		
-	    }}).raw;
-	    // FIXME, make the xtsel mapping automatic
-	    static_assert(ccu8_ns::unit(HB0)==0, "Wrong timer for ADC trigger");
-	    static_assert(pwm.adc_irq==2, "Wrong ADC trigger");
-	    vadc.G[i].QCTRL0=qctrl0_t({{
-		.srcresreg=0,	// Use CHCTR.resreg
-		.xtsel=8, 	// CCU80::SR2 (See asserts)
-		.xtlvl=0,
-		.xtmode=1,
-		.xtwc=1,
-		.gtsel=0,
-		.gtlvl=0,
-		.gtwc=0,
-		.tmen=0,	// Uncertain
-		.tmwc=1
-	    }}).raw;
-	    vadc.G[i].SYNCTR=synctr_t({{
-		.stsel=0,	// Master
-		.evalr1=1,
-		.evalr2=1,
-		.evalr3=1
-	    }}).raw;
-	}
+    }
+    for(int i: {0,3}) {	// Current measurement channels
+	// Current measurement is averaged
+	vadc.G[i].RCR[1]=rcr_t({{
+	    .drctr=3,	// 4 results
+	    .dmm=0,	// accumulation 
+	    .wfr=0,	// overwrite
+	    .fen=0,	// top of fifo
+	    .srgen=uint32_t(i==0? 1:0)	// no service request (only master)
+	}}).raw;
+    }
+    for(int i: {1,2}){
+	vadc.G[i].RCR[1]=rcr_t({{ // Encoder channels
+	    // sincos is not averaged
+	    .drctr=0,// 1 results
+	    .dmm=0,	// accumulation 
+	    .wfr=0,	// overwrite
+	    .fen=0,	// top of fifo
+	    .srgen=0	// no service request
+	}}).raw;
+    }
+    for(int i=1;i<4;i++) {
+	// slave
+	vadc.G[i].SYNCTR=synctr_t({{
+	    .stsel=1,	// synchronise to G0
+	    .evalr1=0,
+	    .evalr2=0,
+	    .evalr3=0
+	}}).raw;
+    }
+    { 
+	// master
+	int i=0;
+	// Arbiter, only queued mode is enabled
+	vadc.G[i].ARBPR=arbpr_t({{
+	    .prio0=3,
+	    .csm0=1,
+	    .prio1=0,
+	    .csm1=0,
+	    .prio2=0,
+	    .csm2=0,
+	    .asen0=1,
+	    .asen1=0,
+	    .asen2=0
+	}}).raw;
+	vadc.G[i].QMR0=qmr0_t({{
+	    .engt=1,
+	    .entr=1,
+	    .clrv=0,
+	    .trev=0,
+	    .flush=0,
+	    .cev=0,
+	    .rptdis=0
+	}}).raw;
+	vadc.G[i].QINR0=qinr0_t({{
+	    .reqchnr=0,
+	    .rf=1,
+	    .ensi=0,
+	    .extr=1,
+	    
+	}}).raw;
+	// FIXME, make the xtsel mapping automatic
+	static_assert(ccu8_ns::unit(HB0)==0, "Wrong timer for ADC trigger");
+	static_assert(pwm.adc_irq==2, "Wrong ADC trigger");
+	vadc.G[i].QCTRL0=qctrl0_t({{
+	    .srcresreg=0,	// Use CHCTR.resreg
+	    .xtsel=8, 	// CCU80::SR2 (See asserts)
+	    .xtlvl=0,
+	    .xtmode=1,
+	    .xtwc=1,
+	    .gtsel=0,
+	    .gtlvl=0,
+	    .gtwc=0,
+	    .tmen=0,	// Uncertain
+	    .tmwc=1
+	}}).raw;
+	vadc.G[i].SYNCTR=synctr_t({{
+	    .stsel=0,	// Master
+	    .evalr1=1,
+	    .evalr2=1,
+	    .evalr3=1
+	}}).raw;
     }
     vadc.G[0].ARBCFG=arbcfg_t({{
 	.anonc=3,	// permanently on (master/standalone mode)

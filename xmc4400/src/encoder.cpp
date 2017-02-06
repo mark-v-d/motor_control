@@ -279,8 +279,8 @@ float mitsubishi_PQ_t::angle(void)
 
 int32_t mitsubishi_PQ_t::position(void)
 {
-    return rx_buffer[2]+(1<<8)*rx_buffer[3]
-	+(1<<12)*rx_buffer[5]+(1<<20)*rx_buffer[6]+(1<<28)*rx_buffer[7];
+    return (rx_buffer[2]+(1<<8)*rx_buffer[3]
+	+(1<<12)*rx_buffer[5]+(1<<20)*rx_buffer[6]+(1<<28)*rx_buffer[7])<<4;
 }
 
 bool mitsubishi_PQ_t::valid(void)
