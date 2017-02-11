@@ -46,49 +46,35 @@ void udp_sync::Received(Ethernet *p_eth, Ethernet::descriptor const &desc)
 {
     sync_t *p=reinterpret_cast<sync_t*>(desc.buffer);
 
-    // Set packet source
-    p_eth->set_saddr(&pkt);
-    pkt.src_port=desc.buffer->udp.dst_port;
-
-    // Set packet destination
-    memcpy(pkt.dst_mac,p->src_mac,sizeof(pkt.dst_mac));
-    memcpy(pkt.dst_ip,p->src_ip,sizeof(pkt.dst_ip));
-    pkt.dst_port=p->src_port;
-    pkt.type=p->type;
-
-    pkt.length=hton(sizeof(pkt));
-
-    pkt.tx_seconds=p->tx_seconds;
-    pkt.tx_nanoseconds=p->tx_nanoseconds; 
-    pkt.rx_seconds=desc.seconds;
-    pkt.rx_nanoseconds=desc.nanoseconds;
-    pkt.timer=pwm.get_timestamp();
-
     eth_ns::timestamp_control_t control;
     control.raw=eth.TIMESTAMP_CONTROL;
 
+    // Schedule synchronisation event
     constexpr int pre_trigger=0;
     if(p->rx_nanoseconds>=pre_trigger) {
 	eth.TARGET_TIME_SECONDS=p->rx_seconds;
 	eth.TARGET_TIME_NANOSECONDS=p->rx_nanoseconds-pre_trigger;
     } else {
 	eth.TARGET_TIME_SECONDS=p->rx_seconds-1;
-	eth.TARGET_TIME_NANOSECONDS=p->rx_nanoseconds+1000000000-pre_trigger;
+	eth.TARGET_TIME_NANOSECONDS=p->rx_nanoseconds+1'000'000'000-pre_trigger;
     }
     control.tstrig=1;
 
     if(!(control.tsinit | control.tsupdt | control.tsaddreg)) {
-	int32_t d_sec=pkt.tx_seconds-pkt.rx_seconds;
-	int32_t d_nsec=(pkt.tx_nanoseconds>pkt.rx_nanoseconds)?
-	    pkt.tx_nanoseconds-pkt.rx_nanoseconds
-	    :-int32_t(pkt.rx_nanoseconds-pkt.tx_nanoseconds);
+	// When ready update the ADDEND register
+	int32_t d_sec=p->tx_seconds-desc.seconds;
+	int32_t d_nsec=(p->tx_nanoseconds>desc.nanoseconds)?
+	    p->tx_nanoseconds-desc.nanoseconds
+	    :-int32_t(desc.nanoseconds-p->tx_nanoseconds);
 	float error=d_sec+1e-9F*d_nsec;
 	if(fabs(error)>1e-3) {
+	    // If the error exceeds 1ms, reset the time
 	    eth.SYSTEM_TIME_SECONDS_UPDATE=error;
 	    eth.SYSTEM_TIME_NANOSECONDS_UPDATE=fmodf(error,1.0F)*1e9;
 	    control.tsupdt=1;
 	    integrator=0;
 	} else {
+	    // Usually the time is kept up-to-date using a PI controller
 	    integrator+=error*kI;
 	    eth.TIMESTAMP_ADDEND=addend+integrator+kP*error;
 	    control.tsaddreg=1;
@@ -98,8 +84,28 @@ void udp_sync::Received(Ethernet *p_eth, Ethernet::descriptor const &desc)
     eth.TIMESTAMP_CONTROL=control.raw;
     pkt.integrator=integrator;
 
-    if(p->dst_ip[3]!=255)
+    if(p->dst_ip[3]!=255) {
+	// Respond to the sync if it was not a broadcast
+
+	// Set packet source
+	p_eth->set_saddr(&pkt);
+	pkt.src_port=desc.buffer->udp.dst_port;
+
+	// Set packet destination
+	memcpy(pkt.dst_mac,p->src_mac,sizeof(pkt.dst_mac));
+	memcpy(pkt.dst_ip,p->src_ip,sizeof(pkt.dst_ip));
+	pkt.dst_port=p->src_port;
+	pkt.type=p->type;
+
+	pkt.length=hton(sizeof(pkt));
+
+	pkt.tx_seconds=p->tx_seconds;
+	pkt.tx_nanoseconds=p->tx_nanoseconds; 
+	pkt.rx_seconds=desc.seconds;
+	pkt.rx_nanoseconds=desc.nanoseconds;
+	pkt.timer=pwm.get_timestamp();
 	transmit(p_eth);
+    }
 }
 
 void udp_sync::Transmitted(

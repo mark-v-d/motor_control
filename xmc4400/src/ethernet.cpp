@@ -271,10 +271,6 @@ inline void ETH0_0_IRQHandler(uint32_t event)
 {
     if(eth.TIMESTAMP_STATUS&0x2) {
 	pwm.set_timestamp();
-	eth_ns::timestamp_control_t control;
-	control.raw=eth.TIMESTAMP_CONTROL;
-	control.tstrig=0;
-	eth.TIMESTAMP_CONTROL=control.raw;
     }
     if(event&XMC_ETH_MAC_EVENT_RECEIVE) {
 	Ethernet::instance->receiveIRQ();
