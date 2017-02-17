@@ -339,6 +339,14 @@ int mitsubishi_encoder_t::detect(void)
 
     init_full_duplex(uart_config);
 
+    p->serial_tx(0x92);
+    p->serial_tx(0x92);
+    p->serial_tx(0x7a);
+    p->serial_tx(0x7a);
+    p->serial_tx(0x7a);
+    p->serial_tx(0x7a);
+    p->serial_tx(0x7a);
+    p->serial_tx(0x7a);
     p->serial_tx(0x1a);
     if(p->putp!=9) {
 	encoder=std::unique_ptr<dummy_encoder_t>(new dummy_encoder_t);
