@@ -51,7 +51,7 @@ dummy_encoder_t::dummy_encoder_t(void)
     }
 }
 
-std::unique_ptr<encoder_t> encoder(new dummy_encoder_t);
+std::unique_ptr<encoder_t> encoder=std::make_unique<dummy_encoder_t>();
 
 void encoder_t::init_half_duplex(
     XMC_UART_CH_CONFIG_t const &uart_config)
@@ -310,8 +310,8 @@ void mitsubishi_PQ_t::trigger(void)
 int mitsubishi_encoder_t::detect(void)
 {
     using namespace std::chrono;
-    mitsubishi_encoder_t *p=new mitsubishi_encoder_t;
-    encoder=std::unique_ptr<mitsubishi_encoder_t>(p);
+    encoder=std::make_unique<mitsubishi_encoder_t>();
+    auto *p=static_cast<mitsubishi_encoder_t*>(encoder.get());
 
     XMC_UART_CH_CONFIG_t uart_config = {
 	.baudrate=2500000,
@@ -333,7 +333,7 @@ int mitsubishi_encoder_t::detect(void)
     // First try to use half-duplex mode
     p->serial_tx(0x1a);
     if(p->putp==10) {
-	encoder=std::unique_ptr<mitsubishi_MFS13_t>(new mitsubishi_MFS13_t);
+	encoder=std::make_unique<mitsubishi_MFS13_t>();
 	return 1;
     }
 
@@ -349,11 +349,11 @@ int mitsubishi_encoder_t::detect(void)
     p->serial_tx(0x7a);
     p->serial_tx(0x1a);
     if(p->putp!=9) {
-	encoder=std::unique_ptr<dummy_encoder_t>(new dummy_encoder_t);
+	encoder=std::make_unique<dummy_encoder_t>();
 	return 0;
     }
 
-    encoder=std::unique_ptr<mitsubishi_PQ_t>(new mitsubishi_PQ_t);
+    encoder=std::make_unique<mitsubishi_PQ_t>();
     return 1;
 }
 
@@ -526,8 +526,8 @@ int hiperface_t::detect(void)
 {
     using namespace std::chrono;
 
-    hiperface_t *p=new hiperface_t;
-    encoder=std::unique_ptr<hiperface_t>(p);
+    encoder=std::make_unique<hiperface_t>();
+    auto p=static_cast<hiperface_t*>(encoder.get());
 
     XMC_UART_CH_CONFIG_t uart_config = {
 	.baudrate=9600,
@@ -550,7 +550,7 @@ int hiperface_t::detect(void)
     p->transmit({0xff,0x42});
 
     if(p->rx_put!=7) {
-	encoder=std::unique_ptr<dummy_encoder_t>(new dummy_encoder_t);
+	encoder=std::make_unique<dummy_encoder_t>();
 	return 0;
     }
 
