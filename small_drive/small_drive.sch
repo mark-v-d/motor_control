@@ -188,7 +188,7 @@ F 3 "" H 16900 6550 60  0000 C CNN
 $EndComp
 Text Label 15450 6100 0    60   ~ 0
 CUR0
-Text Label 1800 13800 0    60   ~ 0
+Text Label 1800 14000 0    60   ~ 0
 HB1
 Text Label 1800 13700 0    60   ~ 0
 HB2
@@ -1289,7 +1289,7 @@ Text Label 1750 13600 0    60   ~ 0
 ETH0_RXER
 Text Label 1800 10800 0    60   ~ 0
 ETH0_TX_EN
-Text Label 1800 14000 0    60   ~ 0
+Text Label 1800 13800 0    60   ~ 0
 HB0
 Text Label 1800 8200 0    60   ~ 0
 ENC1_Z/SELECT
@@ -4551,7 +4551,7 @@ Connection ~ 1650 4850
 Wire Wire Line
 	1250 6600 1650 6600
 Wire Wire Line
-	1650 6600 1650 6800
+	1650 6600 1650 7100
 Wire Wire Line
 	1350 6500 1250 6500
 Connection ~ 1350 6700
@@ -4738,14 +4738,6 @@ Wire Wire Line
 	1250 9200 2300 9200
 Wire Wire Line
 	1250 9100 2300 9100
-Text Label 4400 3600 0    60   ~ 0
-ETH0_INT
-Wire Wire Line
-	4350 3600 5250 3600
-Text Label 1800 7200 0    60   ~ 0
-ETH0_INT
-Wire Wire Line
-	1250 7200 2300 7200
 $Comp
 L GND #PWR086
 U 1 1 58A4708A
@@ -5001,7 +4993,7 @@ U 2 1 58A15E9C
 P 12700 7050
 F 0 "U7" H 13000 6900 60  0000 C CNN
 F 1 "MC33074DTBR2" H 12700 6800 50  0000 L CNN
-F 2 "Housings_SSOP:TSSOP-14_4.4x5mm_Pitch0.65mm" H -3850 -2200 60  0000 C CNN
+F 2 "Housings_SSOP:TSSOP-14_4.4x5mm_Pitch0.65mm" H -3850 -2200 60  0001 C CNN
 F 3 "" H -3850 -2200 60  0000 C CNN
 	2    12700 7050
 	1    0    0    -1  
@@ -5045,4 +5037,7 @@ F 3 "" H -150 -100 50  0000 C CNN
 $EndComp
 Wire Wire Line
 	700  5300 700  5250
+Wire Wire Line
+	1650 7100 1250 7100
+Connection ~ 1650 6800
 $EndSCHEMATC
