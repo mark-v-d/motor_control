@@ -1,0 +1,33 @@
+component fir "Finite impulse response filter";
+pin in float in;
+variable double state[10];
+param rw float a0 = 0.0;
+param rw float a1 = 0.0;
+param rw float a2 = 0.0;
+param rw float a3 = 0.0;
+param rw float a4 = 0.0;
+param rw float a5 = 0.0;
+param rw float a6 = 0.0;
+param rw float a7 = 0.0;
+param rw float a8 = 0.0;
+param rw float a9 = 0.0;
+pin out float out "out = output of filter";
+function _;
+license "GPL";
+;;
+FUNCTION(_) {
+	for(int i=9;i>0;i--)
+		state[i]=state[i-1];
+	state[0]=in;
+	out=	state[0]*a0 +
+		state[1]*a1 +
+		state[2]*a2 +
+		state[3]*a3 +
+		state[4]*a4 +
+		state[5]*a5 +
+		state[6]*a6 +
+		state[7]*a7 +
+		state[8]*a8 +
+		state[9]*a9;
+
+}

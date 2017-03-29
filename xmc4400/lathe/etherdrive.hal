@@ -1,4 +1,4 @@
-loadrt etherdrive names=J0_drive,J1_drive ipaddr="192.168.0.5","192.168.0.4"
+loadrt etherdrive names=J0_drive,J1_drive ipaddr="192.168.0.4","192.168.0.5"
 
 ################################################################################
 net Xoutput => J0_drive.Iset-1
@@ -24,7 +24,21 @@ setp J1_drive.scale [JOINT_1]SCALE
 
 
 # The sync function should be the first function in the servo thread
-addf etherdrive.sync servo-thread -5
+
+delf motion-command-handler servo-thread
+delf motion-controller servo-thread
+delf pid.0.do-pid-calcs servo-thread
+delf pid.1.do-pid-calcs servo-thread
+
+addf etherdrive.sync servo-thread
+addf pid.0.do-pid-calcs servo-thread
+addf pid.1.do-pid-calcs servo-thread
 addf etherdrive.control servo-thread
+addf motion-command-handler servo-thread
+addf motion-controller servo-thread
 
 net estop:loop iocontrol.0.user-enable-out => iocontrol.0.emc-enable-in
+
+
+setp pid.0.maxerrorI 1e-5
+setp pid.1.maxerrorI 1e-5
