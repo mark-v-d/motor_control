@@ -1,0 +1,19 @@
+#!/bin/bash
+halcmd loadrt velocity
+halcmd net Iz J1_drive.Irotor-1
+halcmd net Iz velocity.0.I
+halcmd net Zpos-fb velocity.0.pos
+
+halcmd addf velocity.0 servo-thread -5
+halcmd setp velocity.0.a11 0.892
+halcmd setp velocity.0.a12 -0.03686
+halcmd setp velocity.0.a21 1.0
+halcmd setp velocity.0.a22 0.508
+halcmd setp velocity.0.b11 -5.88235294117647e-05
+halcmd setp velocity.0.b12 0.03686
+halcmd setp velocity.0.b21 0
+halcmd setp velocity.0.b22 0.492
+
+halcmd net speed_1 velocity.0.speed
+
+halcmd net speed_1 pid.1.feedback-deriv
