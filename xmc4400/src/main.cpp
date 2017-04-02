@@ -1,3 +1,9 @@
+/*
+    PQ23,
+	30.5mH, 7.5 Ohm @ 400Hz u->v, w open
+	23.0mH, 5.2 Ohm @ 400Hz u->v+w
+*/
+
 #include <atomic>
 #include <cmath>
 
