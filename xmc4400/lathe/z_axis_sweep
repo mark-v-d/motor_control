@@ -1,0 +1,61 @@
+#!/bin/bash
+#
+# Signal generator to tune current control loop
+#
+SAMPLES=45000
+if !(halcmd show|grep siggen) >/dev/null ; then
+	echo "loading signal generator"
+	halcmd loadrt siggen
+	halcmd addf siggen.0.update servo-thread
+	halcmd net carrier_sine siggen.0.sine
+	halcmd net carrier_cosine siggen.0.cosine
+	halcmd setp siggen.0.amplitude 0
+
+	halcmd loadrt correlator count=4
+	for i in $(seq 0 3); do
+		halcmd addf correlator.$i servo-thread
+		halcmd net correlate_enable correlator.$i.enable
+		halcmd net correlate_samples correlator.$i.samples
+	done
+	halcmd net carrier_sine correlator.0.carrier
+	halcmd net carrier_cosine correlator.1.carrier
+	halcmd net carrier_sine correlator.2.carrier
+	halcmd net carrier_cosine correlator.3.carrier
+	halcmd net current J1_drive.Irotor-1 
+	halcmd net current correlator.0.signal
+	halcmd net current correlator.1.signal
+	halcmd net Zpos-fb correlator.2.signal
+	halcmd net Zpos-fb correlator.3.signal
+	halcmd unlinkp J1_drive.Iset-1
+	halcmd net carrier_sine siggen.0.sine J1_drive.Iset-1
+fi
+
+if [[ $$1 == 0 ]]; then
+	echo Restore normal operation
+	halcmd unlinkp J1_drive.Iset-1
+	halcmd net Zoutput J1_drive.Iset-1
+	exit
+fi
+
+function get_result() {
+halcmd show|awk --non-decimal-data '
+/correlator...result/ { result[i++]=$4; }
+/siggen.0.frequency/ { freq=$4 }
+/siggen.0.amplitude/ { ampl=$4 }
+$3 == "correlate_samples" { samples=$2+0 }
+END {
+	print freq " " ampl " " samples " " result[0] " " result[1] " " result[2] " " result [3]
+}
+'
+}
+
+halcmd sets correlate_samples $SAMPLES
+halcmd setp siggen.0.amplitude $1
+for i in $(seq $2 $3 $4); do
+	halcmd sets correlate_enable false
+	halcmd setp siggen.0.frequency $i
+	halcmd sets correlate_enable true
+	sleep $[ $SAMPLES/4500 ].2
+	get_result
+done
+

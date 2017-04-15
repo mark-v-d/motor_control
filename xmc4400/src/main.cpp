@@ -7,7 +7,8 @@
 #include <atomic>
 #include <cmath>
 
-#define M_PI 3.1415927
+#include <math.h>
+constexpr auto PI=acos(-1);
 
 #include "hardware.h"
 #include "ethernet.h"

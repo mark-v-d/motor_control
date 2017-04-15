@@ -15,11 +15,12 @@ s=ss(	[0.892,0;1,1],
 	"stname", {"speed", "position"}
 );
 
-L=place(s.',[0.5,0.5])'
-observer=ss(s.a-L*s.c,[s.b,L],s.c,[s.d, 0],s.tsam)
+# Valid 0.9 -> 0.45
+L=place(s.',f)'
+observer=ss(s.a-L*s.c,[s.b,L],s.c,[s.d, 0],s.tsam);
 observer.stname=s.stname;
 observer.inname={s.inname{:}, "fb"};
-observer.outname=s.outname;
+observer.outname=s.outname
 
 
 
