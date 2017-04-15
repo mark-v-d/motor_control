@@ -45,7 +45,7 @@ extern "C" void SysTick_Handler(void)
 
 uint32_t hb[3];
 float adc[4];
-float adc_scale[4]={0.0010819,1.0,1.0,0.0010819};
+float adc_scale[4]={0.0012099,1.0,1.0,0.0012436};
 int32_t adc_offset[4]={0,2047,2047,0};
 
 constexpr float servo_factor=0.00185805929607582;
@@ -56,6 +56,7 @@ enum {
     OFFSET_CALIBRATE,
     ACTIVE,
     MANUAL_ANGLE,
+    MANUAL_VOLTAGE,
     CURRENT,
     VOLTAGE
 } state;
@@ -104,7 +105,7 @@ extern "C" void CCU80_0_IRQHandler(void)
 	}
 	break;
     case OFFSET_CALIBRATE:
-	if(++counter>=256) {
+	if(++counter>=4096) {
 	    state=CURRENT;
 	    for(int i:{0,3})
 		adc_offset[i]/=counter;
@@ -127,10 +128,8 @@ extern "C" void CCU80_0_IRQHandler(void)
 	    HBEN=0;
 	}
     } else {
-	float angle;
-	if(state!=MANUAL_ANGLE)
-	    angle=encoder->angle();
-	else
+	float angle=encoder->angle();
+	if(state==MANUAL_ANGLE || state==MANUAL_VOLTAGE)
 	    angle=manual_angle;
 	float Istator[2];
 	Istator[0]=float(3.0/2)*current[0];
@@ -149,6 +148,7 @@ extern "C" void CCU80_0_IRQHandler(void)
 	    }
 	    // Intentionally no break
 	case VOLTAGE:
+	case MANUAL_VOLTAGE:
 	    HBEN=1;
 	    float sq_len=out.Vrotor[0]*out.Vrotor[0]
 		+out.Vrotor[1]*out.Vrotor[1];

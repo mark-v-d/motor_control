@@ -3,6 +3,11 @@ for i in Z*; do
 	awk '
 		BEGIN { label=0; }
 		label<3 { print "# " $0; label++; }
-		label>=3 {print $2 " " $4 " " $6 " " $8}
+		label>=3 {
+			for(i=2;i<NF;i+=2) {
+				printf("%f ",$i);
+			}
+			printf("\n");
+		}
 	' <$i >$i.fix
 done

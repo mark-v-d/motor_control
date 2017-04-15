@@ -1,5 +1,5 @@
 function load_symbols(result)
-	[output,text]=system(sprintf("arm-none-eabi-readelf --debug-dump -s %s/../software/main.elf |@arm/reparse >@arm/symbols",pwd));
+	[output,text]=system(sprintf("arm-none-eabi-readelf --debug-dump -s %s/../xmc4400/main.elf |@arm/reparse >@arm/symbols",pwd));
 
 	source "@arm/symbols"
 
@@ -10,12 +10,13 @@ end
 function var=add_decoding(var)
 	for x=fieldnames(var)'
 		name=x{1};
-		if !isfield(var.(name),"type") || !isfield(var.(name).type,"encoding")
+		if !isfield(var.(name),"type")
 			continue;
 		elseif isfield(var.(name).type,"structure") 
 			var.(name).decode="structure";
 			var.(name).type.structure= ...
 				add_decoding(var.(name).type.structure);
+			var.(name).decode="structure";
 			continue;
 		elseif isfield(var.(name).type,"enum") 
 			var.(name).decode="enum";
@@ -28,6 +29,9 @@ function var=add_decoding(var)
 			#var.(name).type.union= ...
 				#add_decoding(var.(name).type.union);
 			continue;
+		end
+		if !isfield(var.(name).type,"encoding")
+			continue
 		end
 		encoding=sscanf(var.(name).type.encoding(1),"%d");
 		switch(encoding)

@@ -84,7 +84,11 @@ function result=decode_struct(a,v,b)
 	for x=fieldnames(v.type.structure)'
 		info=v.type.structure.(x{1});
 		s=info.data_member_location+1;
-		e=s+info.type.size-1;
+		if isfield(info.type,"upper_bound")
+			e=s+info.type.size*(info.type.upper_bound+1)-1;
+		else
+			e=s+info.type.size-1;
+		end
 		result.(x{1})=decode(info,b(s:e));
 	end
 endfunction
