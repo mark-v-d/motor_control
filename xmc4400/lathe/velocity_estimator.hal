@@ -1,0 +1,19 @@
+loadrt velocity
+net Iz J1_drive.Irotor-1
+net Iz velocity.0.I
+net Zpos-fb velocity.0.pos
+
+addf velocity.0 servo-thread -6
+setp velocity.0.a11 0.892
+setp velocity.0.a12 -0.1537
+setp velocity.0.a21 1.0
+setp velocity.0.a22 0.108
+setp velocity.0.b11 -5.882e-05
+setp velocity.0.b12 0.1537
+setp velocity.0.b21 0
+setp velocity.0.b22 0.892
+
+net speed_1 velocity.0.speed
+net position_1 velocity.0.position
+
+net speed_1 pid.1.feedback-deriv

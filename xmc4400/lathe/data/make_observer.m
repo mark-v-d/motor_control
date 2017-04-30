@@ -16,6 +16,7 @@ s=ss(	[0.892,0;1,1],
 );
 
 # Valid 0.9 -> 0.45
+# f is a (1,2) vector
 L=place(s.',f)'
 observer=ss(s.a-L*s.c,[s.b,L],s.c,[s.d, 0],s.tsam);
 observer.stname=s.stname;
@@ -36,3 +37,13 @@ plot(
 	r{n}.pos,";pos;",
 	y,";est;",
 	r{n}.i/10,";i;")
+
+printf("halcmd setp velocity.0.a11 %f\n",observer.a(1,1))
+printf("halcmd setp velocity.0.a12 %f\n",observer.a(1,2))
+printf("halcmd setp velocity.0.a21 %f\n",observer.a(2,1))
+printf("halcmd setp velocity.0.a22 %f\n",observer.a(2,2))
+printf("halcmd setp velocity.0.b11 %f\n",observer.b(1,1))
+printf("halcmd setp velocity.0.b12 %f\n",observer.b(1,2))
+printf("halcmd setp velocity.0.b21 %f\n",observer.b(2,1))
+printf("halcmd setp velocity.0.b22 %f\n",observer.b(2,2))
+

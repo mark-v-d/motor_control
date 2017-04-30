@@ -6,13 +6,13 @@ halcmd net Zpos-fb velocity.0.pos
 
 halcmd addf velocity.0 servo-thread -6
 halcmd setp velocity.0.a11 0.892
-halcmd setp velocity.0.a12 0.003136
+halcmd setp velocity.0.a12 -0.1537
 halcmd setp velocity.0.a21 1.0
-halcmd setp velocity.0.a22 0.508
-halcmd setp velocity.0.b11 -5.88235294117647e-05
-halcmd setp velocity.0.b12 -0.003136
+halcmd setp velocity.0.a22 0.108
+halcmd setp velocity.0.b11 -5.882e-05
+halcmd setp velocity.0.b12 0.1537
 halcmd setp velocity.0.b21 0
-halcmd setp velocity.0.b22 0.492
+halcmd setp velocity.0.b22 0.892
 
 halcmd net speed_1 velocity.0.speed
 halcmd net position_1 velocity.0.position

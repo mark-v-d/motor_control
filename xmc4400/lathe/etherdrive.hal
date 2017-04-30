@@ -39,6 +39,5 @@ addf motion-controller servo-thread
 
 net estop:loop iocontrol.0.user-enable-out => iocontrol.0.emc-enable-in
 
-
 setp pid.0.maxerrorI 1e-5
 setp pid.1.maxerrorI 1e-5
