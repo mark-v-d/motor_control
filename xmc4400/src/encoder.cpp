@@ -131,6 +131,105 @@ void encoder_t::init_full_duplex(
 }
 
 /*******************************************************************************
+    Base class for using POSIF
+*******************************************************************************/
+#include "xmc_posif.h"
+
+template <typename enc_a, typename enc_b, typename enc_z>
+class posif_t {
+protected:
+    int32_t timer=0;
+public:
+    void posif_init(uint32_t position);
+    void posif_latch(void);
+};
+
+template <typename enc_a, typename enc_b, typename enc_z>
+void posif_t<enc_a,enc_b,enc_z>::posif_init(
+    uint32_t position
+) {
+    using namespace posif_ns;
+    iopin::input<enc_a::PORT,enc_a::PIN> s0;
+    iopin::input<enc_b::PORT,enc_b::PIN> s90;
+
+    static_assert(unit(s90)==unit(s0),
+	"s90 and s0 must be part of the same POSIF unit");
+    auto p=&posif[unit(s90)];
+
+    XMC_POSIF_CONFIG_t PCONF({{{
+	.mode=XMC_POSIF_MODE_QD,
+	.input0=pinA(s0),
+	.input1=pinB(s90),
+	.input2=0,
+	.filter=7
+    }}});
+    XMC_POSIF_Init(p, &PCONF);
+
+    XMC_POSIF_QD_CONFIG_t qd;
+    qd.phase_a=0;
+    qd.phase_b=0;       /**< Phase-B active level configuration */
+    qd.phase_leader=0;  /**< Which of the two phase signals[Phase A or Phase B]
+			    leads the other? */
+    qd.index=XMC_POSIF_QD_INDEX_GENERATION_NEVER;
+    XMC_POSIF_QD_Init(p, &qd);
+
+    XMC_POSIF_Start(p);
+
+    /* Initialise counter FIXME, allocate unit in some way */
+    XMC_CCU4_SetModuleClock(CCU40, XMC_CCU4_CLOCK_SCU);
+    XMC_CCU4_EnableModule(CCU40);
+    XMC_CCU4_Init(CCU40, XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+    ccu40.GIDLC=1;		// slice[0] out of idle
+
+    ccu40.cc[0].INS=ccu4_cc4_ns::ins_t({{
+	.ev0is=CCU40_IN0_POSIF0_OUT0,	// q_clock
+	.ev1is=CCU40_IN1_POSIF0_OUT1,	// q_dir
+	.ev2is=CCU40_IN2_POSIF0_OUT2,	// FIXME map this to CCU80 SR1
+	.ev0em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
+	.ev1em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
+	.ev2em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_NONE,
+	.ev0lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
+	.ev1lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_COUNT_UP_ON_LOW,
+	.ev2lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
+	.lpf0m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
+	.lpf1m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
+	.lpf2m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED
+    }}).raw;
+    ccu40.cc[0].CMC=ccu4_cc4_ns::cmc_t({{
+	.strts=0,	// no externa start
+	.ends=0,	// no external end
+	.cap0s=0,	// Should be mapped to CCU80 SR1
+	.cap1s=0,	// not external capture 1
+	.gates=0,	// no external gating
+	.uds=2,		// up/down
+	.lds=0,		// no external load
+	.cnts=1,	// count
+	.ofs=0,
+	.ts=0,
+	.mos=0,
+	.tce=0 
+    }}).raw; 
+    ccu40.cc[0].PRS=0xffff;	// 12-bit period (overflow somewhere)
+    ccu40.GCSS=1;		// transfer enable (to load period)
+    ccu40.cc[0].TIMER=(position/8)&0xffff; 
+    ccu40.cc[0].TCSET=1;	// timer ON
+}
+
+template <typename enc_a, typename enc_b, typename enc_z>
+void posif_t<enc_a,enc_b,enc_z>::posif_latch(void)
+{
+    int32_t nt=ccu40.cc[0].TIMER;
+    int32_t ot=timer&0xffff;
+
+    if(nt-ot>4000)
+	timer-=0x10000;
+    if(ot-nt>4000)
+	timer+=0x10000;
+    timer&=0xffff0000;
+    timer|=nt;
+}
+
+/*******************************************************************************
     Mitsubishi base class
 *******************************************************************************/
 class mitsubishi_encoder_t:public encoder_t {
@@ -360,7 +459,9 @@ int mitsubishi_encoder_t::detect(void)
 /*******************************************************************************
     Hiperface encoder
 *******************************************************************************/
-class hiperface_t:public encoder_t {
+class hiperface_t:public encoder_t, 
+    public posif_t<decltype(ENC_SIN),decltype(ENC_COS),decltype(ENC_Z)>
+{
     // FIXME, these settings are for the DS56S
     constexpr static int poles=3;
     constexpr static int increments_per_revolution=(1<<12);
@@ -370,7 +471,6 @@ class hiperface_t:public encoder_t {
     uint8_t rx_buffer[8];
     uint8_t tx_buffer[8];
     volatile int rx_put, tx_get, tx_len;
-    int32_t timer=0;
 public:
     virtual int32_t position(void);
     virtual float angle(void) { return conv*(timer&0xfff)+offset; }
@@ -403,15 +503,7 @@ private:
 
 void hiperface_t::trigger(void)
 {
-    int32_t nt=ccu40.cc[0].TIMER;
-    int32_t ot=timer&0xffff;
-
-    if(nt-ot>4000)
-	timer-=0x10000;
-    if(ot-nt>4000)
-	timer+=0x10000;
-    timer&=0xffff0000;
-    timer|=nt;
+    posif_latch();
 }
 
 int32_t hiperface_t::position(void) 
@@ -453,75 +545,6 @@ void hiperface_t::half_duplex(void)
     LED2=1;
 }
 
-#include "xmc_posif.h"
-
-void posif_init(uint32_t position)
-{
-    using namespace posif_ns;
-
-    static_assert(unit(ENC_COS)==unit(ENC_SIN),
-	"ENC_COS and ENC_SIN must be part of the same POSIF unit");
-    auto p=&posif[unit(ENC_COS)];
-
-    XMC_POSIF_CONFIG_t PCONF({{{
-	.mode=XMC_POSIF_MODE_QD,
-	.input0=pinA(ENC_SIN),
-	.input1=pinB(ENC_COS),
-	.input2=0,
-	.filter=7
-    }}});
-    XMC_POSIF_Init(p, &PCONF);
-
-    XMC_POSIF_QD_CONFIG_t qd;
-    qd.phase_a=0;
-    qd.phase_b=0;       /**< Phase-B active level configuration */
-    qd.phase_leader=0;  /**< Which of the two phase signals[Phase A or Phase B]
-			    leads the other? */
-    qd.index=XMC_POSIF_QD_INDEX_GENERATION_NEVER;
-    XMC_POSIF_QD_Init(p, &qd);
-
-    XMC_POSIF_Start(p);
-
-    /* Initialise counter FIXME, allocate unit in some way */
-    XMC_CCU4_SetModuleClock(CCU40, XMC_CCU4_CLOCK_SCU);
-    XMC_CCU4_EnableModule(CCU40);
-    XMC_CCU4_Init(CCU40, XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
-    ccu40.GIDLC=1;		// slice[0] out of idle
-
-    ccu40.cc[0].INS=ccu4_cc4_ns::ins_t({{
-	.ev0is=CCU40_IN0_POSIF0_OUT0,	// q_clock
-	.ev1is=CCU40_IN1_POSIF0_OUT1,	// q_dir
-	.ev2is=CCU40_IN2_POSIF0_OUT2,	// FIXME map this to CCU80 SR1
-	.ev0em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
-	.ev1em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
-	.ev2em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_NONE,
-	.ev0lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
-	.ev1lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_COUNT_UP_ON_LOW,
-	.ev2lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
-	.lpf0m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
-	.lpf1m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
-	.lpf2m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED
-    }}).raw;
-    ccu40.cc[0].CMC=ccu4_cc4_ns::cmc_t({{
-	.strts=0,	// no externa start
-	.ends=0,	// no external end
-	.cap0s=0,	// Should be mapped to CCU80 SR1
-	.cap1s=0,	// not external capture 1
-	.gates=0,	// no external gating
-	.uds=2,		// up/down
-	.lds=0,		// no external load
-	.cnts=1,	// count
-	.ofs=0,
-	.ts=0,
-	.mos=0,
-	.tce=0 
-    }}).raw; 
-    ccu40.cc[0].PRS=0xffff;	// 12-bit period (overflow somewhere)
-    ccu40.GCSS=1;		// transfer enable (to load period)
-    ccu40.cc[0].TIMER=(position/8)&0xffff; 
-    ccu40.cc[0].TCSET=1;	// timer ON
-}
-
 int hiperface_t::detect(void)
 {
     using namespace std::chrono;
@@ -558,7 +581,7 @@ int hiperface_t::detect(void)
 	+0x100L*p->rx_buffer[4]
 	+0x10000L*p->rx_buffer[3]
 	+0x1000000L*p->rx_buffer[2];
-    posif_init(position);
+    p->posif_init(position);
 
     return 1;
 }

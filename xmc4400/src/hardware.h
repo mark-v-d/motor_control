@@ -74,6 +74,10 @@ static iopin::input<14,6> ENC_COS;
 static iopin::input<2,6> MDAT;
 static iopin::DSD_MCLK1<1,8> MCLK;
 
+static iopin::input<1,3> ENC_A;
+static iopin::input<1,2> ENC_B;
+static iopin::input<1,1> ENC_Z;
+
 #endif
 
 #endif

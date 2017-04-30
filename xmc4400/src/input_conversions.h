@@ -3,7 +3,7 @@
 
 /*********
     FIXME, most of this file can be generated.
-    POSIF is an exception.
+    POSIF is an exception. (but is complete for the XMC4400)
     FIXME, the 
 *********/
 
@@ -106,18 +106,28 @@ constexpr inline IRQn_Type irq(iopin::pinBase<port,pin> const &i)
 
 namespace posif_ns {
 BASE__FUNCTION(unit, int);
+SPECIALISATION(unit, int, 1, 1, 0); 	// posif 0A
+SPECIALISATION(unit, int, 1, 2, 0);
+SPECIALISATION(unit, int, 1, 3, 0);
+SPECIALISATION(unit, int, 14, 5, 0);	// posif 0B
 SPECIALISATION(unit, int, 14, 6, 0);
-SPECIALISATION(unit, int, 14, 7, 0);
+SPECIALISATION(unit, int, 14, 7, 0); 
+SPECIALISATION(unit, int, 2, 3, 1); 	// posif 1A
+SPECIALISATION(unit, int, 2, 4, 1);
+SPECIALISATION(unit, int, 2, 5, 1);
 
 BASE__FUNCTION(pinZ, int);
 BASE__FUNCTION(pinB, int);
 BASE__FUNCTION(pinA, int);
-SPECIALISATION(pinZ, int,  2, 3, 0);
-SPECIALISATION(pinB, int,  2, 4, 0);
-SPECIALISATION(pinA, int,  2, 5, 0);
-SPECIALISATION(pinZ, int, 14, 5, 1);
+SPECIALISATION(pinZ, int,  1, 1, 0);	// posif 0A
+SPECIALISATION(pinB, int,  1, 2, 0);
+SPECIALISATION(pinA, int,  1, 3, 0);
+SPECIALISATION(pinZ, int, 14, 5, 1);	// posif 0B
 SPECIALISATION(pinB, int, 14, 6, 1);
 SPECIALISATION(pinA, int, 14, 7, 1);
+SPECIALISATION(pinZ, int,  2, 3, 0);	// posif 1A
+SPECIALISATION(pinB, int,  2, 4, 0);
+SPECIALISATION(pinA, int,  2, 5, 0);
 }
 
 namespace dsd_ch_ns {
