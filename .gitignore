@@ -5,4 +5,5 @@ t
 *.tmp
 *.sym
 .*.d
+*.pyc
 octave-workspace
