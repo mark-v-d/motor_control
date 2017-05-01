@@ -151,6 +151,7 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
     using namespace posif_ns;
     iopin::input<enc_a::PORT,enc_a::PIN> s0;
     iopin::input<enc_b::PORT,enc_b::PIN> s90;
+    iopin::input<enc_z::PORT,enc_z::PIN> z;
 
     static_assert(unit(s90)==unit(s0),
 	"s90 and s0 must be part of the same POSIF unit");
@@ -160,7 +161,7 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
 	.mode=XMC_POSIF_MODE_QD,
 	.input0=pinA(s0),
 	.input1=pinB(s90),
-	.input2=0,
+	.input2=pinZ(z),
 	.filter=7
     }}});
     XMC_POSIF_Init(p, &PCONF);
@@ -170,7 +171,7 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
     qd.phase_b=0;       /**< Phase-B active level configuration */
     qd.phase_leader=0;  /**< Which of the two phase signals[Phase A or Phase B]
 			    leads the other? */
-    qd.index=XMC_POSIF_QD_INDEX_GENERATION_NEVER;
+    qd.index=XMC_POSIF_QD_INDEX_GENERATION_ALWAYS;
     XMC_POSIF_QD_Init(p, &qd);
 
     XMC_POSIF_Start(p);
@@ -184,10 +185,10 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
     ccu40.cc[0].INS=ccu4_cc4_ns::ins_t({{
 	.ev0is=CCU40_IN0_POSIF0_OUT0,	// q_clock
 	.ev1is=CCU40_IN1_POSIF0_OUT1,	// q_dir
-	.ev2is=CCU40_IN2_POSIF0_OUT2,	// FIXME map this to CCU80 SR1
+	.ev2is=CCU40_IN2_POSIF0_OUT3,	// index
 	.ev0em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
 	.ev1em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
-	.ev2em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_NONE,
+	.ev2em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
 	.ev0lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
 	.ev1lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_COUNT_UP_ON_LOW,
 	.ev2lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
@@ -196,9 +197,9 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
 	.lpf2m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED
     }}).raw;
     ccu40.cc[0].CMC=ccu4_cc4_ns::cmc_t({{
-	.strts=0,	// no externa start
+	.strts=0,	// no external start
 	.ends=0,	// no external end
-	.cap0s=0,	// Should be mapped to CCU80 SR1
+	.cap0s=3,	// index
 	.cap1s=0,	// not external capture 1
 	.gates=0,	// no external gating
 	.uds=2,		// up/down
@@ -232,7 +233,9 @@ void posif_t<enc_a,enc_b,enc_z>::posif_latch(void)
 /*******************************************************************************
     Mitsubishi base class
 *******************************************************************************/
-class mitsubishi_encoder_t:public encoder_t {
+class mitsubishi_encoder_t:public encoder_t,
+    public posif_t<decltype(ENC_A),decltype(ENC_B), decltype(ENC_Z)>
+{
 protected:
     int putp;
     uint8_t rx_buffer[16];
@@ -353,6 +356,7 @@ void mitsubishi_MFS13_t::trigger(void)
     ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL 
 	| XMC_GPIO_MODE_OUTPUT_ALT2));
     putp=0;
+    posif_latch();
     ENC_TXD=0x1a;
 }
 
@@ -402,6 +406,7 @@ void mitsubishi_PQ_t::trigger(void)
 	| XMC_GPIO_MODE_OUTPUT_ALT2));
     putp=0;
     ENC_TXD=0x1a;
+    posif_latch();
     LED2=1;
 }
 

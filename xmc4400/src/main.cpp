@@ -77,6 +77,8 @@ extern "C" void CCU80_0_IRQHandler(void)
 	out.adc[i]=(int32_t(vadc.G[i].RES[0]&0xffff)-adc_offset[i])*adc_scale[i];
     out.vservo=dsd.ch[dsd_ch_ns::channel(MDAT)].RESM*servo_factor;
 
+    out.counter= uint32_t(ccu40.cc[0].TIMER)<<16 | ccu40.cc[0].CV[1];
+
     float current[3];
     current[0]=out.adc[0];
     current[1]=out.adc[3];
