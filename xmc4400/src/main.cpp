@@ -71,25 +71,27 @@ extern "C" void CCU80_0_IRQHandler(void)
     static uint32_t counter;
     uint32_t output_scale=pwm.get_period();
 
-
     LED2=0;
     for(int i=0;i<4;i++)
 	out.adc[i]=(int32_t(vadc.G[i].RES[0]&0xffff)-adc_offset[i])*adc_scale[i];
     out.vservo=dsd.ch[dsd_ch_ns::channel(MDAT)].RESM*servo_factor;
 
-    out.counter= uint32_t(ccu40.cc[0].TIMER)<<16 | ccu40.cc[0].CV[1];
+    out.counter= uint32_t(ccu40.cc[0].CV[1])<<16 | ccu40.cc[0].TIMER;
 
     float current[3];
     current[0]=out.adc[0];
     current[1]=out.adc[3];
     current[2]=-current[0]-current[1];
 
-    if(!encoder->valid()) {
+    int valid=encoder->valid();
+
+    if(!valid) {
 	out.angle=1000;
 	LED1=0;
-    } else
+    } else {
 	LED1=1;
-    out.position=encoder->position();
+	out.position=encoder->position();
+    }
 
     switch(state) {
     case STARTUP:
@@ -119,18 +121,7 @@ extern "C" void CCU80_0_IRQHandler(void)
 	break;
     }
 
-    if(!encoder->valid() && !state==MANUAL_ANGLE) {
-	switch(state) {
-	case ACTIVE:
-	    HBEN=1;
-	    HB0=hb[0];
-	    HB1=hb[1];
-	    HB2=hb[2];
-	    break;
-	default:
-	    HBEN=0;
-	}
-    } else {
+    if(valid) {
 	float angle=encoder->angle();
 	if(state==MANUAL_ANGLE || state==MANUAL_VOLTAGE)
 	    angle=manual_angle;
@@ -209,7 +200,7 @@ extern "C" void CCU80_1_IRQHandler(void)
 /* This interrupt is used to transfer the data */
 extern "C" void CCU80_3_IRQHandler(void)
 {
-    LED2=0;
+    LED3=0;
     static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
     static_assert(pwm.transfer_irq==3, "Wrong handler");
     constexpr uint32_t shadow_transfer=0x1111
@@ -217,34 +208,34 @@ extern "C" void CCU80_3_IRQHandler(void)
 	| (2<<4*ccu8_ns::slice(HB1))
 	| (2<<4*ccu8_ns::slice(HB2));
     ccu8[ccu8_ns::unit(HB0)].GCSS=shadow_transfer;
-    LED2=1;
+    LED3=1;
 }
 
 /* Receive interrupt (full-duplex serial) */
 extern "C" void USIC0_0_IRQHandler(void)
 {
-    // LED3=0;
+    LED3=0;
     static_assert(encoder_t::fd_irq==0, "Full duplex should be mapped to IRQ0");
     static_assert(usic_ch_ns::unit(ENC_RXD)==0, "Invalid unit mapping");
     encoder->full_duplex();
-    // LED3=1;
+    LED3=1;
 }
 
 /* Mapped to Frame finished (half-duplex serial) */
 extern "C" void USIC0_1_IRQHandler(void)
 {
-    // LED0=0;
+    LED3=0;
     static_assert(encoder_t::hd_irq==1, "Half duplex should be mapped to IRQ1");
     static_assert(usic_ch_ns::unit(ENC_TXD)==0, "Invalid unit mapping");
     encoder->half_duplex();
-    // LED0=1;
+    LED3=1;
 }
 
 extern "C" void VADC0_G0_0_IRQHandler(void)
 {
-    LED1=0;
+    LED3=0;
     vadc.G[0].REFCLR=vadc.G[0].REFLAG;
-    LED1=1;
+    LED3=1;
 }
 
 void init_adc(void);

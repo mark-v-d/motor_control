@@ -180,54 +180,51 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
     XMC_CCU4_SetModuleClock(CCU40, XMC_CCU4_CLOCK_SCU);
     XMC_CCU4_EnableModule(CCU40);
     XMC_CCU4_Init(CCU40, XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
-    ccu40.GIDLC=1;		// slice[0] out of idle
+    ccu40.GIDLC=3;		// slice[0] out of idle
 
-    ccu40.cc[0].INS=ccu4_cc4_ns::ins_t({{
-	.ev0is=CCU40_IN0_POSIF0_OUT0,	// q_clock
-	.ev1is=CCU40_IN1_POSIF0_OUT1,	// q_dir
-	.ev2is=CCU40_IN2_POSIF0_OUT3,	// index
-	.ev0em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
-	.ev1em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
-	.ev2em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
-	.ev0lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
-	.ev1lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_COUNT_UP_ON_LOW,
-	.ev2lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
-	.lpf0m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
-	.lpf1m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
-	.lpf2m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED
-    }}).raw;
-    ccu40.cc[0].CMC=ccu4_cc4_ns::cmc_t({{
-	.strts=0,	// no external start
-	.ends=0,	// no external end
-	.cap0s=3,	// index
-	.cap1s=0,	// not external capture 1
-	.gates=0,	// no external gating
-	.uds=2,		// up/down
-	.lds=0,		// no external load
-	.cnts=1,	// count
-	.ofs=0,
-	.ts=0,
-	.mos=0,
-	.tce=0 
-    }}).raw; 
+    for(uint32_t i=0;i<2;i++) {
+	ccu40.cc[i].INS=ccu4_cc4_ns::ins_t({{
+	    .ev0is=CCU40_IN0_POSIF0_OUT0,	// q_clock
+	    .ev1is=CCU40_IN1_POSIF0_OUT1,	// q_dir
+	    .ev2is=CCU40_IN2_POSIF0_OUT3,	// index
+	    .ev0em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
+	    .ev1em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
+	    .ev2em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
+	    .ev0lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
+	    .ev1lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_COUNT_UP_ON_LOW,
+	    .ev2lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
+	    .lpf0m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
+	    .lpf1m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
+	    .lpf2m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED
+	}}).raw;
+	ccu40.cc[i].CMC=ccu4_cc4_ns::cmc_t({{
+	    .strts=0,	// no external start
+	    .ends=0,	// no external end
+	    .cap0s=3,	// index
+	    .cap1s=0,	// not external capture 1
+	    .gates=0,	// no external gating
+	    .uds=2,	// up/down
+	    .lds=0,	// no external load
+	    .cnts=1,	// count
+	    .ofs=0,
+	    .ts=0,
+	    .mos=0,
+	    .tce=i 
+	}}).raw; 
+    }
     ccu40.cc[0].PRS=0xffff;	// 12-bit period (overflow somewhere)
-    ccu40.GCSS=1;		// transfer enable (to load period)
+    ccu40.cc[1].PRS=0xffff;	// 12-bit period (overflow somewhere)
+    ccu40.GCSS=0x11;		// transfer enable (to load period)
     ccu40.cc[0].TIMER=(position/8)&0xffff; 
     ccu40.cc[0].TCSET=1;	// timer ON
+    ccu40.cc[1].TIMER=(position>>(3+16))&0xffff; 
+    ccu40.cc[1].TCSET=1;	// timer ON
 }
 
 template <typename enc_a, typename enc_b, typename enc_z>
-void posif_t<enc_a,enc_b,enc_z>::posif_latch(void)
+inline void posif_t<enc_a,enc_b,enc_z>::posif_latch(void)
 {
-    int32_t nt=ccu40.cc[0].TIMER;
-    int32_t ot=timer&0xffff;
-
-    if(nt-ot>4000)
-	timer-=0x10000;
-    if(ot-nt>4000)
-	timer+=0x10000;
-    timer&=0xffff0000;
-    timer|=nt;
+    timer=ccu40.cc[0].TIMER | (ccu40.cc[1].TIMER<<16);
 }
 
 /*******************************************************************************
@@ -259,36 +256,37 @@ inline void mitsubishi_encoder_t::read_fifo(void)
 {
     if(!putp) {
 	using namespace usic_ch_ns;
-	XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
-	trbsr_t status;
-	while(status.raw=channel->TRBSR, !status.rempty) {
-	    rx_buffer[putp++]=channel->OUTR;
+	constexpr XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
+	for(;;) {
+	    trbsr_t status={.raw=channel->TRBSR};
+	    if(status.rempty) 
+		break;
+	    if(putp<sizeof(rx_buffer))
+		rx_buffer[putp++]=channel->OUTR;
+	    else
+		int dummy=channel->OUTR;
 	}
     }
 }
 
 void mitsubishi_encoder_t::half_duplex(void)
 {
-    LED2=0;
     using namespace usic_ch_ns;
     ENC_TXD.set(XMC_GPIO_MODE_INPUT_TRISTATE);
     ENC_DIR=0;
     NVIC_DisableIRQ(irq<hd_irq>(ENC_TXD));
 
-    XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
+    constexpr XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
     uint32_t reason=channel->PSR;
     channel->PSCR=reason;
-    LED2=1;
 }
 
 void mitsubishi_encoder_t::full_duplex(void)
 {
-    LED2=0;
     using namespace usic_ch_ns;
     XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
     channel->PSCR=channel->PSR;
     rx_buffer[putp++]=channel->OUTR;
-    LED2=1;
 }
 
 void mitsubishi_encoder_t::serial_tx(uint8_t data)
@@ -340,8 +338,9 @@ int32_t mitsubishi_MFS13_t::position(void)
 bool mitsubishi_MFS13_t::valid(void)
 {
     read_fifo();
-    if(putp!=10)
+    if(putp!=10) {
 	return false;
+    }
     uint8_t crc=0;
     for(int i=1;i<putp;i++)
 	crc^=rx_buffer[i];
@@ -355,9 +354,9 @@ void mitsubishi_MFS13_t::trigger(void)
     NVIC_EnableIRQ(usic_ch_ns::irq<hd_irq>(ENC_TXD));
     ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL 
 	| XMC_GPIO_MODE_OUTPUT_ALT2));
+    ENC_TXD=0x1a;
     putp=0;
     posif_latch();
-    ENC_TXD=0x1a;
 }
 
 /* HC-PQ[24]3 motor ***********************************************************/
@@ -394,20 +393,17 @@ bool mitsubishi_PQ_t::valid(void)
     uint8_t crc=0;
     for(int i=0;i<putp;i++)
 	crc^=rx_buffer[i];
-    LED1=crc==0;
     return crc==0;
 }
 
 void mitsubishi_PQ_t::trigger(void)
 {
-    LED2=0;
     ENC_DIR=1;
     ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL 
 	| XMC_GPIO_MODE_OUTPUT_ALT2));
     putp=0;
     ENC_TXD=0x1a;
     posif_latch();
-    LED2=1;
 }
 
 /******************************************************************************/
@@ -437,6 +433,7 @@ int mitsubishi_encoder_t::detect(void)
     // First try to use half-duplex mode
     p->serial_tx(0x1a);
     if(p->putp==10) {
+	p->posif_init(0);
 	encoder=std::make_unique<mitsubishi_MFS13_t>();
 	return 1;
     }
@@ -457,6 +454,7 @@ int mitsubishi_encoder_t::detect(void)
 	return 0;
     }
 
+    // p->posif_init(0);
     encoder=std::make_unique<mitsubishi_PQ_t>();
     return 1;
 }
@@ -529,7 +527,6 @@ int32_t hiperface_t::position(void)
 
 void hiperface_t::half_duplex(void)
 {
-    LED2=0;
     XMC_USIC_CH_t *usic=ENC_TXD;
     uint32_t reason=usic->PSR;
     if(reason & USIC_CH_PSR_ASCMode_RFF_Msk) {
@@ -547,7 +544,6 @@ void hiperface_t::half_duplex(void)
 	}
     } 
     usic->PSCR=reason;
-    LED2=1;
 }
 
 int hiperface_t::detect(void)
