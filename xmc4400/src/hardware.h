@@ -5,6 +5,7 @@
 #include <atomic>
 #include <stdint.h>
 #include "gpio.h"
+#include "pwm_3phase.h"
 
 constexpr float trigger_HZ=4500.0;
 
@@ -77,6 +78,17 @@ static iopin::DSD_MCLK1<1,8> MCLK;
 static iopin::input<1,3> ENC_A;
 static iopin::input<1,2> ENC_B;
 static iopin::input<1,1> ENC_Z;
+
+
+extern pwm_3phase <decltype(HB0),decltype(HB1),decltype(HB2)>pwm;
+
+/*
+    Allocated units:
+    CCU80 -> PWM
+    CCU40 -> POSIF0
+    CCU41 -> POSIF1 (FIXME, do this)
+    ERU1,ETLx,OGU2 -> x=pwm.spare_slice(), latch posif counter
+*/
 
 #endif
 

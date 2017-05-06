@@ -27,8 +27,8 @@ public:
     static int constexpr adc_irq=2;
     static int constexpr transfer_irq=3;
 
-private:
     constexpr int spare_slice(void);
+private:
     static constexpr int module=ccu8_ns::unit<A>();
 };
 
@@ -114,7 +114,7 @@ pwm_3phase<A,B,C>::pwm_3phase(unsigned frequency)
 	cc.CMC=CMC_t{{.EXTERNAL_START=1}};  // use EVENT0 to start
 	cc.TCCLR=TCCLR_t{{.TIMER_STOP=1, .TIMER_CLEAR=1}};
 	cc.TC=ccu8_cc8_ns::tc_t({{
-	    .tcm=0,		// center aligned
+	    .tcm=0,		// edge aligned
 	    .tssm=0,
 	    .clst=1,
 	    .cmod=0,
@@ -125,7 +125,7 @@ pwm_3phase<A,B,C>::pwm_3phase(unsigned frequency)
 	    .strm=1,		// External start also clears the counter
 	    .sce=0,		// Equal Capture Event enable
 	    .ccs=0,		// Continuous Capture Enable
-	    .dithe=0,		// no sither
+	    .dithe=0,		// no dither
 	    .dim=0		// Dither input selector
 	}}).raw;
 	cc.PRS=8*period-1;
@@ -211,5 +211,4 @@ inline void pwm_3phase<A,B,C>::set_timestamp(void)
     ccu8[unit<A>()].cc[spare_slice()].PRS=timer;
 }
 
-extern pwm_3phase<decltype(HB0),decltype(HB1),decltype(HB2)> pwm;
 #endif

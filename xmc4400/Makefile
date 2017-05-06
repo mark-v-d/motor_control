@@ -10,7 +10,7 @@ endif
 OBJS=main.o startup_$(DEVICE).o system_$(DEVICE).o ethernet.o icmp.o system.o 
 OBJS+=udp_sync.o
 OBJS+=xmc4_scu.o xmc_ccu8.o xmc_usic.o xmc_uart.o xmc4_gpio.o encoder.o 
-OBJS+=xmc_posif.o xmc_ccu4.o
+OBJS+=xmc_posif.o xmc_ccu4.o xmc_eru.o xmc4_eru.o
 # xmc_eth_mac.o 
 # xmc_eth_phy_ksz8031rnl.o
 

@@ -3,6 +3,7 @@
 
 #include "xmc_scu.h"
 #include "xmc_ccu4.h"
+#include "xmc_eru.h"
 
 #include <atomic>
 #include <math.h>
@@ -212,13 +213,61 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
 	    .tce=i 
 	}}).raw; 
     }
-    ccu40.cc[0].PRS=0xffff;	// 12-bit period (overflow somewhere)
-    ccu40.cc[1].PRS=0xffff;	// 12-bit period (overflow somewhere)
-    ccu40.GCSS=0x11;		// transfer enable (to load period)
+    for(uint32_t i=2;i<4;i++) {
+	ccu40.cc[i].INS=ccu4_cc4_ns::ins_t({{
+	    .ev0is=CCU40_IN0_POSIF0_OUT0,	// q_clock
+	    .ev1is=CCU40_IN1_POSIF0_OUT1,	// q_dir
+	    .ev2is=CCU40_IN2_SCU_ERU1_IOUT2,	// latch on CCU80
+	    .ev0em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
+	    .ev1em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
+	    .ev2em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
+	    .ev0lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
+	    .ev1lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_COUNT_UP_ON_LOW,
+	    .ev2lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
+	    .lpf0m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
+	    .lpf1m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
+	    .lpf2m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED
+	}}).raw;
+	ccu40.cc[i].CMC=ccu4_cc4_ns::cmc_t({{
+	    .strts=0,	// no external start
+	    .ends=0,	// no external end
+	    .cap0s=3,	// index
+	    .cap1s=0,	// not external capture 1
+	    .gates=0,	// no external gating
+	    .uds=2,	// up/down
+	    .lds=0,	// no external load
+	    .cnts=1,	// count
+	    .ofs=0,
+	    .ts=0,
+	    .mos=0,
+	    .tce=i 
+	}}).raw; 
+    }
+    for(int i=0;i<4;i++)
+	ccu40.cc[i].PRS=0xffff;	// 16-bit period
+    ccu40.GCSS=0x1111;		// transfer enable (to load period)
     ccu40.cc[0].TIMER=(position/8)&0xffff; 
-    ccu40.cc[0].TCSET=1;	// timer ON
+    ccu40.cc[2].TIMER=(position/8)&0xffff; 
     ccu40.cc[1].TIMER=(position>>(3+16))&0xffff; 
-    ccu40.cc[1].TCSET=1;	// timer ON
+    ccu40.cc[3].TIMER=(position>>(3+16))&0xffff; 
+    for(int i=0;i<4;i++)
+	ccu40.cc[i].TCSET=1;	// timer ON
+
+    XMC_ERU_Enable(XMC_ERU1);
+    XMC_ERU_ETL_SetInput(XMC_ERU1, pwm.spare_slice(), XMC_ERU_ETL_INPUT_A0, 
+	ERU1_ETL0_INPUTB_CCU80_ST0);
+    XMC_ERU_ETL_SetSource(XMC_ERU1, pwm.spare_slice(), XMC_ERU_ETL_SOURCE_B);
+    XMC_ERU_ETL_SetEdgeDetection(XMC_ERU1, pwm.spare_slice(), 
+	XMC_ERU_ETL_EDGE_DETECTION_FALLING);
+    XMC_ERU_ETL_SetStatusFlagMode(XMC_ERU1, pwm.spare_slice(), 
+	XMC_ERU_ETL_STATUS_FLAG_MODE_HWCTRL);
+    XMC_ERU_ETL_EnableOutputTrigger(XMC_ERU1, pwm.spare_slice(), 
+	XMC_ERU_ETL_OUTPUT_TRIGGER_CHANNEL2);
+
+    XMC_ERU_OGU_DisablePatternDetection(XMC_ERU1, 2);
+    XMC_ERU_OGU_DisablePeripheralTrigger(XMC_ERU1, 2);
+    XMC_ERU_OGU_SetServiceRequestMode(XMC_ERU1, 2, 
+	XMC_ERU_OGU_SERVICE_REQUEST_ON_TRIGGER);
 }
 
 template <typename enc_a, typename enc_b, typename enc_z>
