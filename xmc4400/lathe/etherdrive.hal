@@ -10,6 +10,7 @@ setp J0_drive.kI-0 [JOINT_0]I_cur
 setp J0_drive.kI-1 [JOINT_0]I_cur
 setp J0_drive.lim 0.85
 setp J0_drive.scale [JOINT_0]SCALE
+setp J0_drive.scale2 1
 
 ################################################################################
 net Zoutput => J1_drive.Iset-1
@@ -21,6 +22,7 @@ setp J1_drive.kI-0 [JOINT_1]I_cur
 setp J1_drive.kI-1 [JOINT_1]I_cur
 setp J1_drive.lim 0.85
 setp J1_drive.scale [JOINT_1]SCALE
+setp J1_drive.scale2 1
 
 
 # The sync function should be the first function in the servo thread

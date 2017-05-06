@@ -324,6 +324,7 @@ inline void mitsubishi_encoder_t::read_fifo(void)
     }
 }
 
+__attribute__((section(".ram_code")))
 void mitsubishi_encoder_t::half_duplex(void)
 {
     using namespace usic_ch_ns;

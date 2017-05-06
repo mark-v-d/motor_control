@@ -224,7 +224,9 @@ extern "C" void USIC0_0_IRQHandler(void)
 }
 
 /* Mapped to Frame finished (half-duplex serial) */
-extern "C" void USIC0_1_IRQHandler(void)
+extern "C"
+__attribute__((section(".ram_code")))
+void USIC0_1_IRQHandler(void)
 {
     LED3=0;
     static_assert(encoder_t::hd_irq==1, "Half duplex should be mapped to IRQ1");

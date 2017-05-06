@@ -248,6 +248,8 @@ static int export_pins(char *prefix, long index)
     FP_OUT(output[1],output-1);
     FP_OUT(output[2],output-2);
     FP_OUT(vservo,vservo);
+    FP_OUT(position2,position2);
+    FP_OUT(index2,index2);
 
     // Local settings
     FP_IN(scale,scale);
