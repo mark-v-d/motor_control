@@ -145,6 +145,7 @@ public:
     void posif_latch(void);
 };
 
+// FIXME, this only works for POSIF0, POSIF1 needs ccu41
 template <typename enc_a, typename enc_b, typename enc_z>
 void posif_t<enc_a,enc_b,enc_z>::posif_init(
     uint32_t position
@@ -177,82 +178,6 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
 
     XMC_POSIF_Start(p);
 
-    /* Initialise counter FIXME, allocate unit in some way */
-    XMC_CCU4_SetModuleClock(CCU40, XMC_CCU4_CLOCK_SCU);
-    XMC_CCU4_EnableModule(CCU40);
-    XMC_CCU4_Init(CCU40, XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
-    ccu40.GIDLC=3;		// slice[0] out of idle
-
-    for(uint32_t i=0;i<2;i++) {
-	ccu40.cc[i].INS=ccu4_cc4_ns::ins_t({{
-	    .ev0is=CCU40_IN0_POSIF0_OUT0,	// q_clock
-	    .ev1is=CCU40_IN1_POSIF0_OUT1,	// q_dir
-	    .ev2is=CCU40_IN2_POSIF0_OUT3,	// index
-	    .ev0em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
-	    .ev1em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
-	    .ev2em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
-	    .ev0lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
-	    .ev1lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_COUNT_UP_ON_LOW,
-	    .ev2lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
-	    .lpf0m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
-	    .lpf1m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
-	    .lpf2m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED
-	}}).raw;
-	ccu40.cc[i].CMC=ccu4_cc4_ns::cmc_t({{
-	    .strts=0,	// no external start
-	    .ends=0,	// no external end
-	    .cap0s=3,	// index
-	    .cap1s=0,	// not external capture 1
-	    .gates=0,	// no external gating
-	    .uds=2,	// up/down
-	    .lds=0,	// no external load
-	    .cnts=1,	// count
-	    .ofs=0,
-	    .ts=0,
-	    .mos=0,
-	    .tce=i 
-	}}).raw; 
-    }
-    for(uint32_t i=2;i<4;i++) {
-	ccu40.cc[i].INS=ccu4_cc4_ns::ins_t({{
-	    .ev0is=CCU40_IN0_POSIF0_OUT0,	// q_clock
-	    .ev1is=CCU40_IN1_POSIF0_OUT1,	// q_dir
-	    .ev2is=CCU40_IN2_SCU_ERU1_IOUT2,	// latch on CCU80
-	    .ev0em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
-	    .ev1em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
-	    .ev2em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
-	    .ev0lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
-	    .ev1lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_COUNT_UP_ON_LOW,
-	    .ev2lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
-	    .lpf0m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
-	    .lpf1m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
-	    .lpf2m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED
-	}}).raw;
-	ccu40.cc[i].CMC=ccu4_cc4_ns::cmc_t({{
-	    .strts=0,	// no external start
-	    .ends=0,	// no external end
-	    .cap0s=3,	// index
-	    .cap1s=0,	// not external capture 1
-	    .gates=0,	// no external gating
-	    .uds=2,	// up/down
-	    .lds=0,	// no external load
-	    .cnts=1,	// count
-	    .ofs=0,
-	    .ts=0,
-	    .mos=0,
-	    .tce=i 
-	}}).raw; 
-    }
-    for(int i=0;i<4;i++)
-	ccu40.cc[i].PRS=0xffff;	// 16-bit period
-    ccu40.GCSS=0x1111;		// transfer enable (to load period)
-    ccu40.cc[0].TIMER=(position/8)&0xffff; 
-    ccu40.cc[2].TIMER=(position/8)&0xffff; 
-    ccu40.cc[1].TIMER=(position>>(3+16))&0xffff; 
-    ccu40.cc[3].TIMER=(position>>(3+16))&0xffff; 
-    for(int i=0;i<4;i++)
-	ccu40.cc[i].TCSET=1;	// timer ON
-
     XMC_ERU_Enable(XMC_ERU1);
     XMC_ERU_ETL_SetInput(XMC_ERU1, pwm.spare_slice(), XMC_ERU_ETL_INPUT_A0, 
 	ERU1_ETL0_INPUTB_CCU80_ST0);
@@ -262,12 +187,87 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
     XMC_ERU_ETL_SetStatusFlagMode(XMC_ERU1, pwm.spare_slice(), 
 	XMC_ERU_ETL_STATUS_FLAG_MODE_HWCTRL);
     XMC_ERU_ETL_EnableOutputTrigger(XMC_ERU1, pwm.spare_slice(), 
-	XMC_ERU_ETL_OUTPUT_TRIGGER_CHANNEL2);
+	XMC_ERU_ETL_OUTPUT_TRIGGER_CHANNEL1);
 
-    XMC_ERU_OGU_DisablePatternDetection(XMC_ERU1, 2);
-    XMC_ERU_OGU_DisablePeripheralTrigger(XMC_ERU1, 2);
-    XMC_ERU_OGU_SetServiceRequestMode(XMC_ERU1, 2, 
+    XMC_ERU_OGU_DisablePatternDetection(XMC_ERU1, 1);
+    XMC_ERU_OGU_DisablePeripheralTrigger(XMC_ERU1, 1);
+    XMC_ERU_OGU_SetServiceRequestMode(XMC_ERU1, 1, 
 	XMC_ERU_OGU_SERVICE_REQUEST_ON_TRIGGER);
+
+    /* Initialise counter FIXME, allocate unit in some way */
+    XMC_CCU4_SetModuleClock(CCU40, XMC_CCU4_CLOCK_SCU);
+    XMC_CCU4_EnableModule(CCU40);
+    XMC_CCU4_Init(CCU40, XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+    ccu40.GIDLC=0x100;		// pre-scaler out of idle
+
+    // Slice 0 latches the index pulse
+    ccu40.cc[0].INS=ccu4_cc4_ns::ins_t({{
+	.ev0is=CCU40_IN0_POSIF0_OUT0,	// q_clock
+	.ev1is=CCU40_IN0_POSIF0_OUT1,	// q_dir
+	.ev2is=CCU40_IN0_POSIF0_OUT3,	// index
+	.ev0em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
+	.ev1em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_NONE,
+	.ev2em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
+	.ev0lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
+	.ev1lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_COUNT_UP_ON_LOW,
+	.ev2lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
+	.lpf0m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
+	.lpf1m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
+	.lpf2m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED
+    }}).raw;
+    ccu40.cc[0].CMC=ccu4_cc4_ns::cmc_t({{
+	.strts=0,	// no external start
+	.ends=0,	// no external end
+	.cap0s=3,	// index
+	.cap1s=0,	// not external capture 1
+	.gates=0,	// no external gating
+	.uds=2,	// up/down
+	.lds=0,	// no external load
+	.cnts=1,	// count
+	.ofs=0,
+	.ts=0,
+	.mos=0,
+	.tce=0 
+    }}).raw; 
+
+    // slice 1 latches at the interrupt
+    ccu40.cc[1].INS=ccu4_cc4_ns::ins_t({{
+	.ev0is=CCU40_IN1_POSIF0_OUT0,	// q_clock
+	.ev1is=CCU40_IN1_POSIF0_OUT1,	// q_dir
+	.ev2is=CCU40_IN1_SCU_ERU1_IOUT1, // latch
+	.ev0em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
+	.ev1em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_NONE,
+	.ev2em=XMC_CCU4_SLICE_EVENT_EDGE_SENSITIVITY_RISING_EDGE,
+	.ev0lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
+	.ev1lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_COUNT_UP_ON_LOW,
+	.ev2lm=XMC_CCU4_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_HIGH,
+	.lpf0m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
+	.lpf1m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED,
+	.lpf2m=XMC_CCU4_SLICE_EVENT_FILTER_DISABLED
+    }}).raw;
+    ccu40.cc[1].CMC=ccu4_cc4_ns::cmc_t({{
+	.strts=0,	// no external start
+	.ends=0,	// no external end
+	.cap0s=3,	// index
+	.cap1s=0,	// not external capture 1
+	.gates=0,	// no external gating
+	.uds=2,	// up/down
+	.lds=0,	// no external load
+	.cnts=1,	// count
+	.ofs=0,
+	.ts=0,
+	.mos=0,
+	.tce=0
+    }}).raw; 
+
+    for(int i=0;i<2;i++)
+	ccu40.cc[i].PRS=0xffff;	// 16-bit period
+    ccu40.GCSS=0x11;		// transfer enable (to load period)
+    ccu40.cc[0].TIMER=(position/8)&0xffff;
+    ccu40.cc[1].TIMER=(position>>(3+16))&0xffff;
+    ccu40.GIDLC=0x3;		// slice[0] out of idle
+    for(int i=0;i<2;i++)
+	ccu40.cc[i].TCSET=1;	// timer ON
 }
 
 template <typename enc_a, typename enc_b, typename enc_z>
@@ -321,8 +321,8 @@ inline void mitsubishi_encoder_t::read_fifo(void)
 void mitsubishi_encoder_t::half_duplex(void)
 {
     using namespace usic_ch_ns;
-    ENC_TXD.set(XMC_GPIO_MODE_INPUT_TRISTATE);
     ENC_DIR=0;
+    ENC_TXD.set(XMC_GPIO_MODE_INPUT_TRISTATE);
     NVIC_DisableIRQ(irq<hd_irq>(ENC_TXD));
 
     constexpr XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
@@ -384,28 +384,41 @@ int32_t mitsubishi_MFS13_t::position(void)
 	+(1<<28)*(rx_buffer[7]&0x0f);
 }
 
+char wrong[16], right[16];
+int wrong_length;
 bool mitsubishi_MFS13_t::valid(void)
 {
     read_fifo();
-    if(putp!=10) {
+    if(putp!=10 && putp!=9) {
+	for(int i=0;i<putp;i++)
+	    wrong[i]=rx_buffer[i];
+	wrong_length=putp;
 	return false;
     }
     uint8_t crc=0;
-    for(int i=1;i<putp;i++)
+    for(int i=putp-9;i<putp;i++)
 	crc^=rx_buffer[i];
+    if(crc!=0) {
+	for(int i=0;i<putp;i++)
+	    wrong[i]=rx_buffer[i];
+	wrong_length=putp;
+	return false;
+    } else {
+	for(int i=0;i<putp;i++)
+	    right[i]=rx_buffer[i];
+    }
     return crc==0;
 }
 
 void mitsubishi_MFS13_t::trigger(void)
 {
     ENC_DIR=1;
+    putp=0;
     NVIC_ClearPendingIRQ(usic_ch_ns::irq<hd_irq>(ENC_TXD));
     NVIC_EnableIRQ(usic_ch_ns::irq<hd_irq>(ENC_TXD));
     ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL 
 	| XMC_GPIO_MODE_OUTPUT_ALT2));
     ENC_TXD=0x1a;
-    putp=0;
-    posif_latch();
 }
 
 /* HC-PQ[24]3 motor ***********************************************************/
