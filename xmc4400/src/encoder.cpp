@@ -138,11 +138,23 @@ void encoder_t::init_full_duplex(
 
 template <typename enc_a, typename enc_b, typename enc_z>
 class posif_t {
-protected:
     int32_t timer=0;
 public:
     void posif_init(uint32_t position);
-    void posif_latch(void);
+    uint32_t posif_low_timer(void) { return ccu40.cc[1].CV[1]; }
+    uint32_t posif_low_index(void) { return ccu40.cc[0].CV[1]; }
+    uint32_t posif_timer(void) {
+	int32_t nt=posif_low_timer();
+	int32_t ot=timer&0xffff;
+
+	if(nt-ot>4000)
+	    timer-=0x10000;
+	if(ot-nt>4000)
+	    timer+=0x10000;
+	timer&=0xffff0000;
+	timer|=nt;
+	return timer;
+    }
 };
 
 // FIXME, this only works for POSIF0, POSIF1 needs ccu41
@@ -268,12 +280,6 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
     ccu40.GIDLC=0x3;		// slice[0] out of idle
     for(int i=0;i<2;i++)
 	ccu40.cc[i].TCSET=1;	// timer ON
-}
-
-template <typename enc_a, typename enc_b, typename enc_z>
-inline void posif_t<enc_a,enc_b,enc_z>::posif_latch(void)
-{
-    timer=ccu40.cc[0].TIMER | (ccu40.cc[1].TIMER<<16);
 }
 
 /*******************************************************************************
@@ -465,7 +471,6 @@ void mitsubishi_PQ_t::trigger(void)
 	| XMC_GPIO_MODE_OUTPUT_ALT2));
     putp=0;
     ENC_TXD=0x1a;
-    posif_latch();
 }
 
 /******************************************************************************/
@@ -538,7 +543,7 @@ class hiperface_t:public encoder_t,
     volatile int rx_put, tx_get, tx_len;
 public:
     virtual int32_t position(void);
-    virtual float angle(void) { return conv*(timer&0xfff)+offset; }
+    virtual float angle(void) { return conv*(posif_low_timer()&0xfff)+offset; }
     virtual bool valid(void) { return true; }
 
     virtual void trigger(void);
@@ -568,7 +573,6 @@ private:
 
 void hiperface_t::trigger(void)
 {
-    posif_latch();
 }
 
 int32_t hiperface_t::position(void) 
@@ -577,7 +581,7 @@ int32_t hiperface_t::position(void)
     int32_t ch1=vadc.G[2].RES[0]&0xffff; ch1-=2047;
     constexpr float c=0.5/PI;
     int32_t ang=1023.0F*(c*atan2f(-ch1,ch0)+0.5F);
-    uint32_t t=timer;
+    uint32_t t=posif_timer();
     if(ang>>8==3)
 	t--;
     if(ang>>8==0)

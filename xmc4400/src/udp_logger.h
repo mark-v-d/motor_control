@@ -16,6 +16,8 @@ public:
 	float angle;
 	float output[3];
 	float vservo;
+	uint16_t index2;
+	uint16_t position2;
     };
 
     struct  __attribute__ ((__packed__)) input_t {

@@ -64,11 +64,6 @@ enum {
 
 float manual_angle;
 
-struct {
-    volatile uint32_t timer[2];
-    volatile uint32_t capture[2];
-} posif_data;
-
 extern "C" void CCU80_0_IRQHandler(void)
 {
     static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
@@ -81,12 +76,9 @@ extern "C" void CCU80_0_IRQHandler(void)
 	out.adc[i]=(int32_t(vadc.G[i].RES[0]&0xffff)-adc_offset[i])*adc_scale[i];
     out.vservo=dsd.ch[dsd_ch_ns::channel(MDAT)].RESM*servo_factor;
 
-    out.counter= uint32_t(ccu40.cc[0].CV[1])<<16 | ccu40.cc[0].TIMER;
+    out.index2=ccu40.cc[0].CV[1]; // FIXME, need a second encoder
+    out.position2=ccu40.cc[1].CV[1];
 
-    posif_data.timer[0]=(ccu40.cc[1].TIMER<<16) | ccu40.cc[0].TIMER;
-    posif_data.timer[1]=(ccu40.cc[3].TIMER<<16) | ccu40.cc[2].TIMER;
-    posif_data.capture[0]=(ccu40.cc[1].CV[1]<<16) | ccu40.cc[0].CV[1];
-    posif_data.capture[1]=(ccu40.cc[3].CV[1]<<16) | ccu40.cc[2].CV[1];
 
     float current[3];
     current[0]=out.adc[0];

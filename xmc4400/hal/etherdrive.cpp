@@ -54,6 +54,8 @@ struct output_t {
     float angle;
     float output[3];
     float vservo;
+    uint16_t index2;
+    uint16_t position2;
 };
 
 struct input_t {
@@ -82,8 +84,11 @@ struct comp_state {
     hal_float_t *angle;
     hal_float_t *output[3];
     hal_float_t *vservo;
+    hal_float_t *index2;
+    hal_float_t *position2;
 
     hal_float_t *scale;
+    hal_float_t *scale2;
 
     // hal_float_t value;
     struct sockaddr_in addr;
@@ -95,6 +100,8 @@ static inline void update_output_pins(struct comp_state *dest,
 {
     *(dest->counter)=pkt->counter;
     *(dest->position)=pkt->position**(dest->scale);
+    *(dest->position2)=pkt->position2**(dest->scale2);
+    *(dest->index2)=pkt->index2**(dest->scale2);
     *(dest->angle)=pkt->angle;
     *(dest->vservo)=pkt->vservo;
 
@@ -244,6 +251,7 @@ static int export_pins(char *prefix, long index)
 
     // Local settings
     FP_IN(scale,scale);
+    FP_IN(scale2,scale2);
 
 #if 0
     r=hal_param_float_newf(HAL_RO, &(inst->value), comp_id, "%s.value", prefix);
