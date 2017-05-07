@@ -1,0 +1,8 @@
+halcmd loadrt index_list
+
+halcmd net test_index index-list.0.index-in J0_drive.index2
+halcmd net test_angle index-list.0.angle J0_drive.angle
+
+halcmd addf index-list.0 servo-thread
+
+halmeter -s pin index-list.0.last-index&

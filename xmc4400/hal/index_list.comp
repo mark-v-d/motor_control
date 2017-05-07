@@ -1,0 +1,38 @@
+component index_list "Find angle for index points";
+pin in float index_in "The signal that triggers an aquisition";
+pin in float angle "Measured motor angle";
+pin out float index-## [40];
+pin out float min-## [40];
+pin out float max-## [40];
+pin out float last_index "index";
+function _;
+license "GPL";
+;;
+EXTRA_SETUP() {
+}
+FUNCTION(_) {
+	if(last_index==0) {
+		index(0)=1e9;
+		last_index=index_in;
+	}
+	if(last_index==index_in)
+		return;
+	last_index=index_in;
+	for(int i=0;i<40;i++) {
+		if(index(i)==index_in) {
+			max(i)=angle>max(i)? angle:max(i);
+			min(i)=angle<min(i)? angle:min(i);
+			break;
+		} else if(index(i)>index_in) {
+			for(int j=39;j>i;j--) {
+				index(j)=index(j-1);
+				max(j)=max(j-1);
+				min(j)=min(j-1);
+			}
+			index(i)=index_in;
+			max(i)=angle;
+			min(i)=angle;
+			break;
+		}
+	}
+}
