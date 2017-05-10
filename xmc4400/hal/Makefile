@@ -3,13 +3,14 @@
 link: etherdrive.so
 
 obj-m += etherdrive.o
+obj-m += homing.o
 
 LDFLAGS=$(shell xeno-config --ldflags --posix --no-auto-init)
 LDFLAGS+=-L $(EMC2_HOME)/lib -luspace-xenomai
 
 %.o: %.cpp
 	$(ECHO) Compiling realtime $<
-	$(Q)$(CC) -o $@ $(EXTRA_CFLAGS) -std=c++17 -c $<
+	$(Q)$(CC) -I ../include -o $@ $(EXTRA_CFLAGS) -std=c++17 -c $<
 
 include $(EMC2_HOME)/src/Makefile.modinc
 

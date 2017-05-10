@@ -1,0 +1,25 @@
+loadrt homer count=2
+addf homer.0 servo-thread -4
+addf homer.1 servo-thread -4
+
+setp homer.0.current-max 1.47
+net Xoutput homer.0.current
+net Xindex-val J0_drive.index2 homer.0.index-value
+net Xindex joint.0.index-enable homer.0.index-enable
+net Xhome homer.0.limit-switch joint.0.home-sw-in
+
+unlinkp J0_drive.position
+net Xencoder1 J0_drive.position homer.0.position-in-0
+net Xencoder2 J0_drive.position2 homer.0.position-in-1
+net Xpos-fb homer.0.position-out-0 
+
+setp homer.1.current-max 2
+net Zoutput homer.1.current
+net Zindex-val J1_drive.index2 homer.1.index-value
+net Zindex joint.1.index-enable homer.1.index-enable
+net Zhome homer.1.limit-switch joint.1.home-sw-in
+
+unlinkp J1_drive.position
+net Zencoder1 J1_drive.position homer.1.position-in-0
+net Zencoder2 J1_drive.position2 homer.1.position-in-1
+net Zpos-fb homer.1.position-out-0

@@ -76,9 +76,8 @@ extern "C" void CCU80_0_IRQHandler(void)
 	out.adc[i]=(int32_t(vadc.G[i].RES[0]&0xffff)-adc_offset[i])*adc_scale[i];
     out.vservo=dsd.ch[dsd_ch_ns::channel(MDAT)].RESM*servo_factor;
 
-    out.index2=ccu40.cc[0].CV[1]; // FIXME, need a second encoder
-    out.position2=ccu40.cc[1].CV[1];
-
+    out.position2=encoder->position2(); // FIXME, need second encoder
+    out.index2=encoder->index2();
 
     float current[3];
     current[0]=out.adc[0];

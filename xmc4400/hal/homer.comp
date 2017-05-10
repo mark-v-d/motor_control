@@ -1,0 +1,32 @@
+component homer "Fancy homing";
+pin in float current "motor current used as limit switch";
+pin in float current_max=1e20;
+pin in float current_min=-1e20;
+pin in float index_value;
+pin in float position_in-# [2];
+pin out bit limit_switch;
+pin io bit index_enable; 
+pin out float position_out-# [2];
+variable float limit_sign;
+variable float offset[2];
+pin out float old_index;
+pin out s32 index_counter;
+function _;
+license "GPL";
+;;
+FUNCTION(_) {
+	if(limit_switch && limit_sign*current<0) {
+		limit_switch=0;
+	} else if(current>current_max || current<current_min) {
+		limit_switch=1;
+		limit_sign=current;
+	}
+	if(index_enable && old_index!=index_value) { 
+		offset[0]=position_in(0);
+		offset[1]=position_in(1);
+		index_enable=0;
+	}
+	old_index=index_value;
+	position_out(0)=position_in(0)-offset[0];
+	position_out(1)=position_in(1)-offset[1];
+}

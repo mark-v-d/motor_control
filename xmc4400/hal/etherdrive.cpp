@@ -44,25 +44,7 @@ struct sync_t {
     float integrator;
 };
 
-struct output_t {
-    uint32_t counter;
-    int32_t position;
-    float adc[4];
-    float Irotor[2];
-    float Vrotor[2];
-    float I[2];
-    float angle;
-    float output[3];
-    float vservo;
-    uint16_t index2;
-    uint16_t position2;
-};
-
-struct input_t {
-    float Iset[2];
-    float kP[2], kI[2];
-    float lim;
-};
+#include "drive_packet.h"
 
 /******************************************************************************/
 struct comp_state {
@@ -78,14 +60,14 @@ struct comp_state {
     hal_s32_t *counter;
     hal_float_t *adc[4];
     hal_float_t *position;
+    hal_float_t *position2;
+    hal_float_t *index2;
     hal_float_t *Irotor[2];
     hal_float_t *Vrotor[2];
     hal_float_t *I[2];
     hal_float_t *angle;
     hal_float_t *output[3];
     hal_float_t *vservo;
-    hal_float_t *index2;
-    hal_float_t *position2;
 
     hal_float_t *scale;
     hal_float_t *scale2;

@@ -15,6 +15,10 @@ public:
     virtual void half_duplex(void)=0;
     virtual void full_duplex(void)=0;
 
+    // FIXME, we need two seperate (and identical) encoders
+    virtual int32_t position2(void) { return 0; } 
+    virtual int32_t index2(void) { return 0; }
+
     static constexpr int hd_irq=1; // half duplex irq/SR output
     static constexpr int fd_irq=0; // full duplex irq/SR output
 

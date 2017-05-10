@@ -6,25 +6,7 @@ public:
     virtual void Received(Ethernet*,Ethernet::descriptor const&);
     virtual void Unreachable(Ethernet*);
 
-    struct  __attribute__ ((__packed__)) output_t {
-	uint32_t counter;
-	int32_t position;
-	float adc[4];
-	float Irotor[2];
-	float Vrotor[2];
-	float I[2];
-	float angle;
-	float output[3];
-	float vservo;
-	uint16_t index2;
-	uint16_t position2;
-    };
-
-    struct  __attribute__ ((__packed__)) input_t {
-	float Iset[2];
-	float kP[2], kI[2];
-	float lim;
-    };
+#include "drive_packet.h"
 
     udp_logger(struct input_t*);
     void transmit(Ethernet *eth, output_t const &d);

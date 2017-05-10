@@ -29,6 +29,7 @@ VPATH+=XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/$(DEVICE)_series/Source/
 VPATH+=XMC_Peripheral_Library_v2.1.6p1/XMCLib/src/
 
 
+CPPFLAGS+=-I ./include
 CPPFLAGS+=-I ./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/$(DEVICE)_series/Include/
 CPPFLAGS+=-I ./XMC_Peripheral_Library_v2.1.6p1/XMCLib/inc/
 CPPFLAGS+=-I ./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Include/

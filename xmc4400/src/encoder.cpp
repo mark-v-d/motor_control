@@ -139,10 +139,9 @@ void encoder_t::init_full_duplex(
 template <typename enc_a, typename enc_b, typename enc_z>
 class posif_t {
     int32_t timer=0;
+    int32_t index=0;
 public:
     void posif_init(uint32_t position);
-    uint32_t posif_low_timer(void) { return ccu40.cc[1].CV[1]; }
-    uint32_t posif_low_index(void) { return ccu40.cc[0].CV[1]; }
     uint32_t posif_timer(void) {
 	int32_t nt=posif_low_timer();
 	int32_t ot=timer&0xffff;
@@ -155,6 +154,21 @@ public:
 	timer|=nt;
 	return timer;
     }
+    uint32_t posif_index(void) {
+	int32_t nt=posif_low_index();
+	int32_t ot=index&0xffff;
+
+	if(nt-ot>15000)
+	    index-=0x10000;
+	if(ot-nt>15000)
+	    index+=0x10000;
+	index&=0xffff0000;
+	index|=nt;
+	return index;
+    }
+protected:
+    uint16_t posif_low_timer(void) { return ccu40.cc[1].CV[1]; }
+    uint16_t posif_low_index(void) { return ccu40.cc[0].CV[1]; }
 };
 
 // FIXME, this only works for POSIF0, POSIF1 needs ccu41
@@ -299,6 +313,10 @@ public:
     virtual void trigger(void) { }
     virtual void half_duplex(void);
     virtual void full_duplex(void);
+
+    virtual int32_t position2(void) { return posif_timer(); }
+    virtual int32_t index2(void) { return posif_index(); }
+
 
     static int detect(void);
 private:
@@ -522,7 +540,7 @@ int mitsubishi_encoder_t::detect(void)
 	return 0;
     }
 
-    // p->posif_init(0);
+    p->posif_init(0);
     encoder=std::make_unique<mitsubishi_PQ_t>();
     return 1;
 }
