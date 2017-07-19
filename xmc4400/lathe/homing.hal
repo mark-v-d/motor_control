@@ -16,14 +16,20 @@ net Xencoder1 J0_drive.position homer.0.position-in-0
 net Xencoder2 J0_drive.position2 homer.0.position-in-1
 net Xpos-fb homer.0.position-out-0 
 
-#setp homer.1.current-max 2
-#net Zoutput homer.1.current
 net Zindex-val J1_drive.index2 homer.1.index-value
 net Zindex joint.1.index-enable homer.1.index-enable
-#net Zhome homer.1.limit-switch joint.1.home-sw-in
-net Zhome analogy.in-1 joint.1.home-sw-in
+net Zhome  analogy.1.in-1 joint.1.home-sw-in
 
-# unlinkp J1_drive.position
-# net Zencoder1 J1_drive.position homer.1.position-in-0
-# net Zencoder2 J1_drive.position2 homer.1.position-in-1
-# net Zpos-fb homer.1.position-out-0
+unlinkp J1_drive.position
+net Zencoder1 J1_drive.position homer.1.position-in-0
+net Zencoder2 J1_drive.position2 homer.1.position-in-1
+net Zpos-fb homer.1.position-out-0
+
+net Flood  halui.flood.is-on
+net Flood  analogy.2.out-3
+net Mist  halui.mist.is-on
+net Mist  analogy.2.out-2
+net MachinePower halui.machine.is-on
+net MachinePower  analogy.2.out-0
+
+

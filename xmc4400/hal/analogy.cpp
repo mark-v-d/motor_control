@@ -13,49 +13,71 @@
 #include <pthread.h>
 #include <rtdm/analogy.h>
 
-#include <vector>
-
 static int comp_id;
 static a4l_desc_t dsc; 
 
-int inputs=0, outputs=0, bidirs=0;
-hal_bit_t **input, **output, **bidir;
-
+static hal_bit_t ***unit;
+int *bits;
 
 static void an_sync(void *p, long period)
 {
     int input_idx=0, output_idx=0, bidir_idx=0;
-    for(int i=0;i<dsc.nb_subd;i++) {
+    for(int u=0;u<dsc.nb_subd;u++) {
 	a4l_sbinfo_t *sbinfo;
-	int err=a4l_get_subdinfo(&dsc, i, &sbinfo);
+	int err=a4l_get_subdinfo(&dsc, u, &sbinfo);
 	if(err<0) {
 	    rtapi_print_msg(RTAPI_MSG_ERR,"a4l_get_subdinfo failed\n");
 	    return;
 	}
 	if(sbinfo->flags==A4L_SUBD_DI) {
 	    int mask, value;
-	    err=a4l_sync_dio(&dsc, i, &mask, &value);
+	    err=a4l_sync_dio(&dsc, u, &mask, &value);
 	    for(int bit=0; 
-		bit<sbinfo->nb_chan && input_idx<inputs; 
+		bit<sbinfo->nb_chan && bit<bits[u];
 		bit++, input_idx++
 	    ) {
-		*(input[input_idx])=value&1;
+		*(unit[u][bit])=value&1;
 		value>>=1;
 	    }
 	} else if(sbinfo->flags==A4L_SUBD_DO) {
+	    int mask=(1<<sbinfo->nb_chan)-1;
+	    int value=0;
+	    for(int bit=0; 
+		bit<sbinfo->nb_chan && bit<bits[u];
+		bit++
+	    ) {
+		if(*(unit[u][bit]))
+		    value|=1<<bit;
+	    }
+	    err=a4l_sync_dio(&dsc, u, &mask, &value);
 	} else if(sbinfo->flags==A4L_SUBD_DIO) {
+	    int mask=(1<<sbinfo->nb_chan)-1;
+	    int value=0;
+	    for(int bit=0; 
+		bit<sbinfo->nb_chan && bit<bits[u];
+		bit++
+	    ) {
+		if(*(unit[u][sbinfo->nb_chan+bit]))
+		    value|=1<<bit;
+	    }
+	    err=a4l_sync_dio(&dsc, u, &mask, &value);
+	    for(int bit=0; 
+		bit<sbinfo->nb_chan && bit<bits[u];
+		bit++
+	    ) {
+		*(unit[u][bit])=value&1;
+		value>>=1;
+	    }
 	} else {
 	    rtapi_print_msg(RTAPI_MSG_WARN,
 		"unit %d ignored, flags=0x%08x\n",
-		i, sbinfo->flags);
+		u, sbinfo->flags);
 	}
     }
 }
 
 extern "C" int rtapi_app_main(void) 
 {
-    int r = 0;
-    int i;
     comp_id = hal_init("analogy");
     if(comp_id < 0) 
 	return comp_id;
@@ -70,44 +92,57 @@ extern "C" int rtapi_app_main(void)
 	if(err<0) 
 	    throw("a4l_fill_desc");
 
-	for(int i=0;i<dsc.nb_subd;i++) {
+	unit=reinterpret_cast<hal_bit_t***>(
+	    hal_malloc(dsc.nb_subd*sizeof(hal_bit_t**)));
+	bits=reinterpret_cast<int*>(
+	    hal_malloc(dsc.nb_subd*sizeof(int)));
+	for(int u=0;u<dsc.nb_subd;u++) {
 	    a4l_sbinfo_t *sbinfo;
-	    err = a4l_get_subdinfo(&dsc, i, &sbinfo);
+	    err = a4l_get_subdinfo(&dsc, u, &sbinfo);
 	    if(err<0)
 		throw("a4l_get_subdinfo");
 	    if(sbinfo->flags==A4L_SUBD_DI) {
-		inputs+=sbinfo->nb_chan;
+		bits[u]=sbinfo->nb_chan;
+		unit[u]=reinterpret_cast<hal_bit_t**>(
+		    hal_malloc(bits[u]*sizeof(hal_bit_t *)));
+		for(int i=0;i<bits[u];i++) {
+		    hal_pin_bit_newf(HAL_OUT, &(unit[u][i]), comp_id,
+			"analogy.%d.in-%d", u, i);
+		} 
 	    } else if(sbinfo->flags==A4L_SUBD_DO) {
-		outputs+=sbinfo->nb_chan;
+		bits[u]=sbinfo->nb_chan;
+		unit[u]=reinterpret_cast<hal_bit_t**>(
+		    hal_malloc(bits[u]*sizeof(hal_bit_t *)));
+		for(int i=0;i<bits[u];i++) {
+		    hal_pin_bit_newf(HAL_IN, &(unit[u][i]), comp_id,
+			"analogy.%d.out-%d", u, i);
+		} 
+		int mask=0, value;
+		err=a4l_sync_dio(&dsc, u, &mask, &value);
+		for(int bit=0; 
+		    bit<sbinfo->nb_chan && bit<bits[u];
+		    bit++
+		) {
+		    *(unit[u][bit])=value&1;
+		    value>>=1;
+		}
 	    } else if(sbinfo->flags==A4L_SUBD_DIO) {
-		bidirs+=sbinfo->nb_chan;
+		bits[u]=sbinfo->nb_chan;
+		unit[u]=reinterpret_cast<hal_bit_t**>(
+		    hal_malloc(2*bits[u]*sizeof(hal_bit_t *)));
+		for(int i=0;i<bits[u];i++) {
+		    hal_pin_bit_newf(HAL_OUT, &(unit[u][i]), comp_id,
+			"analogy.%d.in-%d", u, i);
+		    hal_pin_bit_newf(HAL_IN, &(unit[u][sbinfo->nb_chan+i]), 
+			comp_id, "analogy.%d.out-%d", u, i);
+		    *unit[u][sbinfo->nb_chan+i]=1;
+		} 
 	    } else {
 		rtapi_print_msg(RTAPI_MSG_WARN,
 		    "unit %d ignored, flags=0x%08x\n",
-		    i, sbinfo->flags);
+		    u, sbinfo->flags);
 	    }
 	}
-	input=reinterpret_cast<hal_bit_t**>(
-	    hal_malloc(inputs*sizeof(hal_bit_t *)));
-	for(int i=0;i<inputs;i++) {
-	    hal_pin_bit_newf(HAL_OUT, &(input[i]), comp_id,
-		"analogy.in-%d", i);
-	} 
-
-	output=reinterpret_cast<hal_bit_t**>(
-	    hal_malloc(outputs*sizeof(hal_bit_t *)));
-	for(int i=0;i<outputs;i++) {
-	    hal_pin_bit_newf(HAL_IN, &(output[i]), comp_id,
-		"analogy.out-%d", i);
-	} 
-
-	bidir=reinterpret_cast<hal_bit_t**>(
-	    hal_malloc(bidirs*sizeof(hal_bit_t *)));
-	for(int i=0;i<bidirs;i++) {
-	    hal_pin_bit_newf(HAL_IO, &(bidir[i]), comp_id,
-		"analogy.io-%d", i);
-	} 
-
 	err=hal_export_funct("analogy.sync", an_sync, NULL, 1, 0, comp_id);
 	if(err)
 	    throw("hal_export_funct");
