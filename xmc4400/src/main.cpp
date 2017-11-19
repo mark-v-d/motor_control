@@ -63,6 +63,7 @@ enum {
 } state;
 
 float manual_angle;
+float angle_offset=0;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
@@ -123,7 +124,7 @@ extern "C" void CCU80_0_IRQHandler(void)
     }
 
     if(valid) {
-	float angle=encoder->angle();
+	float angle=encoder->angle()+angle_offset;
 	if(state==MANUAL_ANGLE || state==MANUAL_VOLTAGE)
 	    angle=manual_angle;
 	float Istator[2];

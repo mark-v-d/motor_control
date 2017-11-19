@@ -1,0 +1,43 @@
+#!/bin/bash
+halcmd setp pid.1.Pgain -10
+halcmd setp pid.1.Dgain -0.03
+halcmd setp pid.1.Igain -1000
+halcmd setp pid.1.maxerrorI 1e-4
+
+kP=0.70
+kI=0.1
+halcmd setp J1_drive.kP-0 $kP
+halcmd setp J1_drive.kP-1 $kP
+halcmd setp J1_drive.kI-0 $kI
+halcmd setp J1_drive.kI-1 $kI
+
+exit 0
+
+#
+# Signal generator to tune current control loop
+#
+halcmd loadrt siggen
+halcmd setp siggen.0.amplitude 0.01
+halcmd addf siggen.0.update servo-thread
+halcmd unlinkp J1_drive.Iset-1
+halcmd net test_signal siggen.0.square J1_drive.Iset-1
+
+#
+# Undo
+#
+halcmd unlinkp J1_drive.Iset-1
+halcmd net Zoutput J1_drive.Iset-1
+
+#
+# Siggen to PID controller
+#
+halcmd unlinkp pid.1.command
+halcmd setp siggen.0.amplitude 0.01
+halcmd net test_signal siggen.0.square pid.1.command
+
+
+#
+# Reconnect PID controller
+#
+halcmd unlinkp pid.1.command
+halcmd net Zpos-cmd joint.1.motor-pos-cmd pid.1.command
