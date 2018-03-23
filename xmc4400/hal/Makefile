@@ -6,7 +6,7 @@ obj-m += etherdrive.o
 obj-m += analogy.o
 obj-m += homing.o
 
-LDFLAGS=$(shell xeno-config --ldflags --posix --no-auto-init)
+LDFLAGS=$(shell xeno-config --ldflags --posix --no-auto-init --mode-check)
 LDFLAGS+=-L $(EMC2_HOME)/lib -luspace-xenomai -lanalogy
 
 CXXFLAGS+=$(shell xeno-config --cflags --posix)

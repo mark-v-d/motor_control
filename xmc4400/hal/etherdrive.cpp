@@ -55,6 +55,7 @@ struct comp_state {
     hal_float_t *kP[2];
     hal_float_t *kI[2];
     hal_float_t *lim;
+    hal_float_t *angle_offset;
 
     // output pins
     hal_s32_t *counter;
@@ -164,6 +165,7 @@ static void send_control(void *p, long period)
 	in.kI[0]=*(lp->kI[0]);
 	in.kI[1]=*(lp->kI[1]);
 	in.lim=*(lp->lim);
+	in.angle_offset=*(lp->angle_offset);
 	sendto(udp,&in,sizeof(in),0,
 	    reinterpret_cast<sockaddr*>(&lp->addr),sizeof(lp->addr));
     }
@@ -212,6 +214,7 @@ static int export_pins(char *prefix, long index)
     FP_IN(kI[0],kI-0);
     FP_IN(kI[1],kI-1);
     FP_IN(lim,lim);
+    FP_IN(angle_offset,angle_offset);
 
     S32_OUT(counter,counter);
     FP_OUT(position,position);

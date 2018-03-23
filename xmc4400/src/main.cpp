@@ -154,6 +154,7 @@ extern "C" void CCU80_0_IRQHandler(void)
 		out.I[0]*=in.lim/sqrtf(sq_len);
 		out.I[1]*=in.lim/sqrtf(sq_len);
 	    }
+	    angle_offset=in.angle_offset;
 
 	    float Vstator[2];
 	    Vstator[0]=cosf(angle)*out.Vrotor[0]-sinf(angle)*out.Vrotor[1];

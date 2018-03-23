@@ -1,15 +1,14 @@
 #!/bin/bash
-halcmd setp pid.1.Pgain -10
-halcmd setp pid.1.Dgain -0.03
-halcmd setp pid.1.Igain -1000
+P=-30 
+I=-0000 
+D=1e-1
+halcmd setp pid.1.Pgain $P
+halcmd setp pid.1.Dgain $D
+halcmd setp pid.1.Igain $I
 halcmd setp pid.1.maxerrorI 1e-4
 
-kP=0.70
-kI=0.1
-halcmd setp J1_drive.kP-0 $kP
-halcmd setp J1_drive.kP-1 $kP
-halcmd setp J1_drive.kI-0 $kI
-halcmd setp J1_drive.kI-1 $kI
+kP=0.60 kI=0.025
+halcmd setp J1_drive.kP-0 $kP; halcmd setp J1_drive.kP-1 $kP; halcmd setp J1_drive.kI-0 $kI; halcmd setp J1_drive.kI-1 $kI; echo $kP $kI
 
 exit 0
 

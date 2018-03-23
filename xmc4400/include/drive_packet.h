@@ -16,4 +16,5 @@ struct  __attribute__ ((__packed__)) input_t {
     float Iset[2];
     float kP[2], kI[2];
     float lim;
+    float angle_offset;
 };
