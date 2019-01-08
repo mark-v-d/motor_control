@@ -31,5 +31,3 @@ net Mist  halui.mist.is-on
 net Mist  analogy.2.out-2
 net MachinePower halui.machine.is-on
 net MachinePower  analogy.2.out-0
-
-

@@ -654,7 +654,6 @@ Wire Wire Line
 	4950 3650 5050 3650
 Wire Wire Line
 	5050 3650 5050 3600
-NoConn ~ 5000 4900
 Wire Wire Line
 	2050 2150 2050 2100
 Wire Wire Line
