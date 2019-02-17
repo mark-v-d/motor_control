@@ -1,7 +1,4 @@
 EESchema Schematic File Version 4
-LIBS:Local
-LIBS:power
-LIBS:74xx
 LIBS:control_stage-cache
 EELAYER 29 0
 EELAYER END
@@ -17,9 +14,15 @@ Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
+Text Label 17450 6100 0    60   ~ 0
+HB0
 Text Label 1800 14000 0    60   ~ 0
 HB1
 Text Label 1800 13700 0    60   ~ 0
+HB2
+Text Label 17450 6300 0    60   ~ 0
+HB1
+Text Label 17450 6550 0    60   ~ 0
 HB2
 Text Label 2000 6000 0    60   ~ 0
 CUR0
@@ -30,7 +33,7 @@ CUR2
 Text Label 13700 11250 0    60   ~ 0
 ENC0_TXD
 $Comp
-L DB9 J1
+L small_drive-rescue:DB9 J1
 U 1 1 57797C40
 P 9450 13300
 F 0 "J1" H 9450 13850 50  0000 C CNN
@@ -54,7 +57,7 @@ A
 Text Label 11050 13200 2    60   ~ 0
 B
 $Comp
-L +5V #PWR028
+L power:+5V #PWR028
 U 1 1 57798829
 P 10050 12800
 F 0 "#PWR028" H 10050 12650 50  0001 C CNN
@@ -65,7 +68,7 @@ F 3 "" H 10050 12800 50  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L GND-RESCUE-small_drive #PWR026
+L small_drive-rescue:GND-RESCUE-small_drive #PWR026
 U 1 1 57798BD2
 P 9950 13800
 F 0 "#PWR026" H 9950 13550 50  0001 C CNN
@@ -76,7 +79,7 @@ F 3 "" H 9950 13800 50  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L CONN_01X04 P2
+L small_drive-rescue:CONN_01X04 P2
 U 1 1 5779B4F9
 P 2900 10350
 F 0 "P2" H 2900 10600 50  0000 C CNN
@@ -87,7 +90,7 @@ F 3 "" H 2900 10350 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND-RESCUE-small_drive #PWR09
+L small_drive-rescue:GND-RESCUE-small_drive #PWR09
 U 1 1 5779B645
 P 2650 10600
 F 0 "#PWR09" H 2650 10350 50  0001 C CNN
@@ -98,7 +101,7 @@ F 3 "" H 2650 10600 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L LED_592 D1
+L Local:LED_592 D1
 U 1 1 577CB7A7
 P 13000 4550
 F 0 "D1" H 13000 4650 50  0000 C CNN
@@ -109,7 +112,7 @@ F 3 "MDEF592B0001.pdf" H 13000 4650 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R-RESCUE-small_drive R2
+L small_drive-rescue:R-RESCUE-small_drive R2
 U 1 1 577CBAE8
 P 12450 5150
 F 0 "R2" V 12530 5150 50  0000 C CNN
@@ -120,7 +123,7 @@ F 3 "" H 12450 5150 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L LED_592 D1
+L Local:LED_592 D1
 U 2 1 577CBEC9
 P 13000 5150
 F 0 "D1" H 13000 5250 50  0000 C CNN
@@ -131,7 +134,7 @@ F 3 "MDEF592B0001.pdf" H 13000 5250 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R-RESCUE-small_drive R3
+L small_drive-rescue:R-RESCUE-small_drive R3
 U 1 1 577CBECF
 P 12450 4850
 F 0 "R3" V 12530 4850 50  0000 C CNN
@@ -142,7 +145,7 @@ F 3 "" H 12450 4850 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L LED_592 D1
+L Local:LED_592 D1
 U 3 1 577CBF8E
 P 13000 4850
 F 0 "D1" H 13000 4950 50  0000 C CNN
@@ -153,7 +156,7 @@ F 3 "MDEF592B0001.pdf" H 13000 4950 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R-RESCUE-small_drive R4
+L small_drive-rescue:R-RESCUE-small_drive R4
 U 1 1 577CBF94
 P 12450 4550
 F 0 "R4" V 12530 4550 50  0000 C CNN
@@ -164,7 +167,7 @@ F 3 "" H 12450 4550 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L LED_592 D1
+L Local:LED_592 D1
 U 4 1 577CBF9B
 P 13000 4250
 F 0 "D1" H 13000 4350 50  0000 C CNN
@@ -175,7 +178,7 @@ F 3 "MDEF592B0001.pdf" H 13000 4350 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R-RESCUE-small_drive R5
+L small_drive-rescue:R-RESCUE-small_drive R5
 U 1 1 577CBFA1
 P 12450 4250
 F 0 "R5" V 12530 4250 50  0000 C CNN
@@ -186,7 +189,7 @@ F 3 "" H 12450 4250 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L +3.3V-RESCUE-small_drive #PWR044
+L small_drive-rescue:+3.3V-RESCUE-small_drive #PWR044
 U 1 1 577CBFEE
 P 13250 4100
 F 0 "#PWR044" H 13300 4130 20  0001 C CNN
@@ -213,7 +216,7 @@ LED2
 Text Label 1800 13200 0    60   ~ 0
 LED3
 $Comp
-L +12V #PWR07
+L power:+12V #PWR07
 U 1 1 577CDA43
 P 2250 900
 F 0 "#PWR07" H 2250 750 50  0001 C CNN
@@ -224,7 +227,7 @@ F 3 "" H 2250 900 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L +5V #PWR017
+L power:+5V #PWR017
 U 1 1 577CDCC0
 P 6700 1050
 F 0 "#PWR017" H 6700 900 50  0001 C CNN
@@ -235,7 +238,7 @@ F 3 "" H 6700 1050 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L LT1764EQ U6
+L small_drive-rescue:LT1764EQ U6
 U 1 1 577CDD60
 P 10050 1250
 F 0 "U6" H 9900 850 60  0000 C CNN
@@ -247,7 +250,7 @@ F 4 "46" H 10050 1675 60  0001 C CNN "Voorraad"
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C3
+L small_drive-rescue:C-RESCUE-small_drive C3
 U 1 1 577CE246
 P 2500 1400
 F 0 "C3" H 2550 1500 50  0000 L CNN
@@ -258,7 +261,7 @@ F 3 "" H 2500 1400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CP-RESCUE-small_drive C1
+L small_drive-rescue:CP-RESCUE-small_drive C1
 U 1 1 577CE3D8
 P 1950 1400
 F 0 "C1" H 1975 1500 50  0000 L CNN
@@ -269,7 +272,7 @@ F 3 "" H 1950 1400 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C7
+L small_drive-rescue:C-RESCUE-small_drive C7
 U 1 1 577CF07E
 P 7000 1400
 F 0 "C7" H 7050 1500 50  0000 L CNN
@@ -280,7 +283,7 @@ F 3 "" H 7000 1400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CP-RESCUE-small_drive C6
+L small_drive-rescue:CP-RESCUE-small_drive C6
 U 1 1 577CF084
 P 6450 1400
 F 0 "C6" H 6475 1500 50  0000 L CNN
@@ -291,7 +294,7 @@ F 3 "" H 6450 1400 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C9
+L small_drive-rescue:C-RESCUE-small_drive C9
 U 1 1 577CFC5B
 P 13200 1400
 F 0 "C9" H 13250 1500 50  0000 L CNN
@@ -302,7 +305,7 @@ F 3 "" H 13200 1400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C12
+L small_drive-rescue:C-RESCUE-small_drive C12
 U 1 1 577CFD7B
 P 8750 1400
 F 0 "C12" H 8800 1500 50  0000 L CNN
@@ -313,7 +316,7 @@ F 3 "" H 8750 1400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C13
+L small_drive-rescue:C-RESCUE-small_drive C13
 U 1 1 577CFD81
 P 9100 1400
 F 0 "C13" H 9150 1500 50  0000 L CNN
@@ -324,7 +327,7 @@ F 3 "" H 9100 1400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND-RESCUE-small_drive #PWR020
+L small_drive-rescue:GND-RESCUE-small_drive #PWR020
 U 1 1 577D3636
 P 7200 2000
 F 0 "#PWR020" H 7200 1750 50  0001 C CNN
@@ -335,7 +338,7 @@ F 3 "" H 7200 2000 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C15
+L small_drive-rescue:C-RESCUE-small_drive C15
 U 1 1 577D4053
 P 11450 1400
 F 0 "C15" H 11500 1500 50  0000 L CNN
@@ -346,7 +349,7 @@ F 3 "" H 11450 1400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CP-RESCUE-small_drive C14
+L small_drive-rescue:CP-RESCUE-small_drive C14
 U 1 1 577D4059
 P 10900 1400
 F 0 "C14" H 10925 1500 50  0000 L CNN
@@ -357,7 +360,7 @@ F 3 "" H 10900 1400 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C16
+L small_drive-rescue:C-RESCUE-small_drive C16
 U 1 1 577D405F
 P 11800 1400
 F 0 "C16" H 11850 1500 50  0000 L CNN
@@ -368,7 +371,7 @@ F 3 "" H 11800 1400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C17
+L small_drive-rescue:C-RESCUE-small_drive C17
 U 1 1 577D4065
 P 12150 1400
 F 0 "C17" H 12200 1500 50  0000 L CNN
@@ -379,7 +382,7 @@ F 3 "" H 12150 1400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C18
+L small_drive-rescue:C-RESCUE-small_drive C18
 U 1 1 577D406B
 P 12500 1400
 F 0 "C18" H 12550 1500 50  0000 L CNN
@@ -390,7 +393,7 @@ F 3 "" H 12500 1400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L +3.3V-RESCUE-small_drive #PWR034
+L small_drive-rescue:+3.3V-RESCUE-small_drive #PWR034
 U 1 1 577D4C40
 P 11150 1050
 F 0 "#PWR034" H 11200 1080 20  0001 C CNN
@@ -403,7 +406,7 @@ $EndComp
 Text Label 12350 5500 0    60   ~ 0
 HBEN
 $Comp
-L C-RESCUE-small_drive C8
+L small_drive-rescue:C-RESCUE-small_drive C8
 U 1 1 57814D4F
 P 12850 1400
 F 0 "C8" H 12900 1500 50  0000 L CNN
@@ -414,7 +417,7 @@ F 3 "" H 12850 1400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L HOLE HOLE1
+L small_drive-rescue:HOLE HOLE1
 U 1 1 578204DD
 P 21300 13700
 F 0 "HOLE1" H 21300 13700 60  0000 C CNN
@@ -425,7 +428,7 @@ F 3 "" H 21300 13700 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L HOLE HOLE3
+L small_drive-rescue:HOLE HOLE3
 U 1 1 57820774
 P 21650 13700
 F 0 "HOLE3" H 21650 13700 60  0000 C CNN
@@ -436,7 +439,7 @@ F 3 "" H 21650 13700 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L HOLE HOLE2
+L small_drive-rescue:HOLE HOLE2
 U 1 1 5782081D
 P 21300 14100
 F 0 "HOLE2" H 21300 14100 60  0000 C CNN
@@ -447,7 +450,7 @@ F 3 "" H 21300 14100 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L HOLE HOLE4
+L small_drive-rescue:HOLE HOLE4
 U 1 1 57820823
 P 21650 14100
 F 0 "HOLE4" H 21650 14100 60  0000 C CNN
@@ -458,7 +461,7 @@ F 3 "" H 21650 14100 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND-RESCUE-small_drive #PWR039
+L small_drive-rescue:GND-RESCUE-small_drive #PWR039
 U 1 1 57838A84
 P 12600 7650
 F 0 "#PWR039" H 12600 7400 50  0001 C CNN
@@ -469,7 +472,7 @@ F 3 "" H 12600 7650 50  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L Crystal Y1
+L small_drive-rescue:Crystal Y1
 U 1 1 578406AE
 P 3750 10050
 F 0 "Y1" H 3750 10200 50  0000 C CNN
@@ -483,7 +486,7 @@ F 6 "QC3CA12.0000F12B23M" H 3750 10050 60  0001 C CNN "PartNr"
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C48
+L small_drive-rescue:C-RESCUE-small_drive C48
 U 1 1 578407A7
 P 3500 10350
 F 0 "C48" H 3550 10450 50  0000 L CNN
@@ -494,7 +497,7 @@ F 3 "" H 3500 10350 60  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C49
+L small_drive-rescue:C-RESCUE-small_drive C49
 U 1 1 5784091C
 P 4000 10350
 F 0 "C49" H 4050 10450 50  0000 L CNN
@@ -505,7 +508,7 @@ F 3 "" H 4000 10350 60  0000 C CNN
 	1    0    0    1   
 $EndComp
 $Comp
-L DB15 J2
+L small_drive-rescue:DB15 J2
 U 1 1 57A78B2E
 P 9450 10350
 F 0 "J2" H 9470 11200 50  0000 C CNN
@@ -519,7 +522,7 @@ F 6 "1-106506-2" H 9450 10350 60  0001 C CNN "PartNr"
 	-1   0    0    -1  
 $EndComp
 $Comp
-L AD8226 U5
+L Local:AD8226 U5
 U 1 1 57A7A259
 P 12800 8600
 F 0 "U5" H 12950 8900 70  0000 C CNN
@@ -531,7 +534,7 @@ F 4 "1827360" H 12750 8600 60  0001 C CNN "Farnell"
 	1    0    0    -1  
 $EndComp
 $Comp
-L R-RESCUE-small_drive R22
+L small_drive-rescue:R-RESCUE-small_drive R22
 U 1 1 57A7A41A
 P 11800 8550
 F 0 "R22" V 11880 8550 50  0000 C CNN
@@ -542,7 +545,7 @@ F 3 "" H 11800 8550 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R-RESCUE-small_drive R21
+L small_drive-rescue:R-RESCUE-small_drive R21
 U 1 1 57A7B13D
 P 11450 10600
 F 0 "R21" V 11530 10600 50  0000 C CNN
@@ -553,7 +556,7 @@ F 3 "" H 11450 10600 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R-RESCUE-small_drive R24
+L small_drive-rescue:R-RESCUE-small_drive R24
 U 1 1 57A7B755
 P 11450 11200
 F 0 "R24" V 11530 11200 50  0000 C CNN
@@ -568,7 +571,7 @@ ENC0_RXD
 Text Label 13700 11150 0    60   ~ 0
 ENC0_DIR
 $Comp
-L AD8226 U14
+L Local:AD8226 U14
 U 1 1 57A7D682
 P 12800 10000
 F 0 "U14" H 12950 10300 70  0000 C CNN
@@ -580,7 +583,7 @@ F 4 "1827360" H 12750 10000 60  0001 C CNN "Farnell"
 	1    0    0    -1  
 $EndComp
 $Comp
-L R-RESCUE-small_drive R23
+L small_drive-rescue:R-RESCUE-small_drive R23
 U 1 1 57A7D688
 P 11800 9950
 F 0 "R23" V 11880 9950 50  0000 C CNN
@@ -591,7 +594,7 @@ F 3 "" H 11800 9950 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L +12V #PWR042
+L power:+12V #PWR042
 U 1 1 57A7D6F2
 P 12700 9550
 F 0 "#PWR042" H 12700 9400 50  0001 C CNN
@@ -602,7 +605,7 @@ F 3 "" H 12700 9550 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L +12V #PWR040
+L power:+12V #PWR040
 U 1 1 57A7E7E9
 P 12700 8150
 F 0 "#PWR040" H 12700 8000 50  0001 C CNN
@@ -617,7 +620,7 @@ ENC_SIN
 Text Label 14000 8600 0    60   ~ 0
 ENC_COS
 $Comp
-L +3.3V-RESCUE-small_drive #PWR08
+L small_drive-rescue:+3.3V-RESCUE-small_drive #PWR08
 U 1 1 57A81676
 P 2650 10100
 F 0 "#PWR08" H 2700 10130 20  0001 C CNN
@@ -628,7 +631,7 @@ F 3 "" H 2650 10100 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND-RESCUE-small_drive #PWR011
+L small_drive-rescue:GND-RESCUE-small_drive #PWR011
 U 1 1 57A82736
 P 3750 10650
 F 0 "#PWR011" H 3750 10400 50  0001 C CNN
@@ -639,7 +642,7 @@ F 3 "" H 3750 10650 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R-RESCUE-small_drive R18
+L small_drive-rescue:R-RESCUE-small_drive R18
 U 1 1 57A82E01
 P 3200 9900
 F 0 "R18" V 3280 9900 50  0000 C CNN
@@ -682,10 +685,10 @@ ENC_SIN
 Text Label 1850 4950 0    60   ~ 0
 ENC_COS
 $Comp
-L -12V #PWR43
+L power:-12V #PWR043
 U 1 1 57A8ADA6
 P 12700 10550
-F 0 "#PWR43" H 12700 10650 50  0001 C CNN
+F 0 "#PWR043" H 12700 10650 50  0001 C CNN
 F 1 "-12V" H 12700 10700 50  0000 C CNN
 F 2 "" H 12700 10550 50  0000 C CNN
 F 3 "" H 12700 10550 50  0000 C CNN
@@ -693,10 +696,10 @@ F 3 "" H 12700 10550 50  0000 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L -12V #PWR41
+L power:-12V #PWR041
 U 1 1 57A8B447
 P 12700 9150
-F 0 "#PWR41" H 12700 9250 50  0001 C CNN
+F 0 "#PWR041" H 12700 9250 50  0001 C CNN
 F 1 "-12V" H 12700 9300 50  0000 C CNN
 F 2 "" H 12700 9150 50  0000 C CNN
 F 3 "" H 12700 9150 50  0000 C CNN
@@ -704,7 +707,7 @@ F 3 "" H 12700 9150 50  0000 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L CONN_01X04 P3
+L small_drive-rescue:CONN_01X04 P3
 U 1 1 57A8B807
 P 12950 3650
 F 0 "P3" H 12950 3900 50  0000 C CNN
@@ -733,7 +736,7 @@ MDAT
 Text Label 1800 13300 0    60   ~ 0
 MCLK
 $Comp
-L C-RESCUE-small_drive C11
+L small_drive-rescue:C-RESCUE-small_drive C11
 U 1 1 57A93635
 P 1050 14850
 F 0 "C11" H 1100 14950 50  0000 L CNN
@@ -744,7 +747,7 @@ F 3 "" H 1050 14850 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C28
+L small_drive-rescue:C-RESCUE-small_drive C28
 U 1 1 57A93819
 P 1400 14850
 F 0 "C28" H 1450 14950 50  0000 L CNN
@@ -755,7 +758,7 @@ F 3 "" H 1400 14850 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C29
+L small_drive-rescue:C-RESCUE-small_drive C29
 U 1 1 57A93892
 P 1750 14850
 F 0 "C29" H 1800 14950 50  0000 L CNN
@@ -766,7 +769,7 @@ F 3 "" H 1750 14850 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C30
+L small_drive-rescue:C-RESCUE-small_drive C30
 U 1 1 57A93964
 P 2100 14850
 F 0 "C30" H 2150 14950 50  0000 L CNN
@@ -777,7 +780,7 @@ F 3 "" H 2100 14850 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C31
+L small_drive-rescue:C-RESCUE-small_drive C31
 U 1 1 57A93AAE
 P 2450 14850
 F 0 "C31" H 2500 14950 50  0000 L CNN
@@ -788,7 +791,7 @@ F 3 "" H 2450 14850 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR02
+L power:GND #PWR02
 U 1 1 57A95204
 P 1150 15200
 F 0 "#PWR02" H 1150 14950 50  0001 C CNN
@@ -799,7 +802,7 @@ F 3 "" H 1150 15200 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C10
+L small_drive-rescue:C-RESCUE-small_drive C10
 U 1 1 57A95E2A
 P 700 14850
 F 0 "C10" H 750 14950 50  0000 L CNN
@@ -810,7 +813,7 @@ F 3 "" H 700 14850 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R-RESCUE-small_drive R1
+L small_drive-rescue:R-RESCUE-small_drive R1
 U 1 1 57A96F87
 P 2050 10200
 F 0 "R1" V 2130 10200 50  0000 C CNN
@@ -821,7 +824,7 @@ F 3 "" H 2050 10200 60  0000 C CNN
 	0    1    -1   0   
 $EndComp
 $Comp
-L ips511g U3
+L Local:ips511g U3
 U 1 1 57A9E546
 P 10200 8750
 F 0 "U3" H 10200 9200 60  0000 C CNN
@@ -832,7 +835,7 @@ F 3 "" H 10200 8750 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR030
+L power:GND #PWR030
 U 1 1 57A9E706
 P 10200 9250
 F 0 "#PWR030" H 10200 9000 50  0001 C CNN
@@ -843,7 +846,7 @@ F 3 "" H 10200 9250 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L ips511g U2
+L Local:ips511g U2
 U 1 1 57A9EB12
 P 10200 7550
 F 0 "U2" H 10200 8000 60  0000 C CNN
@@ -854,7 +857,7 @@ F 3 "" H 10200 7550 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR029
+L power:GND #PWR029
 U 1 1 57A9EB18
 P 10200 8050
 F 0 "#PWR029" H 10200 7800 50  0001 C CNN
@@ -865,7 +868,7 @@ F 3 "" H 10200 8050 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L +5V #PWR032
+L power:+5V #PWR032
 U 1 1 57A9F86D
 P 10700 7050
 F 0 "#PWR032" H 10700 6900 50  0001 C CNN
@@ -876,7 +879,7 @@ F 3 "" H 10700 7050 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L +12V #PWR033
+L power:+12V #PWR033
 U 1 1 57AA03DC
 P 10700 8300
 F 0 "#PWR033" H 10700 8150 50  0001 C CNN
@@ -887,7 +890,7 @@ F 3 "" H 10700 8300 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR027
+L power:GND #PWR027
 U 1 1 57AA32DE
 P 10050 11250
 F 0 "#PWR027" H 10050 11000 50  0001 C CNN
@@ -904,7 +907,7 @@ ENC_5V
 Text Label 1800 11700 0    60   ~ 0
 ENC_12V
 $Comp
-L R-RESCUE-small_drive R19
+L small_drive-rescue:R-RESCUE-small_drive R19
 U 1 1 57AA48B3
 P 9450 8900
 F 0 "R19" V 9530 8900 50  0000 C CNN
@@ -915,7 +918,7 @@ F 3 "" H 9450 8900 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R-RESCUE-small_drive R20
+L small_drive-rescue:R-RESCUE-small_drive R20
 U 1 1 57AA4BB2
 P 9500 7700
 F 0 "R20" V 9580 7700 50  0000 C CNN
@@ -925,8 +928,10 @@ F 3 "" H 9500 7700 60  0000 C CNN
 	1    9500 7700
 	1    0    0    -1  
 $EndComp
+Text Label 17450 6750 0    60   ~ 0
+HBEN
 $Comp
-L CONN_01X04 P1
+L small_drive-rescue:CONN_01X04 P1
 U 1 1 57ABEB19
 P 1000 1550
 F 0 "P1" H 1000 1800 50  0000 C CNN
@@ -937,7 +942,7 @@ F 3 "" H 1000 1550 50  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L +5V #PWR04
+L power:+5V #PWR04
 U 1 1 57ABF760
 P 1450 950
 F 0 "#PWR04" H 1450 800 50  0001 C CNN
@@ -948,7 +953,7 @@ F 3 "" H 1450 950 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L NKE1212DC X1
+L Local:NKE1212DC X1
 U 1 1 57AC04D2
 P 4250 1200
 F 0 "X1" H 4250 1400 60  0000 C CNN
@@ -959,7 +964,7 @@ F 3 "" H 4250 1200 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C33
+L small_drive-rescue:C-RESCUE-small_drive C33
 U 1 1 57AC14BC
 P 5500 1350
 F 0 "C33" H 5550 1450 50  0000 L CNN
@@ -970,7 +975,7 @@ F 3 "" H 5500 1350 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CP-RESCUE-small_drive C32
+L small_drive-rescue:CP-RESCUE-small_drive C32
 U 1 1 57AC14C2
 P 4950 1350
 F 0 "C32" H 4975 1450 50  0000 L CNN
@@ -981,10 +986,10 @@ F 3 "" H 4950 1350 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L -12V #PWR14
+L power:-12V #PWR014
 U 1 1 57AC272B
 P 5200 1650
-F 0 "#PWR14" H 5200 1750 50  0001 C CNN
+F 0 "#PWR014" H 5200 1750 50  0001 C CNN
 F 1 "-12V" H 5200 1800 50  0000 C CNN
 F 2 "" H 5200 1650 50  0000 C CNN
 F 3 "" H 5200 1650 50  0000 C CNN
@@ -992,7 +997,7 @@ F 3 "" H 5200 1650 50  0000 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L KSZ8081 U19
+L Local:KSZ8081 U19
 U 1 1 57A7B745
 P 6100 4300
 F 0 "U19" H 6100 4400 60  0000 C CNN
@@ -1007,7 +1012,7 @@ F 7 "Microchip" H 6400 4700 60  0001 C CNN "Manufacturer"
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND-RESCUE-small_drive #PWR016
+L small_drive-rescue:GND-RESCUE-small_drive #PWR016
 U 1 1 57A7BC35
 P 6100 5900
 F 0 "#PWR016" H 6100 5650 50  0001 C CNN
@@ -1018,7 +1023,7 @@ F 3 "" H 6100 5900 50  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L Crystal Y2
+L small_drive-rescue:Crystal Y2
 U 1 1 57A7C676
 P 7150 5000
 F 0 "Y2" H 7150 5150 50  0000 C CNN
@@ -1032,7 +1037,7 @@ F 6 "QC3CA25.0000F18B23M" H 7150 5000 60  0001 C CNN "PartNr"
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C46
+L small_drive-rescue:C-RESCUE-small_drive C46
 U 1 1 57A7C79D
 P 6900 5400
 F 0 "C46" H 6950 5500 50  0000 L CNN
@@ -1043,7 +1048,7 @@ F 3 "" H 6900 5400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND-RESCUE-small_drive #PWR019
+L small_drive-rescue:GND-RESCUE-small_drive #PWR019
 U 1 1 57A7D2A8
 P 7150 5700
 F 0 "#PWR019" H 7150 5450 50  0001 C CNN
@@ -1054,7 +1059,7 @@ F 3 "" H 7150 5700 50  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C47
+L small_drive-rescue:C-RESCUE-small_drive C47
 U 1 1 57A7DA5E
 P 7350 5400
 F 0 "C47" H 7400 5500 50  0000 L CNN
@@ -1083,7 +1088,7 @@ ETH0_~RST
 Text Label 1800 7400 0    60   ~ 0
 ETH0_~RST
 $Comp
-L R-RESCUE-small_drive R35
+L small_drive-rescue:R-RESCUE-small_drive R35
 U 1 1 57A8429D
 P 6000 5550
 F 0 "R35" V 6080 5550 50  0000 C CNN
@@ -1094,7 +1099,7 @@ F 3 "" H 6000 5550 60  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L +3.3V-RESCUE-small_drive #PWR015
+L small_drive-rescue:+3.3V-RESCUE-small_drive #PWR015
 U 1 1 57A85425
 P 6050 2700
 F 0 "#PWR015" H 6100 2730 20  0001 C CNN
@@ -1105,7 +1110,7 @@ F 3 "" H 6050 2700 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C45
+L small_drive-rescue:C-RESCUE-small_drive C45
 U 1 1 57A871E5
 P 6550 2850
 F 0 "C45" H 6600 2950 50  0000 L CNN
@@ -1116,7 +1121,7 @@ F 3 "" H 6550 2850 60  0000 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L C-RESCUE-small_drive C44
+L small_drive-rescue:C-RESCUE-small_drive C44
 U 1 1 57A87546
 P 6550 2500
 F 0 "C44" H 6600 2600 50  0000 L CNN
@@ -1127,7 +1132,7 @@ F 3 "" H 6550 2500 60  0000 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L GND #PWR018
+L power:GND #PWR018
 U 1 1 57A876E8
 P 6900 3100
 F 0 "#PWR018" H 6900 2850 50  0001 C CNN
@@ -1138,7 +1143,7 @@ F 3 "" H 6900 3100 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C51
+L small_drive-rescue:C-RESCUE-small_drive C51
 U 1 1 57A8B8EF
 P 8250 5100
 F 0 "C51" H 8300 5200 50  0000 L CNN
@@ -1149,7 +1154,7 @@ F 3 "" H 8250 5100 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C50
+L small_drive-rescue:C-RESCUE-small_drive C50
 U 1 1 57A8BB5B
 P 7900 5100
 F 0 "C50" H 7950 5200 50  0000 L CNN
@@ -1160,7 +1165,7 @@ F 3 "" H 7900 5100 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND-RESCUE-small_drive #PWR022
+L small_drive-rescue:GND-RESCUE-small_drive #PWR022
 U 1 1 57A8C367
 P 7900 5350
 F 0 "#PWR022" H 7900 5100 50  0001 C CNN
@@ -1171,7 +1176,7 @@ F 3 "" H 7900 5350 50  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L GND-RESCUE-small_drive #PWR023
+L small_drive-rescue:GND-RESCUE-small_drive #PWR023
 U 1 1 57A8C3F8
 P 8250 5350
 F 0 "#PWR023" H 8250 5100 50  0001 C CNN
@@ -1182,7 +1187,7 @@ F 3 "" H 8250 5350 50  0000 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L R-RESCUE-small_drive R36
+L small_drive-rescue:R-RESCUE-small_drive R36
 U 1 1 57A8EC47
 P 7350 3750
 F 0 "R36" V 7430 3750 50  0000 C CNN
@@ -1193,7 +1198,7 @@ F 3 "" H 7350 3750 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R-RESCUE-small_drive R37
+L small_drive-rescue:R-RESCUE-small_drive R37
 U 1 1 57A8F984
 P 8650 5200
 F 0 "R37" V 8730 5200 50  0000 C CNN
@@ -1210,7 +1215,7 @@ LED4
 Text Label 8950 7400 0    60   ~ 0
 ENC_5V
 $Comp
-L +3.3VADC #PWR036
+L power:+3.3VADC #PWR036
 U 1 1 57A9A9E9
 P 11900 6300
 F 0 "#PWR036" H 12050 6250 50  0001 C CNN
@@ -1221,7 +1226,7 @@ F 3 "" H 11900 6300 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L LT1764EQ U18
+L small_drive-rescue:LT1764EQ U18
 U 1 1 57A9B47B
 P 4000 14650
 F 0 "U18" H 3850 14250 60  0000 C CNN
@@ -1233,7 +1238,7 @@ F 4 "46" H 4000 15075 60  0001 C CNN "Voorraad"
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C39
+L small_drive-rescue:C-RESCUE-small_drive C39
 U 1 1 57A9B481
 P 5400 14800
 F 0 "C39" H 5450 14900 50  0000 L CNN
@@ -1244,7 +1249,7 @@ F 3 "" H 5400 14800 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CP-RESCUE-small_drive C38
+L small_drive-rescue:CP-RESCUE-small_drive C38
 U 1 1 57A9B487
 P 4850 14800
 F 0 "C38" H 4875 14900 50  0000 L CNN
@@ -1255,7 +1260,7 @@ F 3 "" H 4850 14800 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C40
+L small_drive-rescue:C-RESCUE-small_drive C40
 U 1 1 57A9B48D
 P 5750 14800
 F 0 "C40" H 5800 14900 50  0000 L CNN
@@ -1266,7 +1271,7 @@ F 3 "" H 5750 14800 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C41
+L small_drive-rescue:C-RESCUE-small_drive C41
 U 1 1 57A9B493
 P 6100 14800
 F 0 "C41" H 6150 14900 50  0000 L CNN
@@ -1277,7 +1282,7 @@ F 3 "" H 6100 14800 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C42
+L small_drive-rescue:C-RESCUE-small_drive C42
 U 1 1 57A9B499
 P 6450 14800
 F 0 "C42" H 6500 14900 50  0000 L CNN
@@ -1288,7 +1293,7 @@ F 3 "" H 6450 14800 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C43
+L small_drive-rescue:C-RESCUE-small_drive C43
 U 1 1 57A9B4A5
 P 6800 14800
 F 0 "C43" H 6850 14900 50  0000 L CNN
@@ -1299,7 +1304,7 @@ F 3 "" H 6800 14800 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L +3.3VADC #PWR013
+L power:+3.3VADC #PWR013
 U 1 1 57A9B5FE
 P 5100 14300
 F 0 "#PWR013" H 5250 14250 50  0001 C CNN
@@ -1310,7 +1315,7 @@ F 3 "" H 5100 14300 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L +5V #PWR010
+L power:+5V #PWR010
 U 1 1 57A9B697
 P 3250 14250
 F 0 "#PWR010" H 3250 14100 50  0001 C CNN
@@ -1321,7 +1326,7 @@ F 3 "" H 3250 14250 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND-RESCUE-small_drive #PWR012
+L small_drive-rescue:GND-RESCUE-small_drive #PWR012
 U 1 1 57A9C453
 P 4000 15400
 F 0 "#PWR012" H 4000 15150 50  0001 C CNN
@@ -1332,7 +1337,7 @@ F 3 "" H 4000 15400 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L +3.3V-RESCUE-small_drive #PWR024
+L small_drive-rescue:+3.3V-RESCUE-small_drive #PWR024
 U 1 1 57A8F5FB
 P 8650 3350
 F 0 "#PWR024" H 8700 3380 20  0001 C CNN
@@ -1343,7 +1348,7 @@ F 3 "" H 8650 3350 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR025
+L power:GND #PWR025
 U 1 1 57A91274
 P 9750 5000
 F 0 "#PWR025" H 9750 4750 50  0001 C CNN
@@ -1354,7 +1359,7 @@ F 3 "" H 9750 5000 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L ETH100_MAG U20
+L Local:ETH100_MAG U20
 U 1 1 57A856A3
 P 9250 4200
 F 0 "U20" H 9250 5000 60  0000 C CNN
@@ -1369,7 +1374,7 @@ F 7 "SI-50170-F" H 9650 5675 60  0001 C CNN "PartNr"
 	1    0    0    -1  
 $EndComp
 $Comp
-L R-RESCUE-small_drive R38
+L small_drive-rescue:R-RESCUE-small_drive R38
 U 1 1 57A9197D
 P 10550 12750
 F 0 "R38" V 10630 12750 50  0000 C CNN
@@ -1380,7 +1385,7 @@ F 3 "" H 10550 12750 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R-RESCUE-small_drive R39
+L small_drive-rescue:R-RESCUE-small_drive R39
 U 1 1 57A91BC0
 P 10550 13400
 F 0 "R39" V 10630 13400 50  0000 C CNN
@@ -1391,7 +1396,7 @@ F 3 "" H 10550 13400 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R-RESCUE-small_drive R40
+L small_drive-rescue:R-RESCUE-small_drive R40
 U 1 1 57A91C75
 P 10550 13800
 F 0 "R40" V 10630 13800 50  0000 C CNN
@@ -1402,7 +1407,7 @@ F 3 "" H 10550 13800 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R-RESCUE-small_drive R41
+L small_drive-rescue:R-RESCUE-small_drive R41
 U 1 1 57A93BE3
 P 11200 14100
 F 0 "R41" V 11280 14100 50  0000 C CNN
@@ -1413,7 +1418,7 @@ F 3 "" H 11200 14100 60  0000 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L R-RESCUE-small_drive R42
+L small_drive-rescue:R-RESCUE-small_drive R42
 U 1 1 57A93CC4
 P 11500 14100
 F 0 "R42" V 11580 14100 50  0000 C CNN
@@ -1424,7 +1429,7 @@ F 3 "" H 11500 14100 60  0000 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L R-RESCUE-small_drive R43
+L small_drive-rescue:R-RESCUE-small_drive R43
 U 1 1 57A94549
 P 11800 14100
 F 0 "R43" V 11880 14100 50  0000 C CNN
@@ -1435,7 +1440,7 @@ F 3 "" H 11800 14100 60  0000 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L GND #PWR035
+L power:GND #PWR035
 U 1 1 57A95178
 P 11400 14450
 F 0 "#PWR035" H 11400 14200 50  0001 C CNN
@@ -1452,7 +1457,7 @@ ETH0_TXD1
 Text Label 4400 3800 0    60   ~ 0
 ETH0_TX_EN
 $Comp
-L +3.3VADC #PWR06
+L power:+3.3VADC #PWR06
 U 1 1 57AACBFD
 P 1700 6700
 F 0 "#PWR06" H 1850 6650 50  0001 C CNN
@@ -1463,7 +1468,7 @@ F 3 "" H 1700 6700 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R-RESCUE-small_drive R44
+L small_drive-rescue:R-RESCUE-small_drive R44
 U 1 1 57AAE702
 P 13650 8600
 F 0 "R44" V 13730 8600 50  0000 C CNN
@@ -1474,7 +1479,7 @@ F 3 "" H 13650 8600 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R-RESCUE-small_drive R45
+L small_drive-rescue:R-RESCUE-small_drive R45
 U 1 1 57AAF1A7
 P 13650 10000
 F 0 "R45" V 13730 10000 50  0000 C CNN
@@ -1485,7 +1490,7 @@ F 3 "" H 13650 10000 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L C-RESCUE-small_drive C59
+L small_drive-rescue:C-RESCUE-small_drive C59
 U 1 1 57AB2A73
 P 14600 1400
 F 0 "C59" H 14650 1500 50  0000 L CNN
@@ -1496,7 +1501,7 @@ F 3 "" H 14600 1400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C56
+L small_drive-rescue:C-RESCUE-small_drive C56
 U 1 1 57AB2A79
 P 13550 1400
 F 0 "C56" H 13600 1500 50  0000 L CNN
@@ -1507,7 +1512,7 @@ F 3 "" H 13550 1400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C57
+L small_drive-rescue:C-RESCUE-small_drive C57
 U 1 1 57AB2A7F
 P 13900 1400
 F 0 "C57" H 13950 1500 50  0000 L CNN
@@ -1518,7 +1523,7 @@ F 3 "" H 13900 1400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C58
+L small_drive-rescue:C-RESCUE-small_drive C58
 U 1 1 57AB2A85
 P 7350 1400
 F 0 "C58" H 7400 1500 50  0000 L CNN
@@ -1529,9 +1534,15 @@ F 3 "" H 7350 1400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
+	18100 6100 17450 6100
+Wire Wire Line
 	1250 13800 2300 13800
 Wire Wire Line
 	1250 14000 2300 14000
+Wire Wire Line
+	18100 6300 17450 6300
+Wire Wire Line
+	18100 6550 17450 6550
 Wire Wire Line
 	1250 6000 2450 6000
 Wire Wire Line
@@ -2011,6 +2022,8 @@ Wire Wire Line
 	9450 8600 9450 8650
 Connection ~ 9450 8600
 Wire Wire Line
+	18100 6750 17450 6750
+Wire Wire Line
 	4000 9800 4000 10050
 Connection ~ 4000 10050
 Wire Wire Line
@@ -2325,7 +2338,7 @@ Wire Wire Line
 Wire Wire Line
 	12100 11850 12400 11850
 $Comp
-L +3.3V-RESCUE-small_drive #PWR021
+L small_drive-rescue:+3.3V-RESCUE-small_drive #PWR021
 U 1 1 57AB782F
 P 7550 14400
 F 0 "#PWR021" H 7600 14430 20  0001 C CNN
@@ -2336,7 +2349,7 @@ F 3 "" H 7550 14400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R-RESCUE-small_drive R46
+L small_drive-rescue:R-RESCUE-small_drive R46
 U 1 1 57AB78DA
 P 7200 14500
 F 0 "R46" V 7280 14500 50  0000 C CNN
@@ -2396,7 +2409,7 @@ Wire Wire Line
 	12150 7150 12400 7150
 Connection ~ 13350 7500
 $Comp
-L R-RESCUE-small_drive R48
+L small_drive-rescue:R-RESCUE-small_drive R48
 U 1 1 57ABF7E9
 P 11900 7250
 F 0 "R48" V 11980 7250 50  0000 C CNN
@@ -2412,7 +2425,7 @@ Wire Wire Line
 	11900 6850 11900 6950
 Connection ~ 11900 6950
 $Comp
-L R-RESCUE-small_drive R47
+L small_drive-rescue:R-RESCUE-small_drive R47
 U 1 1 57AC00D4
 P 11900 6600
 F 0 "R47" V 11980 6600 50  0000 C CNN
@@ -2430,7 +2443,7 @@ Wire Wire Line
 	11900 7600 11900 7500
 Connection ~ 12600 7600
 $Comp
-L CONN_01X04 P4
+L small_drive-rescue:CONN_01X04 P4
 U 1 1 57AC5567
 P 13050 5650
 F 0 "P4" H 13050 5900 50  0000 C CNN
@@ -2457,7 +2470,7 @@ HBEN
 Wire Wire Line
 	1250 11800 2300 11800
 $Comp
-L CONN_01X01 P8
+L small_drive-rescue:CONN_01X01 P8
 U 1 1 57AD55B2
 P 12600 2650
 F 0 "P8" H 12600 2750 50  0000 C CNN
@@ -2468,7 +2481,7 @@ F 3 "" H 12600 2650 50  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L GND #PWR037
+L power:GND #PWR037
 U 1 1 57AD5727
 P 12600 3100
 F 0 "#PWR037" H 12600 2850 50  0001 C CNN
@@ -2493,7 +2506,7 @@ ENC_RXP
 Text Label 10300 11050 0    60   ~ 0
 ENC_RXN
 $Comp
-L XMC4400-F100-RESCUE-small_drive U1
+L small_drive-rescue:XMC4400-F100-RESCUE-small_drive U1
 U 1 1 58A09522
 P 800 3700
 F 0 "U1" H 911 5137 60  0000 C CNN
@@ -2506,7 +2519,7 @@ F 5 "XMC4400F100K512ABXQSA1-ND" H 800 -3200 60  0001 C CNN "Digikey"
 	1    0    0    -1  
 $EndComp
 $Comp
-L XMC4400-F100-RESCUE-small_drive U1
+L small_drive-rescue:XMC4400-F100-RESCUE-small_drive U1
 U 2 1 58A09C0A
 P 800 7050
 F 0 "U1" H 931 8487 60  0000 C CNN
@@ -2519,7 +2532,7 @@ F 5 "XMC4400F100K512ABXQSA1-ND" H 800 150 60  0001 C CNN "Digikey"
 	1    0    0    -1  
 $EndComp
 $Comp
-L XMC4400-F100-RESCUE-small_drive U1
+L small_drive-rescue:XMC4400-F100-RESCUE-small_drive U1
 U 3 1 58A09D3A
 P 800 9950
 F 0 "U1" H 911 11387 60  0000 C CNN
@@ -2532,7 +2545,7 @@ F 5 "XMC4400F100K512ABXQSA1-ND" H 800 3050 60  0001 C CNN "Digikey"
 	1    0    0    -1  
 $EndComp
 $Comp
-L XMC4400-F100-RESCUE-small_drive U1
+L small_drive-rescue:XMC4400-F100-RESCUE-small_drive U1
 U 4 1 58A09EEF
 P 800 12850
 F 0 "U1" H 931 14287 60  0000 C CNN
@@ -2545,7 +2558,7 @@ F 5 "XMC4400F100K512ABXQSA1-ND" H 800 5950 60  0001 C CNN "Digikey"
 	1    0    0    -1  
 $EndComp
 $Comp
-L R-RESCUE-small_drive R49
+L small_drive-rescue:R-RESCUE-small_drive R49
 U 1 1 58A0FE9B
 P 5150 3050
 F 0 "R49" H 5032 3096 50  0000 C CNN
@@ -2588,7 +2601,7 @@ Wire Wire Line
 Connection ~ 1550 9700
 Connection ~ 1550 7600
 $Comp
-L +3.3V-RESCUE-small_drive #PWR05
+L small_drive-rescue:+3.3V-RESCUE-small_drive #PWR05
 U 1 1 58A15DE2
 P 1550 2300
 F 0 "#PWR05" H 5900 -1470 20  0001 C CNN
@@ -2618,7 +2631,7 @@ Wire Wire Line
 Connection ~ 1350 9600
 Connection ~ 1350 10000
 $Comp
-L GND #PWR03
+L power:GND #PWR03
 U 1 1 58A1B6CF
 P 1350 14250
 F 0 "#PWR03" H 1400 14300 50  0001 C CNN
@@ -2654,7 +2667,7 @@ Wire Wire Line
 Text Notes 2600 7000 0    60   ~ 0
 P14.8 VADC_G1CH0 VADC_G3CH2
 $Comp
-L LTC2850-RESCUE-small_drive U4
+L small_drive-rescue:LTC2850-RESCUE-small_drive U4
 U 1 1 5779D666
 P 12950 11100
 F 0 "U4" H 12950 11400 60  0000 C CNN
@@ -2665,7 +2678,7 @@ F 3 "LTC28050.pdf" H 12950 11400 60  0001 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L LTC2850-RESCUE-small_drive U15
+L small_drive-rescue:LTC2850-RESCUE-small_drive U15
 U 1 1 58A2C663
 P 12950 12000
 F 0 "U15" H 12950 12300 60  0000 C CNN
@@ -2688,7 +2701,7 @@ Wire Wire Line
 Wire Wire Line
 	13500 14900 13550 14900
 $Comp
-L LTC2850-RESCUE-small_drive U22
+L small_drive-rescue:LTC2850-RESCUE-small_drive U22
 U 1 1 58A2F929
 P 12950 13800
 F 0 "U22" H 12950 14100 60  0000 C CNN
@@ -2699,7 +2712,7 @@ F 3 "LTC28050.pdf" H 12950 14100 60  0001 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L LTC2850-RESCUE-small_drive U23
+L small_drive-rescue:LTC2850-RESCUE-small_drive U23
 U 1 1 58A2F9FA
 P 12950 14750
 F 0 "U23" H 12950 15050 60  0000 C CNN
@@ -2754,7 +2767,7 @@ Wire Wire Line
 	13750 13650 13500 13650
 Connection ~ 13750 13650
 $Comp
-L +5V #PWR047
+L power:+5V #PWR047
 U 1 1 58A372FE
 P 13750 12550
 F 0 "#PWR047" H 13800 12600 50  0001 C CNN
@@ -2781,7 +2794,7 @@ Connection ~ 13650 14700
 Text Label 14050 14700 0    60   ~ 0
 ENC1_DDIR
 $Comp
-L +5V #PWR045
+L power:+5V #PWR045
 U 1 1 58A3BA29
 P 13650 10600
 F 0 "#PWR045" H 13700 10650 50  0001 C CNN
@@ -2803,7 +2816,7 @@ Wire Wire Line
 Wire Wire Line
 	1250 9100 2300 9100
 $Comp
-L GND #PWR046
+L power:GND #PWR046
 U 1 1 58A4708A
 P 13650 12200
 F 0 "#PWR046" H 13700 12250 50  0001 C CNN
@@ -2824,7 +2837,7 @@ Wire Wire Line
 	13500 12150 13650 12150
 Connection ~ 13650 12150
 $Comp
-L R-RESCUE-small_drive R50
+L small_drive-rescue:R-RESCUE-small_drive R50
 U 1 1 58A0E9B2
 P 12950 13250
 F 0 "R50" V 13030 13250 50  0000 C CNN
@@ -2835,7 +2848,7 @@ F 3 "" H 12950 13250 60  0000 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L R-RESCUE-small_drive R53
+L small_drive-rescue:R-RESCUE-small_drive R53
 U 1 1 58A0E9B8
 P 10650 12150
 F 0 "R53" V 10730 12150 50  0000 C CNN
@@ -2851,7 +2864,7 @@ Wire Wire Line
 	13200 13250 13550 13250
 Connection ~ 13550 13250
 $Comp
-L R-RESCUE-small_drive R51
+L small_drive-rescue:R-RESCUE-small_drive R51
 U 1 1 58A11B4C
 P 12950 14250
 F 0 "R51" V 13030 14250 50  0000 C CNN
@@ -2862,7 +2875,7 @@ F 3 "" H 12950 14250 60  0000 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L R-RESCUE-small_drive R52
+L small_drive-rescue:R-RESCUE-small_drive R52
 U 1 1 58A11CD0
 P 12950 15200
 F 0 "R52" V 13030 15200 50  0000 C CNN
@@ -2881,7 +2894,7 @@ Wire Wire Line
 Wire Wire Line
 	13200 14250 13550 14250
 $Comp
-L R-RESCUE-small_drive R54
+L small_drive-rescue:R-RESCUE-small_drive R54
 U 1 1 58A143B7
 P 14100 14250
 F 0 "R54" V 14180 14250 50  0000 C CNN
@@ -2892,7 +2905,7 @@ F 3 "" H 14100 14250 60  0000 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L R-RESCUE-small_drive R55
+L small_drive-rescue:R-RESCUE-small_drive R55
 U 1 1 58A144A6
 P 14100 15200
 F 0 "R55" V 14180 15200 50  0000 C CNN
@@ -2907,7 +2920,7 @@ Connection ~ 13550 15200
 Wire Wire Line
 	13750 12550 13750 12650
 $Comp
-L GND #PWR031
+L power:GND #PWR031
 U 1 1 58A172A0
 P 10300 12150
 F 0 "#PWR031" H 10350 12200 50  0001 C CNN
@@ -2920,7 +2933,7 @@ $EndComp
 Wire Wire Line
 	10300 12150 10400 12150
 $Comp
-L GND #PWR050
+L power:GND #PWR050
 U 1 1 58A17AA0
 P 14450 14250
 F 0 "#PWR050" H 14500 14300 50  0001 C CNN
@@ -2933,7 +2946,7 @@ $EndComp
 Wire Wire Line
 	14450 14250 14350 14250
 $Comp
-L GND #PWR051
+L power:GND #PWR051
 U 1 1 58A17C0B
 P 14450 15200
 F 0 "#PWR051" H 14500 15250 50  0001 C CNN
@@ -2946,7 +2959,7 @@ $EndComp
 Wire Wire Line
 	14450 15200 14350 15200
 $Comp
-L R-RESCUE-small_drive R57
+L small_drive-rescue:R-RESCUE-small_drive R57
 U 1 1 58A0C7F5
 P 12950 11550
 F 0 "R57" V 13030 11550 50  0000 C CNN
@@ -2961,7 +2974,7 @@ Wire Wire Line
 Wire Wire Line
 	12350 11550 12700 11550
 $Comp
-L R-RESCUE-small_drive R58
+L small_drive-rescue:R-RESCUE-small_drive R58
 U 1 1 58A124B5
 P 14100 11550
 F 0 "R58" V 14180 11550 50  0000 C CNN
@@ -2972,7 +2985,7 @@ F 3 "" H 14100 11550 60  0000 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L GND #PWR048
+L power:GND #PWR048
 U 1 1 58A124BB
 P 14450 11550
 F 0 "#PWR048" H 14500 11600 50  0001 C CNN
@@ -2986,7 +2999,7 @@ Wire Wire Line
 	14450 11550 14350 11550
 Connection ~ 13550 11550
 $Comp
-L R-RESCUE-small_drive R56
+L small_drive-rescue:R-RESCUE-small_drive R56
 U 1 1 58A12F61
 P 12100 12150
 F 0 "R56" V 12180 12150 50  0000 C CNN
@@ -2998,10 +3011,21 @@ F 3 "" H 12100 12150 60  0000 C CNN
 $EndComp
 Wire Wire Line
 	11850 12150 10900 12150
+$Comp
+L small_drive-rescue:TL074-RESCUE-small_drive U7
+U 2 1 58A15E9C
+P 12700 7050
+F 0 "U7" H 13000 6900 60  0000 C CNN
+F 1 "MC33074DTBR2" H 12700 6800 50  0000 L CNN
+F 2 "Housings_SSOP:TSSOP-14_4.4x5mm_Pitch0.65mm" H -3850 -2200 60  0001 C CNN
+F 3 "" H -3850 -2200 60  0000 C CNN
+	2    12700 7050
+	1    0    0    -1  
+$EndComp
 Text Notes 2600 4250 0    60   ~ 0
 P15.3 VADC_G2CH3
 $Comp
-L R-RESCUE-small_drive R59
+L small_drive-rescue:R-RESCUE-small_drive R59
 U 1 1 58A23A68
 P 14100 13250
 F 0 "R59" V 14180 13250 50  0000 C CNN
@@ -3012,7 +3036,7 @@ F 3 "" H 14100 13250 60  0000 C CNN
 	0    -1   1    0   
 $EndComp
 $Comp
-L GND #PWR049
+L power:GND #PWR049
 U 1 1 58A23A6E
 P 14450 13250
 F 0 "#PWR049" H 14500 13300 50  0001 C CNN
@@ -3025,7 +3049,7 @@ $EndComp
 Wire Wire Line
 	14450 13250 14350 13250
 $Comp
-L GND #PWR01
+L power:GND #PWR01
 U 1 1 58A26D7A
 P 700 5300
 F 0 "#PWR01" H -150 -350 50  0001 C CNN
@@ -3041,7 +3065,7 @@ Wire Wire Line
 	1650 7100 1250 7100
 Connection ~ 1650 6800
 $Comp
-L LTC2850-RESCUE-small_drive U21
+L small_drive-rescue:LTC2850-RESCUE-small_drive U21
 U 1 1 58A2F853
 P 12950 12800
 F 0 "U21" H 12950 13100 60  0000 C CNN
@@ -3095,7 +3119,7 @@ Wire Wire Line
 	9950 13100 9900 13100
 Connection ~ 9950 13500
 $Comp
-L C-RESCUE-small_drive C60
+L small_drive-rescue:C-RESCUE-small_drive C60
 U 1 1 58D45D58
 P 2900 1400
 F 0 "C60" H 2950 1500 50  0000 L CNN
@@ -3106,7 +3130,7 @@ F 3 "" H 2900 1400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C-RESCUE-small_drive C61
+L small_drive-rescue:C-RESCUE-small_drive C61
 U 1 1 58D45E27
 P 3300 1400
 F 0 "C61" H 3350 1500 50  0000 L CNN
@@ -3128,7 +3152,7 @@ Wire Wire Line
 	2900 1950 2900 1600
 Connection ~ 2900 1950
 $Comp
-L +5V #PWR038
+L power:+5V #PWR038
 U 1 1 58F3CFDD
 P 12600 6650
 F 0 "#PWR038" H 12600 6500 50  0001 C CNN
@@ -3141,7 +3165,7 @@ $EndComp
 Wire Wire Line
 	12600 6650 12600 6750
 $Comp
-L C-RESCUE-small_drive C62
+L small_drive-rescue:C-RESCUE-small_drive C62
 U 1 1 58F3D587
 P 7700 1400
 F 0 "C62" H 7750 1500 50  0000 L CNN
@@ -3487,15 +3511,4 @@ Wire Wire Line
 	3300 1950 3800 1950
 Wire Wire Line
 	2900 1950 3300 1950
-$Comp
-L TL074-RESCUE-small_drive U7
-U 2 1 58A15E9C
-P 12700 7050
-F 0 "U7" H 13000 6900 60  0000 C CNN
-F 1 "MC33074DTBR2" H 12700 6800 50  0000 L CNN
-F 2 "Housings_SSOP:TSSOP-14_4.4x5mm_Pitch0.65mm" H -3850 -2200 60  0001 C CNN
-F 3 "" H -3850 -2200 60  0000 C CNN
-	2    12700 7050
-	1    0    0    -1  
-$EndComp
 $EndSCHEMATC

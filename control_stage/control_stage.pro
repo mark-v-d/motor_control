@@ -1,4 +1,4 @@
-update=Sun 17 Feb 2019 10:15:26 PM CET
+update=Tue 07 Mar 2017 11:03:46 PM CET
 version=1
 last_client=kicad
 [general]
@@ -34,3 +34,4 @@ EquName4=${KIPRJMOD}/../../data/home/transistor.equ
 [eeschema]
 version=1
 LibDir=
+[eeschema/libraries]
