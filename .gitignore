@@ -7,4 +7,5 @@ t
 .*.d
 *.pyc
 *-backups
+*.mdat
 octave-workspace

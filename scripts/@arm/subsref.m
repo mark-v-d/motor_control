@@ -20,16 +20,22 @@ function b=subsref(a,s)
 				len=len(1);
 			end
 			x+=len;
-			[data, headers{end+1}]=tl_peek(a.local.skt,a.local.ctr,
-				start*4,len);
-			b=[b,data];
+			switch(mod(len,4))
+			case 0 data=do_and_wait(a,sprintf("mdw %d %d\n",start,len/4));
+			otherwise data=do_and_wait(a,sprintf("mdb %d %d\n",start,len));
+			end
+			b=[b,decode_string(data)];
 		until x>length(ind);
-		b=typecast(b,"uint32");
+		size(b)
+		b=typecast(b,"uint8");
 	case "{}"
 		error("sw cannot be indexed with ()");
 	case "."
 		if strcmp(s(1).subs,"local") || strcmp(s(1).subs,"var")
 			b=a.(s(1).subs);
+		elseif strcmp(s(1).subs,"tpi")  || strcmp(s(1).subs,"itm")
+			# We don't have to read itm
+			b=[];
 		else
 			b=dodot(a,a.var.(s(1).subs));
 		end
@@ -39,12 +45,7 @@ function b=subsref(a,s)
 	end
 endfunction
 
-function b=dodot(a,v)
-	len=v.type.size;
-	if isfield(v.type,"upper_bound")
-		len*=v.type.upper_bound+1;
-	end
-	td=do_and_wait(a,sprintf("mdb %d %d\n",v.address,len)); 
+function b=decode_string(td)
 	lines=strsplit(char(td),"\n");
 	b=[];
 	for x=lines
@@ -52,14 +53,25 @@ function b=dodot(a,v)
 		if length(line)<13 || (line(11)!=':' && line(12)!=':')
 			continue;
 		end
-		b=[b;uint8(sscanf(line(13:end),"%x"))];
+		b=[b;uint32(sscanf(line(13:end),"%x"))];
+	end
+	b=typecast(b,"uint8");
+endfunction
+
+function b=dodot(a,v)
+	if isfield(v.type,"upper_bound")
+		len=v.type.type.size;
+		len*=v.type.upper_bound+1;
+	else
+		len=v.type.size;
+	end
+	td=do_and_wait(a,sprintf("mdw %d %d\n",v.address,ceil(len/4)));
+	b=decode_string(td)(1:len);
+
+	if isfield(v.type, "proc")
+		b=v.type.proc(a,v.type,b);
 	end
 
-	switch(v.decode)
-	case "structure" b=decode_struct(a,v,b);
-	case "enum" b=decode_enum(a,v,b);
-	otherwise b=typecast(b,v.decode);
-	end
 endfunction
 
 function result=decode(info, b)
@@ -71,7 +83,7 @@ function result=decode(info, b)
 			name=x{1}
 			result.(name)=decode(info.type.union.(name),b);
 		end
-	otherwise 
+	otherwise
 		if(strcmp(info.decode,"pointer"))
 			result=typecast(b,"uint32");
 		else
@@ -84,11 +96,7 @@ function result=decode_struct(a,v,b)
 	for x=fieldnames(v.type.structure)'
 		info=v.type.structure.(x{1});
 		s=info.data_member_location+1;
-		if isfield(info.type,"upper_bound")
-			e=s+info.type.size*(info.type.upper_bound+1)-1;
-		else
-			e=s+info.type.size-1;
-		end
+		e=s+info.type.size-1;
 		result.(x{1})=decode(info,b(s:e));
 	end
 endfunction

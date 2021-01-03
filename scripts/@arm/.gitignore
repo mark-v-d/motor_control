@@ -1,1 +1,4 @@
 symbols
+parse
+decode
+*.elf
