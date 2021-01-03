@@ -1,4 +1,4 @@
-function result=arm(port=4444,filename="../software/main.elf")
+function result=arm(port=4444,filename="../xmc4400/main.elf")
 	result.local.skt=socket(AF_INET, SOCK_STREAM, 0);
 	client_info = struct("addr", "localhost", "port", port);
 	connect(result.local.skt, client_info);
