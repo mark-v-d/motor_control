@@ -21,7 +21,7 @@ struct POSIF_PADDED_t:public POSIF_GLOBAL_TypeDef {
   __I  uint32_t  RESERVED6[4031];
 };
 
-struct VADC_complete_t:public VADC_GLOBAL_TypeDef 
+struct VADC_complete_t:public VADC_GLOBAL_TypeDef
 {
     __I uint32_t RESERVED5[3];
     struct group:public VADC_G_TypeDef
@@ -79,12 +79,12 @@ public:
 	return (gpio_port[port].IN>>pin)&1;
     }
 
-    void set(XMC_GPIO_MODE m) { 
+    void set(XMC_GPIO_MODE m) {
 	// Isn't this byte adressable?
-	gpio_port[port].IOCR[pin/4]&=~(255<<8*(pin%4)); 
+	gpio_port[port].IOCR[pin/4]&=~(255<<8*(pin%4));
 	gpio_port[port].IOCR[pin/4]|=m<<8*(pin%4);
     }
-    void set(XMC_GPIO_OUTPUT_STRENGTH m) { 
+    void set(XMC_GPIO_OUTPUT_STRENGTH m) {
 	gpio_port[port].PDR[pin/8]&=~(15<<4*(pin%8));
 	gpio_port[port].PDR[pin/8]|=m<<4*(pin%8);
     }
@@ -108,22 +108,28 @@ public:
     // Ethernet inputs
     operator XMC_ETH_MAC_PORT_CTRL_RXD0() {
 	static_assert(port==-1, "Cannot use this pin as RXD0 for ETH0");
-    } 
+	return -1;
+    }
     operator XMC_ETH_MAC_PORT_CTRL_RXD1() {
 	static_assert(port==-1, "Cannot use this pin as RXD1 for ETH0");
-    } 
+	return -1;
+    }
     operator XMC_ETH_MAC_PORT_CTRL_CLK_RMII() {
 	static_assert(port==-1, "Cannot use this pin as CLK_RMII for ETH0");
-    } 
+	return -1;
+    }
     operator XMC_ETH_MAC_PORT_CTRL_CRS_DV() {
 	static_assert(port==-1, "Cannot use this pin as CRS_DV for ETH0");
-    } 
+	return -1;
+    }
     operator XMC_ETH_MAC_PORT_CTRL_RXER() {
 	static_assert(port==-1, "Cannot use this pin as RXER for ETH0");
-    } 
+	return -1;
+    }
     operator XMC_ETH_MAC_PORT_CTRL_MDIO() {
 	static_assert(port==-1, "Cannot use this pin as MDIO for ETH0");
-    } 
+	return -1;
+    }
 };
 
 template <int port, int pin>
@@ -149,8 +155,8 @@ template <int port, int pin>
 class input:public pinBase<port,pin>
 {
 public:
-    input(void) { 
-	pinBase<port,pin>::set(XMC_GPIO_MODE_INPUT_TRISTATE); 
+    input(void) {
+	pinBase<port,pin>::set(XMC_GPIO_MODE_INPUT_TRISTATE);
 	pinBase<port,pin>::set(XMC_GPIO_HWCTRL_DISABLED);
 	if(port>=14)
 	    pinBase<port,pin>::pdisc(0);
@@ -174,8 +180,8 @@ type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD0,0,2);
 type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD0,14,8);
 type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD0,5,0);
 
-type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD1,2,3); 
-type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD1,0,3); 
+type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD1,2,3);
+type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD1,0,3);
 type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD1,14,9);
 type_conversion(XMC_ETH_MAC_PORT_CTRL_RXD1,5,1);
 

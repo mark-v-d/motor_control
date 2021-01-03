@@ -17,7 +17,7 @@ class udp_sync:public Ethernet::Transmitter, public Ethernet::Receiver {
 	uint32_t timer;
 	float integrator;
 
-	sync_t operator =(udp_t const &o) { udp_t::operator=(o); }
+	void operator =(udp_t const &o) { udp_t::operator=(o); }
     } pkt;
 public:
     udp_sync(void);

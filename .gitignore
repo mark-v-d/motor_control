@@ -6,4 +6,5 @@ t
 *.sym
 .*.d
 *.pyc
+*-backups
 octave-workspace

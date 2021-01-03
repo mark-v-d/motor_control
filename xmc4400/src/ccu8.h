@@ -3,7 +3,7 @@
 
 /*
     Figure 21-92 of the XMC4400 manual gives an overview of the registers.
-    
+
 */
 
 extern struct ccu8_t:public CCU8_GLOBAL_TypeDef {
@@ -91,7 +91,7 @@ union CMC_t {
 	uint32_t EXTERNAL_UP_DOWN:2;
 	uint32_t EXTERNAL_LOAD:2;
 	uint32_t EXTERNAL_COUNT:2;
-	uint32_t OVERRIDE:1;	// This field enables the ST bit override 
+	uint32_t OVERRIDE:1;	// This field enables the ST bit override
 	uint32_t TRAP:1;	// trap functionality 0=disabled, 1=event 2
 	uint32_t EXTERNAL_MODULATION:2;
 	uint32_t CONCATENTATION:1; // disabled for cc[0]
@@ -175,10 +175,10 @@ union TC_t {
 union INTE_t {
     struct {
 	uint32_t PERIOD_MATCH:1;	// Period match while counting up
-	uint32_t ONE_MATCH:1;		// One match while counting down 
-	uint32_t COMPARE1_MATCH_UP:1;	// Ch1 Compare match while counting up 
+	uint32_t ONE_MATCH:1;		// One match while counting down
+	uint32_t COMPARE1_MATCH_UP:1;	// Ch1 Compare match while counting up
 	uint32_t COMPARE1_MATCH_DOWN:1;	// Ch1 Compare match while counting down
-	uint32_t COMPARE2_MATCH_UP:1;	// Ch2 Compare match while counting up 
+	uint32_t COMPARE2_MATCH_UP:1;	// Ch2 Compare match while counting up
 	uint32_t COMPARE2_MATCH_DOWN:1;	// Ch2 Compare match while counting down
 	uint32_t :2;
 	uint32_t EVENT0:1;		// Event 0 interrupt enable
@@ -226,7 +226,7 @@ SPECIALISATION(unit, int, 0, 5, 0);
 SPECIALISATION(unit, int, 0, 6, 0);
 
 template <int port, int pin>
-constexpr int unit(void) { static_assert(port==-1, "Invalid pin");}
+constexpr int unit(void) { static_assert(port==-1, "Invalid pin"); return -1;}
 template<> constexpr int unit<0,3>() { return 0; }
 template<> constexpr int unit<0,5>() { return 0; }
 template<> constexpr int unit<0,6>() { return 0; }
@@ -240,7 +240,7 @@ SPECIALISATION(slice, int, 0, 5, 0);
 SPECIALISATION(slice, int, 0, 6, 3);
 
 template <int port, int pin>
-constexpr int slice(void) { static_assert(port==-1, "Invalid pin");}
+constexpr int slice(void) { static_assert(port==-1, "Invalid pin"); return -1; }
 template<> constexpr int slice<0,3>() { return 2; }
 template<> constexpr int slice<0,5>() { return 0; }
 template<> constexpr int slice<0,6>() { return 3; }
@@ -256,8 +256,8 @@ SPECIALISATION(out, int, 0, 6, 0);
 #undef BASE__FUNCTION
 #undef SPECIALISATION
 
-template <int u,int i> constexpr IRQn_Type irq() 
-{ static_assert(u==-1,"Oops");}
+template <int u,int i> constexpr IRQn_Type irq()
+{ static_assert(u==-1,"Oops"); return -1; }
 template <> constexpr IRQn_Type irq<0,0>() { return CCU80_0_IRQn; }
 template <> constexpr IRQn_Type irq<0,1>() { return CCU80_1_IRQn; }
 template <> constexpr IRQn_Type irq<0,2>() { return CCU80_2_IRQn; }

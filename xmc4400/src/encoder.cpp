@@ -58,7 +58,7 @@ void encoder_t::init_half_duplex(
     XMC_UART_CH_CONFIG_t const &uart_config)
 {
     using namespace usic_ch_ns;
-    constexpr XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
+    XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
 
     XMC_UART_CH_DisableEvent(ENC_TXD, XMC_UART_CH_EVENT_STANDARD_RECEIVE);
     NVIC_DisableIRQ(irq<fd_irq>(ENC_TXD));
@@ -96,7 +96,7 @@ void encoder_t::init_full_duplex(
     XMC_UART_CH_CONFIG_t const &uart_config)
 {
     using namespace usic_ch_ns;
-    constexpr XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
+    XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
 
     XMC_UART_CH_DisableEvent(ENC_TXD, XMC_UART_CH_EVENT_FRAME_FINISHED);
     NVIC_DisableIRQ(irq<hd_irq>(ENC_TXD));
@@ -205,19 +205,19 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
     XMC_POSIF_Start(p);
 
     XMC_ERU_Enable(XMC_ERU1);
-    XMC_ERU_ETL_SetInput(XMC_ERU1, pwm.spare_slice(), XMC_ERU_ETL_INPUT_A0, 
+    XMC_ERU_ETL_SetInput(XMC_ERU1, pwm.spare_slice(), XMC_ERU_ETL_INPUT_A0,
 	ERU1_ETL0_INPUTB_CCU80_ST0);
     XMC_ERU_ETL_SetSource(XMC_ERU1, pwm.spare_slice(), XMC_ERU_ETL_SOURCE_B);
-    XMC_ERU_ETL_SetEdgeDetection(XMC_ERU1, pwm.spare_slice(), 
+    XMC_ERU_ETL_SetEdgeDetection(XMC_ERU1, pwm.spare_slice(),
 	XMC_ERU_ETL_EDGE_DETECTION_FALLING);
-    XMC_ERU_ETL_SetStatusFlagMode(XMC_ERU1, pwm.spare_slice(), 
+    XMC_ERU_ETL_SetStatusFlagMode(XMC_ERU1, pwm.spare_slice(),
 	XMC_ERU_ETL_STATUS_FLAG_MODE_HWCTRL);
-    XMC_ERU_ETL_EnableOutputTrigger(XMC_ERU1, pwm.spare_slice(), 
+    XMC_ERU_ETL_EnableOutputTrigger(XMC_ERU1, pwm.spare_slice(),
 	XMC_ERU_ETL_OUTPUT_TRIGGER_CHANNEL1);
 
     XMC_ERU_OGU_DisablePatternDetection(XMC_ERU1, 1);
     XMC_ERU_OGU_DisablePeripheralTrigger(XMC_ERU1, 1);
-    XMC_ERU_OGU_SetServiceRequestMode(XMC_ERU1, 1, 
+    XMC_ERU_OGU_SetServiceRequestMode(XMC_ERU1, 1,
 	XMC_ERU_OGU_SERVICE_REQUEST_ON_TRIGGER);
 
     /* Initialise counter FIXME, allocate unit in some way */
@@ -253,8 +253,8 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
 	.ofs=0,
 	.ts=0,
 	.mos=0,
-	.tce=0 
-    }}).raw; 
+	.tce=0
+    }}).raw;
 
     // slice 1 latches at the interrupt
     ccu40.cc[1].INS=ccu4_cc4_ns::ins_t({{
@@ -284,7 +284,7 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
 	.ts=0,
 	.mos=0,
 	.tce=0
-    }}).raw; 
+    }}).raw;
 
     for(int i=0;i<2;i++)
 	ccu40.cc[i].PRS=0xffff;	// 16-bit period
@@ -329,10 +329,10 @@ inline void mitsubishi_encoder_t::read_fifo(void)
 {
     if(!putp) {
 	using namespace usic_ch_ns;
-	constexpr XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
+	XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
 	for(;;) {
 	    trbsr_t status={.raw=channel->TRBSR};
-	    if(status.rempty) 
+	    if(status.rempty)
 		break;
 	    if(putp<sizeof(rx_buffer))
 		rx_buffer[putp++]=channel->OUTR;
@@ -350,7 +350,7 @@ void mitsubishi_encoder_t::half_duplex(void)
     ENC_TXD.set(XMC_GPIO_MODE_INPUT_TRISTATE);
     NVIC_DisableIRQ(irq<hd_irq>(ENC_TXD));
 
-    constexpr XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
+    XMC_USIC_CH_t *channel=xmc_channel(ENC_TXD);
     uint32_t reason=channel->PSR;
     channel->PSCR=reason;
 }
@@ -441,7 +441,7 @@ void mitsubishi_MFS13_t::trigger(void)
     putp=0;
     NVIC_ClearPendingIRQ(usic_ch_ns::irq<hd_irq>(ENC_TXD));
     NVIC_EnableIRQ(usic_ch_ns::irq<hd_irq>(ENC_TXD));
-    ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL 
+    ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL
 	| XMC_GPIO_MODE_OUTPUT_ALT2));
     ENC_TXD=0x1a;
 }
@@ -486,7 +486,7 @@ bool mitsubishi_PQ_t::valid(void)
 void mitsubishi_PQ_t::trigger(void)
 {
     ENC_DIR=1;
-    ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL 
+    ENC_TXD.set(XMC_GPIO_MODE_t(XMC_GPIO_MODE_OUTPUT_PUSH_PULL
 	| XMC_GPIO_MODE_OUTPUT_ALT2));
     putp=0;
     ENC_TXD=0x1a;
@@ -548,7 +548,7 @@ int mitsubishi_encoder_t::detect(void)
 /*******************************************************************************
     Hiperface encoder
 *******************************************************************************/
-class hiperface_t:public encoder_t, 
+class hiperface_t:public encoder_t,
     public posif_t<decltype(ENC_SIN),decltype(ENC_COS),decltype(ENC_Z)>
 {
     // FIXME, these settings are for the DS56S
@@ -594,8 +594,8 @@ void hiperface_t::trigger(void)
 {
 }
 
-int32_t hiperface_t::position(void) 
-{ 
+int32_t hiperface_t::position(void)
+{
     int32_t ch0=vadc.G[1].RES[0]&0xffff; ch0-=2047;
     int32_t ch1=vadc.G[2].RES[0]&0xffff; ch1-=2047;
     constexpr float c=0.5/PI;
@@ -627,7 +627,7 @@ void hiperface_t::half_duplex(void)
 	    ENC_TXD.set(XMC_GPIO_MODE_INPUT_TRISTATE);
 	    ENC_DIR=0;
 	}
-    } 
+    }
     usic->PSCR=reason;
 }
 

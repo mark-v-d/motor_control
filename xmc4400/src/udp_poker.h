@@ -4,7 +4,7 @@ class udp_poker:public Ethernet::Receiver {
     struct pkt_t {
 	uint32_t hb[3];
 
-	pkt_t operator =(udp_payload_t const &o) {
+	void operator =(udp_payload_t const &o) {
 	    memcpy(hb,o.data,sizeof(hb));
 	}
     } pkt;

@@ -1,3 +1,0 @@
-(sym_lib_table
-  (lib (name power_stage-rescue)(type Legacy)(uri ${KIPRJMOD}/power_stage-rescue.lib)(options "")(descr ""))
-)

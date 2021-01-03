@@ -125,26 +125,11 @@ X + 8 -400 -150 300 R 50 50 1 1 I
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_+12P
+# small_drive-rescue_+12P-power1-small_drive-rescue
 #
-DEF small_drive-rescue_+12P #PWR 0 0 Y Y 1 F P
+DEF small_drive-rescue_+12P-power1-small_drive-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -150 50 H I C CNN
-F1 "small_drive-rescue_+12P" 0 140 50 H V C CNN
-F2 "" 0 0 50 H V C CNN
-F3 "" 0 0 50 H V C CNN
-DRAW
-P 2 0 1 0 -30 50 0 100 N
-P 2 0 1 0 0 0 0 100 N
-P 2 0 1 0 0 100 30 50 N
-X +12P 1 0 0 0 U 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# small_drive-rescue_+12P-power1
-#
-DEF small_drive-rescue_+12P-power1 #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -150 50 H I C CNN
-F1 "small_drive-rescue_+12P-power1" 0 140 50 H V C CNN
+F1 "small_drive-rescue_+12P-power1-small_drive-rescue" 0 140 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 DRAW
@@ -155,11 +140,26 @@ X +12P 1 0 0 0 U 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_+12V
+# small_drive-rescue_+12P-small_drive-rescue
 #
-DEF small_drive-rescue_+12V #PWR 0 0 Y Y 1 F P
+DEF small_drive-rescue_+12P-small_drive-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -150 50 H I C CNN
-F1 "small_drive-rescue_+12V" 0 140 50 H V C CNN
+F1 "small_drive-rescue_+12P-small_drive-rescue" 0 140 50 H V C CNN
+F2 "" 0 0 50 H V C CNN
+F3 "" 0 0 50 H V C CNN
+DRAW
+P 2 0 1 0 -30 50 0 100 N
+P 2 0 1 0 0 0 0 100 N
+P 2 0 1 0 0 100 30 50 N
+X +12P 1 0 0 0 U 50 50 1 1 W N
+ENDDRAW
+ENDDEF
+#
+# small_drive-rescue_+12V-small_drive-rescue
+#
+DEF small_drive-rescue_+12V-small_drive-rescue #PWR 0 0 Y Y 1 F P
+F0 "#PWR" 0 -150 50 H I C CNN
+F1 "small_drive-rescue_+12V-small_drive-rescue" 0 140 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -170,11 +170,11 @@ X +12V 1 0 0 0 U 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_+3.3V-RESCUE-small_drive
+# small_drive-rescue_+3.3V-RESCUE-small_drive-small_drive-rescue
 #
-DEF small_drive-rescue_+3.3V-RESCUE-small_drive #PWR 0 0 Y Y 1 F P
+DEF small_drive-rescue_+3.3V-RESCUE-small_drive-small_drive-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 50 30 20 H I C CNN
-F1 "small_drive-rescue_+3.3V-RESCUE-small_drive" 0 90 30 H V C CNN
+F1 "small_drive-rescue_+3.3V-RESCUE-small_drive-small_drive-rescue" 0 90 30 H V C CNN
 F2 "" 0 0 60 H V C CNN
 F3 "" 0 0 60 H V C CNN
 DRAW
@@ -184,11 +184,11 @@ X +3.3V 1 0 0 0 U 20 20 0 0 W N
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_+3.3VADC
+# small_drive-rescue_+3.3VADC-small_drive-rescue
 #
-DEF small_drive-rescue_+3.3VADC #PWR 0 0 Y Y 1 F P
+DEF small_drive-rescue_+3.3VADC-small_drive-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 150 -50 50 H I C CNN
-F1 "small_drive-rescue_+3.3VADC" 0 100 50 H V C CNN
+F1 "small_drive-rescue_+3.3VADC-small_drive-rescue" 0 100 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -198,26 +198,11 @@ X +3.3VADC 1 0 0 0 U 50 50 0 0 W N
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_+5P
+# small_drive-rescue_+5P-power1-small_drive-rescue
 #
-DEF small_drive-rescue_+5P #PWR 0 0 Y Y 1 F P
+DEF small_drive-rescue_+5P-power1-small_drive-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -150 50 H I C CNN
-F1 "small_drive-rescue_+5P" 0 140 50 H V C CNN
-F2 "" 0 0 50 H V C CNN
-F3 "" 0 0 50 H V C CNN
-DRAW
-P 2 0 1 0 -30 50 0 100 N
-P 2 0 1 0 0 0 0 100 N
-P 2 0 1 0 0 100 30 50 N
-X +5P 1 0 0 0 U 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# small_drive-rescue_+5P-power1
-#
-DEF small_drive-rescue_+5P-power1 #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -150 50 H I C CNN
-F1 "small_drive-rescue_+5P-power1" 0 140 50 H V C CNN
+F1 "small_drive-rescue_+5P-power1-small_drive-rescue" 0 140 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 DRAW
@@ -228,11 +213,26 @@ X +5P 1 0 0 0 U 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_+5V
+# small_drive-rescue_+5P-small_drive-rescue
 #
-DEF small_drive-rescue_+5V #PWR 0 0 Y Y 1 F P
+DEF small_drive-rescue_+5P-small_drive-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -150 50 H I C CNN
-F1 "small_drive-rescue_+5V" 0 140 50 H V C CNN
+F1 "small_drive-rescue_+5P-small_drive-rescue" 0 140 50 H V C CNN
+F2 "" 0 0 50 H V C CNN
+F3 "" 0 0 50 H V C CNN
+DRAW
+P 2 0 1 0 -30 50 0 100 N
+P 2 0 1 0 0 0 0 100 N
+P 2 0 1 0 0 100 30 50 N
+X +5P 1 0 0 0 U 50 50 1 1 W N
+ENDDRAW
+ENDDEF
+#
+# small_drive-rescue_+5V-small_drive-rescue
+#
+DEF small_drive-rescue_+5V-small_drive-rescue #PWR 0 0 Y Y 1 F P
+F0 "#PWR" 0 -150 50 H I C CNN
+F1 "small_drive-rescue_+5V-small_drive-rescue" 0 140 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -243,11 +243,11 @@ X +5V 1 0 0 0 U 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_-12V
+# small_drive-rescue_-12V-small_drive-rescue
 #
-DEF small_drive-rescue_-12V #PWR 0 0 Y Y 1 F N
+DEF small_drive-rescue_-12V-small_drive-rescue #PWR 0 0 Y Y 1 F N
 F0 "#PWR" 0 100 50 H I C CNN
-F1 "small_drive-rescue_-12V" 0 150 50 H V C CNN
+F1 "small_drive-rescue_-12V-small_drive-rescue" 0 150 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -256,11 +256,11 @@ X -12V 1 0 0 0 U 50 50 0 0 W N
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_7805
+# small_drive-rescue_7805-small_drive-rescue
 #
-DEF small_drive-rescue_7805 U 0 30 N Y 1 F N
+DEF small_drive-rescue_7805-small_drive-rescue U 0 30 N Y 1 F N
 F0 "U" 150 -196 60 H V C CNN
-F1 "small_drive-rescue_7805" 0 200 60 H V C CNN
+F1 "small_drive-rescue_7805-small_drive-rescue" 0 200 60 H V C CNN
 F2 "" 0 0 60 H V C CNN
 F3 "" 0 0 60 H V C CNN
 $FPLIST
@@ -274,11 +274,11 @@ X VO VO 400 50 200 L 40 40 1 1 w
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_AD8226
+# small_drive-rescue_AD8226-small_drive-rescue
 #
-DEF small_drive-rescue_AD8226 U 0 20 Y Y 1 F N
+DEF small_drive-rescue_AD8226-small_drive-rescue U 0 20 Y Y 1 F N
 F0 "U" 150 300 70 H V C CNN
-F1 "small_drive-rescue_AD8226" 150 200 70 H V C CNN
+F1 "small_drive-rescue_AD8226-small_drive-rescue" 150 200 70 H V C CNN
 F2 "" 0 0 60 H V C CNN
 F3 "" 150 300 60 H V C CNN
 F4 "AD8226ARZ" 550 700 60 H I C CNN "PartNr"
@@ -297,11 +297,11 @@ X V+ 8 -100 400 250 D 60 40 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_C-RESCUE-small_drive
+# small_drive-rescue_C-RESCUE-small_drive-small_drive-rescue
 #
-DEF small_drive-rescue_C-RESCUE-small_drive C 0 10 N Y 1 F N
+DEF small_drive-rescue_C-RESCUE-small_drive-small_drive-rescue C 0 10 N Y 1 F N
 F0 "C" 50 100 50 H V L CNN
-F1 "small_drive-rescue_C-RESCUE-small_drive" 50 -100 50 H V L CNN
+F1 "small_drive-rescue_C-RESCUE-small_drive-small_drive-rescue" 50 -100 50 H V L CNN
 F2 "" 0 0 60 H V C CNN
 F3 "" 0 0 60 H V C CNN
 $FPLIST
@@ -318,11 +318,11 @@ X ~ 2 0 -200 170 U 40 40 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_C-device1
+# small_drive-rescue_C-device1-small_drive-rescue
 #
-DEF small_drive-rescue_C-device1 C 0 10 N Y 1 F N
+DEF small_drive-rescue_C-device1-small_drive-rescue C 0 10 N Y 1 F N
 F0 "C" 25 100 50 H V L CNN
-F1 "small_drive-rescue_C-device1" 25 -100 50 H V L CNN
+F1 "small_drive-rescue_C-device1-small_drive-rescue" 25 -100 50 H V L CNN
 F2 "" 38 -150 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -336,11 +336,11 @@ X ~ 2 0 -150 110 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_CONN_01X01
+# small_drive-rescue_CONN_01X01-small_drive-rescue
 #
-DEF small_drive-rescue_CONN_01X01 P 0 40 Y N 1 F N
+DEF small_drive-rescue_CONN_01X01-small_drive-rescue P 0 40 Y N 1 F N
 F0 "P" 0 100 50 H V C CNN
-F1 "small_drive-rescue_CONN_01X01" 100 0 50 V V C CNN
+F1 "small_drive-rescue_CONN_01X01-small_drive-rescue" 100 0 50 V V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 $FPLIST
@@ -356,11 +356,11 @@ X P1 1 -200 0 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_CONN_01X04
+# small_drive-rescue_CONN_01X04-small_drive-rescue
 #
-DEF small_drive-rescue_CONN_01X04 P 0 40 Y N 1 F N
+DEF small_drive-rescue_CONN_01X04-small_drive-rescue P 0 40 Y N 1 F N
 F0 "P" 0 250 50 H V C CNN
-F1 "small_drive-rescue_CONN_01X04" 100 0 50 V V C CNN
+F1 "small_drive-rescue_CONN_01X04-small_drive-rescue" 100 0 50 V V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 $FPLIST
@@ -382,11 +382,11 @@ X P4 4 -200 -150 150 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_CP-RESCUE-small_drive
+# small_drive-rescue_CP-RESCUE-small_drive-small_drive-rescue
 #
-DEF small_drive-rescue_CP-RESCUE-small_drive C 0 10 N Y 1 F N
+DEF small_drive-rescue_CP-RESCUE-small_drive-small_drive-rescue C 0 10 N Y 1 F N
 F0 "C" 25 100 50 H V L CNN
-F1 "small_drive-rescue_CP-RESCUE-small_drive" 25 -100 50 H V L CNN
+F1 "small_drive-rescue_CP-RESCUE-small_drive-small_drive-rescue" 25 -100 50 H V L CNN
 F2 "" 38 -150 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 $FPLIST
@@ -410,11 +410,11 @@ X ~ 2 0 -150 110 U 40 40 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_Crystal
+# small_drive-rescue_Crystal-small_drive-rescue
 #
-DEF small_drive-rescue_Crystal Y 0 40 N N 1 F N
+DEF small_drive-rescue_Crystal-small_drive-rescue Y 0 40 N N 1 F N
 F0 "Y" 0 150 50 H V C CNN
-F1 "small_drive-rescue_Crystal" 0 -150 50 H V C CNN
+F1 "small_drive-rescue_Crystal-small_drive-rescue" 0 -150 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 $FPLIST
@@ -429,11 +429,11 @@ X 2 2 150 0 50 L 40 40 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_D-device1
+# small_drive-rescue_D-device1-small_drive-rescue
 #
-DEF small_drive-rescue_D-device1 D 0 40 N N 1 F N
+DEF small_drive-rescue_D-device1-small_drive-rescue D 0 40 N N 1 F N
 F0 "D" 0 100 50 H V C CNN
-F1 "small_drive-rescue_D-device1" 0 -100 50 H V C CNN
+F1 "small_drive-rescue_D-device1-small_drive-rescue" 0 -100 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -452,11 +452,11 @@ X A 2 150 0 100 L 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_DB15
+# small_drive-rescue_DB15-small_drive-rescue
 #
-DEF small_drive-rescue_DB15 J 0 40 Y N 1 F N
+DEF small_drive-rescue_DB15-small_drive-rescue J 0 40 Y N 1 F N
 F0 "J" 20 850 50 H V C CNN
-F1 "small_drive-rescue_DB15" -50 -850 50 H V C CNN
+F1 "small_drive-rescue_DB15-small_drive-rescue" -50 -850 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 $FPLIST
@@ -519,11 +519,11 @@ X P9 9 -450 -600 300 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_DB9
+# small_drive-rescue_DB9-small_drive-rescue
 #
-DEF small_drive-rescue_DB9 J 0 40 Y N 1 F N
+DEF small_drive-rescue_DB9-small_drive-rescue J 0 40 Y N 1 F N
 F0 "J" 0 550 50 H V C CNN
-F1 "small_drive-rescue_DB9" 0 -550 50 H V C CNN
+F1 "small_drive-rescue_DB9-small_drive-rescue" 0 -550 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 $FPLIST
@@ -572,11 +572,11 @@ X P9 9 -450 300 300 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_ETH100_MAG
+# small_drive-rescue_ETH100_MAG-small_drive-rescue
 #
-DEF small_drive-rescue_ETH100_MAG U 0 40 Y Y 1 F N
+DEF small_drive-rescue_ETH100_MAG-small_drive-rescue U 0 40 Y Y 1 F N
 F0 "U" 0 800 60 H V C CNN
-F1 "small_drive-rescue_ETH100_MAG" 0 -750 60 H V C CNN
+F1 "small_drive-rescue_ETH100_MAG-small_drive-rescue" 0 -750 60 H V C CNN
 F2 "00_Passives:ETH100_MAG" 0 400 60 H I C CNN
 F3 "SI-50170-F.pdf" 0 50 60 H I C CNN
 F4 "SI-50170-F" 400 1475 60 H I C CNN "PartNr"
@@ -686,11 +686,11 @@ X ~ YK -550 -650 275 R 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_GND
+# small_drive-rescue_GND-RESCUE-small_drive-small_drive-rescue
 #
-DEF small_drive-rescue_GND #PWR 0 0 Y Y 1 F P
+DEF small_drive-rescue_GND-RESCUE-small_drive-small_drive-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -250 50 H I C CNN
-F1 "small_drive-rescue_GND" 0 -150 50 H V C CNN
+F1 "small_drive-rescue_GND-RESCUE-small_drive-small_drive-rescue" 0 -150 50 H V C CNN
 F2 "" 0 0 50 H V C CNN
 F3 "" 0 0 50 H V C CNN
 DRAW
@@ -699,24 +699,11 @@ X GND 1 0 0 0 D 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_GND-RESCUE-small_drive
+# small_drive-rescue_GND-power1-small_drive-rescue
 #
-DEF small_drive-rescue_GND-RESCUE-small_drive #PWR 0 0 Y Y 1 F P
+DEF small_drive-rescue_GND-power1-small_drive-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -250 50 H I C CNN
-F1 "small_drive-rescue_GND-RESCUE-small_drive" 0 -150 50 H V C CNN
-F2 "" 0 0 50 H V C CNN
-F3 "" 0 0 50 H V C CNN
-DRAW
-P 6 0 1 0 0 0 0 -50 50 -50 0 -100 -50 -50 0 -50 N
-X GND 1 0 0 0 D 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# small_drive-rescue_GND-power1
-#
-DEF small_drive-rescue_GND-power1 #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -250 50 H I C CNN
-F1 "small_drive-rescue_GND-power1" 0 -150 50 H V C CNN
+F1 "small_drive-rescue_GND-power1-small_drive-rescue" 0 -150 50 H V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 DRAW
@@ -725,30 +712,24 @@ X GND 1 0 0 0 D 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_GNDPWR
+# small_drive-rescue_GND-small_drive-rescue
 #
-DEF small_drive-rescue_GNDPWR #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -200 50 H I C CNN
-F1 "small_drive-rescue_GNDPWR" 0 -130 50 H V C CNN
-F2 "" 0 -50 50 H V C CNN
-F3 "" 0 -50 50 H V C CNN
+DEF small_drive-rescue_GND-small_drive-rescue #PWR 0 0 Y Y 1 F P
+F0 "#PWR" 0 -250 50 H I C CNN
+F1 "small_drive-rescue_GND-small_drive-rescue" 0 -150 50 H V C CNN
+F2 "" 0 0 50 H V C CNN
+F3 "" 0 0 50 H V C CNN
 DRAW
-P 2 0 1 0 0 -50 0 0 N
-P 3 0 1 8 -40 -50 -50 -80 -50 -80 N
-P 3 0 1 8 -20 -50 -30 -80 -30 -80 N
-P 3 0 1 8 0 -50 -10 -80 -10 -80 N
-P 3 0 1 8 20 -50 10 -80 10 -80 N
-P 3 0 1 8 40 -50 -40 -50 -40 -50 N
-P 4 0 1 8 40 -50 30 -80 30 -80 30 -80 N
-X GNDPWR 1 0 0 0 U 50 50 1 1 W N
+P 6 0 1 0 0 0 0 -50 50 -50 0 -100 -50 -50 0 -50 N
+X GND 1 0 0 0 D 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_GNDPWR-power1
+# small_drive-rescue_GNDPWR-power1-small_drive-rescue
 #
-DEF small_drive-rescue_GNDPWR-power1 #PWR 0 0 Y Y 1 F P
+DEF small_drive-rescue_GNDPWR-power1-small_drive-rescue #PWR 0 0 Y Y 1 F P
 F0 "#PWR" 0 -200 50 H I C CNN
-F1 "small_drive-rescue_GNDPWR-power1" 0 -130 50 H V C CNN
+F1 "small_drive-rescue_GNDPWR-power1-small_drive-rescue" 0 -130 50 H V C CNN
 F2 "" 0 -50 50 H I C CNN
 F3 "" 0 -50 50 H I C CNN
 DRAW
@@ -763,11 +744,30 @@ X GNDPWR 1 0 0 0 U 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_HOLE
+# small_drive-rescue_GNDPWR-small_drive-rescue
 #
-DEF small_drive-rescue_HOLE HOLE 0 40 N N 1 F N
+DEF small_drive-rescue_GNDPWR-small_drive-rescue #PWR 0 0 Y Y 1 F P
+F0 "#PWR" 0 -200 50 H I C CNN
+F1 "small_drive-rescue_GNDPWR-small_drive-rescue" 0 -130 50 H V C CNN
+F2 "" 0 -50 50 H V C CNN
+F3 "" 0 -50 50 H V C CNN
+DRAW
+P 2 0 1 0 0 -50 0 0 N
+P 3 0 1 8 -40 -50 -50 -80 -50 -80 N
+P 3 0 1 8 -20 -50 -30 -80 -30 -80 N
+P 3 0 1 8 0 -50 -10 -80 -10 -80 N
+P 3 0 1 8 20 -50 10 -80 10 -80 N
+P 3 0 1 8 40 -50 -40 -50 -40 -50 N
+P 4 0 1 8 40 -50 30 -80 30 -80 30 -80 N
+X GNDPWR 1 0 0 0 U 50 50 1 1 W N
+ENDDRAW
+ENDDEF
+#
+# small_drive-rescue_HOLE-small_drive-rescue
+#
+DEF small_drive-rescue_HOLE-small_drive-rescue HOLE 0 40 N N 1 F N
 F0 "HOLE" 0 0 60 H V C CNN
-F1 "small_drive-rescue_HOLE" 0 0 60 H V C CNN
+F1 "small_drive-rescue_HOLE-small_drive-rescue" 0 0 60 H V C CNN
 F2 "" 0 0 60 H V C CNN
 F3 "" 0 0 60 H V C CNN
 DRAW
@@ -776,11 +776,11 @@ X ~ 1 0 -200 200 U 50 50 1 1 W
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_KSZ8081
+# small_drive-rescue_KSZ8081-small_drive-rescue
 #
-DEF small_drive-rescue_KSZ8081 U 0 40 Y Y 1 F N
+DEF small_drive-rescue_KSZ8081-small_drive-rescue U 0 40 Y Y 1 F N
 F0 "U" 0 100 60 H V C CNN
-F1 "small_drive-rescue_KSZ8081" 0 -400 60 H V C CNN
+F1 "small_drive-rescue_KSZ8081-small_drive-rescue" 0 -400 60 H V C CNN
 F2 "" 0 0 60 H I C CNN
 F3 "" 0 100 60 H I C CNN
 F4 "2509802" 100 200 60 H I C CNN "Farnell"
@@ -817,11 +817,11 @@ X REXT 9 -100 -950 200 U 50 50 1 1 I
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_L-device1
+# small_drive-rescue_L-device1-small_drive-rescue
 #
-DEF small_drive-rescue_L-device1 L 0 40 N N 1 F N
+DEF small_drive-rescue_L-device1-small_drive-rescue L 0 40 N N 1 F N
 F0 "L" -50 0 50 V V C CNN
-F1 "small_drive-rescue_L-device1" 75 0 50 V V C CNN
+F1 "small_drive-rescue_L-device1-small_drive-rescue" 75 0 50 V V C CNN
 F2 "" 0 0 50 H I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -840,11 +840,11 @@ X 2 2 0 -150 50 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_LED_592
+# small_drive-rescue_LED_592-small_drive-rescue
 #
-DEF small_drive-rescue_LED_592 D 0 40 Y N 4 F N
+DEF small_drive-rescue_LED_592-small_drive-rescue D 0 40 Y N 4 F N
 F0 "D" 0 100 50 H V C CNN
-F1 "small_drive-rescue_LED_592" 0 -100 50 H V C CNN
+F1 "small_drive-rescue_LED_592-small_drive-rescue" 0 -100 50 H V C CNN
 F2 "00_Passives:LED_592-3030-013F" -100 0 50 H I C CNN
 F3 "MDEF592B0001.pdf" 0 100 50 H I C CNN
 $FPLIST
@@ -872,11 +872,11 @@ X K 8 -200 0 150 R 40 40 4 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_LT1764EQ
+# small_drive-rescue_LT1764EQ-small_drive-rescue
 #
-DEF small_drive-rescue_LT1764EQ U 0 40 Y Y 1 F N
+DEF small_drive-rescue_LT1764EQ-small_drive-rescue U 0 40 Y Y 1 F N
 F0 "U" -150 -400 60 H V C CNN
-F1 "small_drive-rescue_LT1764EQ" 0 300 60 H V C CNN
+F1 "small_drive-rescue_LT1764EQ-small_drive-rescue" 0 300 60 H V C CNN
 F2 "" 50 0 60 H I C CNN
 F3 "" 0 0 60 H V C CNN
 F4 "46" 0 425 60 H I C CNN "Voorraad"
@@ -890,11 +890,11 @@ X ADJ 5 550 -100 300 L 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_LTC2850-RESCUE-small_drive
+# small_drive-rescue_LTC2850-RESCUE-small_drive-small_drive-rescue
 #
-DEF small_drive-rescue_LTC2850-RESCUE-small_drive U 0 40 Y Y 1 F N
+DEF small_drive-rescue_LTC2850-RESCUE-small_drive-small_drive-rescue U 0 40 Y Y 1 F N
 F0 "U" 0 300 60 H V C CNN
-F1 "small_drive-rescue_LTC2850-RESCUE-small_drive" 0 -300 60 H V C CNN
+F1 "small_drive-rescue_LTC2850-RESCUE-small_drive-small_drive-rescue" 0 -300 60 H V C CNN
 F2 "soic8_3.9mm" 0 50 60 H I C CNN
 F3 "LTC28050.pdf" 0 300 60 H I C CNN
 F4 "LTC2850IS8#PBF-ND" 100 400 60 H I C CNN "digikey"
@@ -911,11 +911,11 @@ X Vdd 8 -550 150 300 R 50 50 1 1 W
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_NKE1212DC
+# small_drive-rescue_NKE1212DC-small_drive-rescue
 #
-DEF small_drive-rescue_NKE1212DC X 0 40 Y Y 1 F N
+DEF small_drive-rescue_NKE1212DC-small_drive-rescue X 0 40 Y Y 1 F N
 F0 "X" 0 200 60 H V C CNN
-F1 "small_drive-rescue_NKE1212DC" 0 -200 60 H V C CNN
+F1 "small_drive-rescue_NKE1212DC-small_drive-rescue" 0 -200 60 H V C CNN
 F2 "" 0 0 60 H V C CNN
 F3 "" 0 0 60 H V C CNN
 DRAW
@@ -927,11 +927,11 @@ X vop 4 400 100 100 L 60 60 1 1 w
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_R-RESCUE-small_drive
+# small_drive-rescue_R-RESCUE-small_drive-small_drive-rescue
 #
-DEF small_drive-rescue_R-RESCUE-small_drive R 0 0 N Y 1 F N
+DEF small_drive-rescue_R-RESCUE-small_drive-small_drive-rescue R 0 0 N Y 1 F N
 F0 "R" 80 0 50 V V C CNN
-F1 "small_drive-rescue_R-RESCUE-small_drive" 0 0 50 V V C CNN
+F1 "small_drive-rescue_R-RESCUE-small_drive-small_drive-rescue" 0 0 50 V V C CNN
 F2 "" 0 0 60 H V C CNN
 F3 "" 0 0 60 H V C CNN
 $FPLIST
@@ -946,11 +946,11 @@ X ~ 2 0 -250 100 U 60 60 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_R-device1
+# small_drive-rescue_R-device1-small_drive-rescue
 #
-DEF small_drive-rescue_R-device1 R 0 0 N Y 1 F N
+DEF small_drive-rescue_R-device1-small_drive-rescue R 0 0 N Y 1 F N
 F0 "R" 80 0 50 V V C CNN
-F1 "small_drive-rescue_R-device1" 0 0 50 V V C CNN
+F1 "small_drive-rescue_R-device1-small_drive-rescue" 0 0 50 V V C CNN
 F2 "" -70 0 50 V I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -964,11 +964,11 @@ X ~ 2 0 -150 50 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_R_Shunt-device1
+# small_drive-rescue_R_Shunt-device1-small_drive-rescue
 #
-DEF small_drive-rescue_R_Shunt-device1 R 0 0 N Y 1 F N
+DEF small_drive-rescue_R_Shunt-device1-small_drive-rescue R 0 0 N Y 1 F N
 F0 "R" -175 0 50 V V C CNN
-F1 "small_drive-rescue_R_Shunt-device1" -100 0 50 V V C CNN
+F1 "small_drive-rescue_R_Shunt-device1-small_drive-rescue" -100 0 50 V V C CNN
 F2 "" -70 0 50 V I C CNN
 F3 "" 0 0 50 H I C CNN
 $FPLIST
@@ -985,11 +985,11 @@ X 4 4 0 -200 100 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_TL074-RESCUE-small_drive
+# small_drive-rescue_TL074-RESCUE-small_drive-small_drive-rescue
 #
-DEF small_drive-rescue_TL074-RESCUE-small_drive U 0 20 Y Y 4 F N
+DEF small_drive-rescue_TL074-RESCUE-small_drive-small_drive-rescue U 0 20 Y Y 4 F N
 F0 "U" 0 200 50 H V L CNN
-F1 "small_drive-rescue_TL074-RESCUE-small_drive" 0 -200 50 H V L CNN
+F1 "small_drive-rescue_TL074-RESCUE-small_drive-small_drive-rescue" 0 -200 50 H V L CNN
 F2 "" -50 100 50 H V C CNN
 F3 "" 50 200 50 H V C CNN
 $FPLIST
@@ -1018,11 +1018,11 @@ X ~ 14 300 0 100 L 50 50 4 1 O
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_XMC4400-F100-RESCUE-small_drive
+# small_drive-rescue_XMC4400-F100-RESCUE-small_drive-small_drive-rescue
 #
-DEF small_drive-rescue_XMC4400-F100-RESCUE-small_drive U 0 40 Y Y 4 L N
+DEF small_drive-rescue_XMC4400-F100-RESCUE-small_drive-small_drive-rescue U 0 40 Y Y 4 L N
 F0 "U" 0 1300 60 H V C CNN
-F1 "small_drive-rescue_XMC4400-F100-RESCUE-small_drive" 0 -1400 60 H V C CNN
+F1 "small_drive-rescue_XMC4400-F100-RESCUE-small_drive-small_drive-rescue" 0 -1400 60 H V C CNN
 F2 "" 100 100 60 H I C CNN
 F3 "" 100 100 60 H I C CNN
 F4 "2418735" 100 1400 60 H I C CNN "Farnell"
@@ -1133,11 +1133,11 @@ X P0.3 99 450 -1150 200 L 50 50 4 1 B
 ENDDRAW
 ENDDEF
 #
-# small_drive-rescue_ips511g
+# small_drive-rescue_ips511g-small_drive-rescue
 #
-DEF small_drive-rescue_ips511g U 0 40 Y Y 1 F N
+DEF small_drive-rescue_ips511g-small_drive-rescue U 0 40 Y Y 1 F N
 F0 "U" 0 450 60 H V C CNN
-F1 "small_drive-rescue_ips511g" 200 -250 60 H V C CNN
+F1 "small_drive-rescue_ips511g-small_drive-rescue" 200 -250 60 H V C CNN
 F2 "" 0 0 60 H V C CNN
 F3 "" 0 0 60 H V C CNN
 DRAW

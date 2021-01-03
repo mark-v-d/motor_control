@@ -59,13 +59,13 @@ LDFLAGS  += $(CPU)
 .%.d: %.S
 	touch $@ 
 
-%.elf: $(LDSCRIPT) symbols.ld
+%.elf: $(LDSCRIPT) 
 	$(CC) $(LDFLAGS) -T $(LDSCRIPT) -T symbols.ld -o $@
 
 %.pre: %.cpp
 	$(CPP) $(CPPFLAGS) $< > $@
 
-main.elf: $(OBJS) symbols.ld
+main.elf: $(OBJS) 
 	$(CXX) $(LDFLAGS) -T $(LDSCRIPT) -T symbols.ld $+ -o $@
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -91,5 +91,5 @@ tools/convert_header: tools/convert_header.cpp
 set_bmi.o: set_bmi.cpp
 	$(CXX) $(CXXFLAGS) -DMAC=$(MAC) -DIPV4=$(IPV4) $(CPPFLAGS) -c $<
 
-set_bmi.elf: startup_$(DEVICE).o system_$(DEVICE).o set_bmi.o symbols.ld
+set_bmi.elf: startup_$(DEVICE).o system_$(DEVICE).o set_bmi.o 
 	$(CXX) $(LDFLAGS) -T $(LDSCRIPT) -T symbols.ld $+ -o $@

@@ -1,3 +1,0 @@
-(sym_lib_table
-  (lib (name small_drive-rescue)(type Legacy)(uri ${KIPRJMOD}/small_drive-rescue.lib)(options "")(descr ""))
-)

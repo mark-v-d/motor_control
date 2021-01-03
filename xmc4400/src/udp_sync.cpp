@@ -1,8 +1,9 @@
-#include "udp_sync.h" 
+#include "udp_sync.h"
 #include "hardware.h"
 #include "ccu8.h"
 #include "pwm_3phase.h"
 #include "bitfields.h"
+#include <cmath>
 
 void udp_sync::TimestampInit(void)
 {
@@ -13,7 +14,7 @@ void udp_sync::TimestampInit(void)
     timestamp_control_t control({{
 	.tsena=1,	// enable timestamp
 	.tscfupdt=1,	// Fine update
-	.tsinit=1,	// Try to init 
+	.tsinit=1,	// Try to init
 	.tsupdt=0,	// Nothing to update
 	.tstrig=0,	// No interrupt
 	.tsaddreg=1,	// Update addend
@@ -100,7 +101,7 @@ void udp_sync::Received(Ethernet *p_eth, Ethernet::descriptor const &desc)
 	pkt.length=hton(sizeof(pkt));
 
 	pkt.tx_seconds=p->tx_seconds;
-	pkt.tx_nanoseconds=p->tx_nanoseconds; 
+	pkt.tx_nanoseconds=p->tx_nanoseconds;
 	pkt.rx_seconds=desc.seconds;
 	pkt.rx_nanoseconds=desc.nanoseconds;
 	pkt.timer=pwm.get_timestamp();
