@@ -1,6 +1,6 @@
 DEVICE=XMC4400
 ifeq ($(DEVICE),XMC4400)
-	PACKAGE=F64
+	PACKAGE=F100
 	MEMORY=512
 else
 	PACKAGE=F100
@@ -29,7 +29,7 @@ VPATH+=XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/$(DEVICE)_series/Source/
 VPATH+=XMC_Peripheral_Library_v2.1.6p1/XMCLib/src/
 
 
-CPPFLAGS+=-I ./include
+CPPFLAGS+=-g -I ./include
 CPPFLAGS+=-I ./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/$(DEVICE)_series/Include/
 CPPFLAGS+=-I ./XMC_Peripheral_Library_v2.1.6p1/XMCLib/inc/
 CPPFLAGS+=-I ./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Include/

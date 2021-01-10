@@ -26,7 +26,7 @@ std::atomic<uint32_t> sleep_counter(0);
 
 icmpProcessing icmp;
 Ethernet eth0(
-    0, 
+    0,
     RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO,
     &icmp
 );
@@ -37,7 +37,7 @@ udp_logger::output_t out;
 udp_logger logger __attribute__((section ("ETH_RAM"))) (&in);
 udp_poker poker __attribute__((section ("ETH_RAM")));
 udp_sync syncer __attribute__((section ("ETH_RAM")));
-pwm_3phase <decltype(HB0),decltype(HB1),decltype(HB2)>pwm(4*trigger_HZ);
+decltype(pwm) pwm(4*trigger_HZ);
 
 extern "C" void SysTick_Handler(void)
 {
@@ -65,6 +65,7 @@ enum {
 float manual_angle;
 float angle_offset=0;
 
+#if 0
 extern "C" void CCU80_0_IRQHandler(void)
 {
     static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
@@ -242,28 +243,38 @@ extern "C" void VADC0_G0_0_IRQHandler(void)
     vadc.G[0].REFCLR=vadc.G[0].REFLAG;
     LED3=1;
 }
+#endif
+
+volatile int counter, led;
 
 void init_adc(void);
 void init_voltage_measurement(void);
 int main()
 {
+    #if 0
     eth0.add_udp_receiver(&logger,ntohs(1));
     eth0.add_udp_receiver(&poker,ntohs(2));
     eth0.add_udp_receiver(&syncer,ntohs(3));
-    pwm.start();
+    #endif
+    //pwm.start();
 
     // SysTick_Config(SystemCoreClock/1000);
-    init_adc();
+    //init_adc();
 
     PPB->SCR=1;
 
-    XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
+    //XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
 
-    init_voltage_measurement();
-    init_encoder();
+    //init_voltage_measurement();
+    //init_encoder();
 
-    for(;;)
-	;
+    for(;;) {
+	LED0=led&1;
+	LED1=(led>>1)&1;
+	LED2=(led>>2)&1;
+	LED3=(led>>3)&1;
+	counter++;
+    }
     return 0;
 }
 
@@ -283,6 +294,7 @@ void __gnu_cxx::__verbose_terminate_handler(void)
     }
 }
 
+#if 0
 void init_adc(void)
 {
     using namespace vadc_g_ns;
@@ -340,7 +352,7 @@ void init_adc(void)
 	}}).raw;
 	vadc.G[i].RCR[0]=rcr_t({{
 	    .drctr=0,	// 4 results
-	    .dmm=0,	// accumulation 
+	    .dmm=0,	// accumulation
 	    .wfr=0,	// overwrite
 	    .fen=1,	// part of fifo
 	    .srgen=0	// no service request
@@ -350,7 +362,7 @@ void init_adc(void)
 	// Current measurement is averaged
 	vadc.G[i].RCR[1]=rcr_t({{
 	    .drctr=3,	// 4 results
-	    .dmm=0,	// accumulation 
+	    .dmm=0,	// accumulation
 	    .wfr=0,	// overwrite
 	    .fen=0,	// top of fifo
 	    .srgen=uint32_t(i==0? 1:0)	// no service request (only master)
@@ -360,7 +372,7 @@ void init_adc(void)
 	vadc.G[i].RCR[1]=rcr_t({{ // Encoder channels
 	    // sincos is not averaged
 	    .drctr=0,// 1 results
-	    .dmm=0,	// accumulation 
+	    .dmm=0,	// accumulation
 	    .wfr=0,	// overwrite
 	    .fen=0,	// top of fifo
 	    .srgen=0	// no service request
@@ -375,7 +387,7 @@ void init_adc(void)
 	    .evalr3=0
 	}}).raw;
     }
-    { 
+    {
 	// master
 	int i=0;
 	// Arbiter, only queued mode is enabled
@@ -404,7 +416,7 @@ void init_adc(void)
 	    .rf=1,
 	    .ensi=0,
 	    .extr=1,
-	    
+
 	}}).raw;
 	// FIXME, make the xtsel mapping automatic
 	static_assert(ccu8_ns::unit(HB0)==0, "Wrong timer for ADC trigger");
@@ -476,5 +488,6 @@ void init_voltage_measurement(void)
 	.cfmsv=3,	// start value ?!?
 	.cfmdcnt=10 	// Decimation counter
     }}).raw;
-    dsd.GLOBRC|=1<<ch; 
+    dsd.GLOBRC|=1<<ch;
 }
+#endif

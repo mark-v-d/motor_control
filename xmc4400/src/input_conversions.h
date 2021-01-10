@@ -4,7 +4,7 @@
 /*********
     FIXME, most of this file can be generated.
     POSIF is an exception. (but is complete for the XMC4400)
-    FIXME, the 
+    FIXME, the
 *********/
 
 #define BASE__FUNCTION(name, type) 			\
@@ -66,13 +66,13 @@ BASE__FUNCTION(rxd, int);
 SPECIALISATION(rxd, int, 1, 4, USIC0_C0_DX0_P1_4);
 SPECIALISATION(rxd, int, 1, 5, USIC0_C0_DX0_P1_5);
 #ifdef USIC0_C0_DX0_P5_0
-SPECIALISATION(rxd_num, int, 5, 0, USIC0_C0_DX0_P5_0);
+SPECIALISATION(rxd, int, 5, 0, USIC0_C0_DX0_P5_0);
 #endif
 
 template <int port, int pin>
 constexpr inline XMC_USIC_CH_t *xmc_channel(iopin::pinBase<port,pin> const &i)
 {
-    return unit(i)? 
+    return unit(i)?
 	(channel(i)? XMC_UART1_CH1:XMC_UART1_CH0):
 	(channel(i)? XMC_UART0_CH1:XMC_UART0_CH0);
 }
@@ -111,7 +111,7 @@ SPECIALISATION(unit, int, 1, 2, 0);
 SPECIALISATION(unit, int, 1, 3, 0);
 SPECIALISATION(unit, int, 14, 5, 0);	// posif 0B
 SPECIALISATION(unit, int, 14, 6, 0);
-SPECIALISATION(unit, int, 14, 7, 0); 
+SPECIALISATION(unit, int, 14, 7, 0);
 SPECIALISATION(unit, int, 2, 3, 1); 	// posif 1A
 SPECIALISATION(unit, int, 2, 4, 1);
 SPECIALISATION(unit, int, 2, 5, 1);

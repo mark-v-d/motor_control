@@ -88,8 +88,8 @@ void Ethernet::SetAddress(void)
     a<<=8;
     a|=g_chipid[4];
     eth.MAC_ADDRESS0_HIGH=a;
-    
-    for(int i=3;i>=0; i--) { 
+
+    for(int i=3;i>=0; i--) {
 	a<<=8;
 	a|=g_chipid[i];
     }
@@ -117,7 +117,7 @@ uint16_t Ethernet::ReadPhy(uint8_t reg_addr)
 void Ethernet::WritePhy(uint8_t reg_addr, uint16_t data)
 {
     eth.GMII_DATA=data;
-    eth.GMII_ADDRESS = 
+    eth.GMII_ADDRESS =
 	(eth.GMII_ADDRESS & ETH_GMII_ADDRESS_CR_Msk) |
 	ETH_GMII_ADDRESS_MB_Msk | ETH_GMII_ADDRESS_MW_Msk |
 	((uint32_t)phy_addr << ETH_GMII_ADDRESS_PA_Pos) |
@@ -172,7 +172,7 @@ void Ethernet::FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control)
 			  (uint32_t)ETH_OPERATION_MODE_TSF_Msk;
 
     /* Increase enhanced descriptor to 8 WORDS, required when the Advanced
-       Time-Stamp feature or Full IPC Offload Engine is enabled 
+       Time-Stamp feature or Full IPC Offload Engine is enabled
     */
     eth.BUS_MODE |= (uint32_t)ETH_BUS_MODE_ATDS_Msk;
 
@@ -198,7 +198,7 @@ void Ethernet::FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control)
 
     // Only full duplex/100Mb, no jumbo frames
     eth.MAC_CONFIGURATION &= (uint32_t)~ETH_MAC_CONFIGURATION_JE_Msk;
-    eth.MAC_CONFIGURATION|= 
+    eth.MAC_CONFIGURATION|=
 	ETH_MAC_CONFIGURATION_DM_Msk | ETH_MAC_CONFIGURATION_FES_Msk;
 
     eth.MMC_TRANSMIT_INTERRUPT_MASK=0xffffffff;
@@ -209,7 +209,7 @@ void Ethernet::FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control)
 	ETH_INTERRUPT_ENABLE_RIE_Msk |	// receive
 	ETH_INTERRUPT_ENABLE_NIE_Msk;
 
-    NVIC_SetPriority(ETH0_0_IRQn, 
+    NVIC_SetPriority(ETH0_0_IRQn,
 	NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 63, 0));
     NVIC_ClearPendingIRQ(ETH0_0_IRQn);
     NVIC_EnableIRQ(ETH0_0_IRQn);
@@ -230,10 +230,10 @@ void Ethernet::receiveIRQ(void)
 	    if(udp.count(port))
 		udp[port]->Received(this,rxd[rx_get]);
 	    } break;
-	case descriptor::ICMP:                               
-	    if(icmpHandler)                      
+	case descriptor::ICMP:
+	    if(icmpHandler)
 		icmpHandler->Received(this,rxd[rx_get]);
-	    break;                           
+	    break;
 	}
 	rxd[rx_get].status=descriptor::OWN;
 	if(++rx_get>=rxp.size())
@@ -252,7 +252,7 @@ int Ethernet::transmit(
     txd[bufnum].length=size;
     txd[bufnum].txp=tx;
     txd[bufnum].status=descriptor::OWN | descriptor::IC | descriptor::TX_LS
-	| descriptor::TX_FS | descriptor::TTSE | descriptor::CIC 
+	| descriptor::TX_FS | descriptor::TTSE | descriptor::CIC
 	| descriptor::TCH;
     eth.TRANSMIT_POLL_DEMAND=0;
 }

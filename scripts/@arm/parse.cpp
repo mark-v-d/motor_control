@@ -71,9 +71,11 @@ class type_name_t {
 protected:
     std::string name;
 public:
-    type_name_t(const dwarf::die &node):
-	name(node.resolve(dwarf::DW_AT::name).as_string())
-    {}
+    type_name_t(const dwarf::die &node) {
+	if(!node.has(dwarf::DW_AT::name))
+	    throw("Missing name"s);
+	name=node.resolve(dwarf::DW_AT::name).as_string();
+    }
     std::string const &get_name(void) { return name; }
 protected:
     type_name_t(void) {}

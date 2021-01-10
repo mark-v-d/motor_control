@@ -8,4 +8,6 @@ t
 *.pyc
 *-backups
 *.mdat
+*.elf
 octave-workspace
+tags
