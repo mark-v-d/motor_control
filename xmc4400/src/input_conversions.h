@@ -8,16 +8,16 @@
 *********/
 
 #define BASE__FUNCTION(name, type) 			\
-template <int port, int pin> 				\
-constexpr type name(iopin::pinBase<port,pin> const &i)	\
+template <int PORT, int PIN> 				\
+constexpr type name(gpio::pin<PORT,PIN> const &i)	\
 { 							\
-    static_assert(port==-1, "Invalid pin");		\
+    static_assert(PORT==-1, "Invalid pin");		\
     return type(0);					\
 }
 
-#define SPECIALISATION(name, type, port, pin, value)		\
+#define SPECIALISATION(name, type, PORT, PIN, value)		\
 template<>							\
-constexpr type name<port,pin>(iopin::pinBase<port,pin> const &i)	\
+constexpr type name<PORT,PIN>(gpio::pin<PORT,PIN> const &i)	\
 {								\
     return value;						\
 }
@@ -69,8 +69,8 @@ SPECIALISATION(rxd, int, 1, 5, USIC0_C0_DX0_P1_5);
 SPECIALISATION(rxd, int, 5, 0, USIC0_C0_DX0_P5_0);
 #endif
 
-template <int port, int pin>
-constexpr inline XMC_USIC_CH_t *xmc_channel(iopin::pinBase<port,pin> const &i)
+template <int PORT, int PIN>
+constexpr inline XMC_USIC_CH_t *xmc_channel(gpio::pin<PORT,PIN> const &i)
 {
     return unit(i)?
 	(channel(i)? XMC_UART1_CH1:XMC_UART1_CH0):
@@ -96,8 +96,8 @@ template<> constexpr IRQn_Type irq_num<1,3>(void) { return USIC1_3_IRQn; }
 template<> constexpr IRQn_Type irq_num<1,4>(void) { return USIC1_4_IRQn; }
 template<> constexpr IRQn_Type irq_num<1,5>(void) { return USIC1_5_IRQn; }
 
-template <int innum,int port, int pin>
-constexpr inline IRQn_Type irq(iopin::pinBase<port,pin> const &i)
+template <int innum,int PORT, int PIN>
+constexpr inline IRQn_Type irq(gpio::pin<PORT,PIN> const &i)
 {
     return irq_num<unit(i),innum>();
 }

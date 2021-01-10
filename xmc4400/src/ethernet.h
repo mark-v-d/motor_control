@@ -20,7 +20,7 @@ public:
 	uint32_t ext_status;
 	uint32_t reserved;
 	uint32_t nanoseconds;
-	uint32_t seconds;     
+	uint32_t seconds;
 	Transmitter *txp;
     public: // types
 	enum protocol_t {
@@ -117,7 +117,7 @@ public:
     class Receiver {
     public:
 	virtual void Received(Ethernet*,descriptor const&)=0;
-    }; 
+    };
 
 
     std::map<uint16_t,Receiver*> udp;
@@ -145,17 +145,17 @@ public:
     template <int a,int b,int c,int d,int e,int f,int g,int h,int i, int j>
     Ethernet(
 	uint8_t pa,
-	XMC_ETH_MAC_PORT_CTRL_RXD0 RXD0, 
+	XMC_ETH_MAC_PORT_CTRL_RXD0 RXD0,
 	XMC_ETH_MAC_PORT_CTRL_RXD1 RXD1,
 	XMC_ETH_MAC_PORT_CTRL_CLK_RMII CLK_RMII,
 	XMC_ETH_MAC_PORT_CTRL_CRS_DV CRS_DV,
 	XMC_ETH_MAC_PORT_CTRL_RXER RXER,
 
-	iopin::ETH0_TXD0<a,b> TXD0,
-	iopin::ETH0_TXD1<c,d> TXD1,
-	iopin::ETH0_TX_EN<e,f> TX_EN,
-	iopin::ETH0_MDC<g,h> MDC,
-	iopin::ETH0_MDO<i,j> MDO,
+	gpio::ETH0_TXD0<a,b> TXD0,
+	gpio::ETH0_TXD1<c,d> TXD1,
+	gpio::ETH0_TX_EN<e,f> TX_EN,
+	gpio::ETH0_MDC<g,h> MDC,
+	gpio::ETH0_MDO<i,j> MDO,
 	Receiver *icmp=NULL
     );
 
@@ -164,16 +164,16 @@ public:
     void add_udp_transmitter(Transmitter *tx,int16_t port) { udp_tx[port]=tx; }
     void erase_udp_transmitter(Transmitter *tx,int16_t port);
 
-    void Unreachable_udp(uint16_t port) { 
-	if(udp_tx.count(port)) 
-	    udp_tx[port]->Unreachable(this); 
+    void Unreachable_udp(uint16_t port) {
+	if(udp_tx.count(port))
+	    udp_tx[port]->Unreachable(this);
     }
 
     void set_saddr(ethernet_t *p);
     void set_saddr(ipv4_t *p);
-    void set_ipv4_address(uint8_t s[4]) { 
+    void set_ipv4_address(uint8_t s[4]) {
 	if(src_ip[3]==0 && s[3]!=255)
-	    memcpy(src_ip,s,sizeof(src_ip)); 
+	    memcpy(src_ip,s,sizeof(src_ip));
     }
 
 private:
@@ -192,17 +192,17 @@ private:
 template <int a,int b,int c,int d,int e,int f,int g,int h,int i, int j>
 Ethernet::Ethernet(
     uint8_t pa,
-    XMC_ETH_MAC_PORT_CTRL_RXD0 RXD0, 
+    XMC_ETH_MAC_PORT_CTRL_RXD0 RXD0,
     XMC_ETH_MAC_PORT_CTRL_RXD1 RXD1,
     XMC_ETH_MAC_PORT_CTRL_CLK_RMII CLK_RMII,
     XMC_ETH_MAC_PORT_CTRL_CRS_DV CRS_DV,
     XMC_ETH_MAC_PORT_CTRL_RXER RXER,
 
-    iopin::ETH0_TXD0<a,b> TXD0,
-    iopin::ETH0_TXD1<c,d> TXD1,
-    iopin::ETH0_TX_EN<e,f> TX_EN,
-    iopin::ETH0_MDC<g,h> MDC,
-    iopin::ETH0_MDO<i,j> MDO,
+    gpio::ETH0_TXD0<a,b> TXD0,
+    gpio::ETH0_TXD1<c,d> TXD1,
+    gpio::ETH0_TX_EN<e,f> TX_EN,
+    gpio::ETH0_MDC<g,h> MDC,
+    gpio::ETH0_MDO<i,j> MDO,
 
     Receiver *icmp
 ):phy_addr(pa), rx_get(0), icmpHandler(icmp), tx_put(0)

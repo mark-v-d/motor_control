@@ -23,60 +23,43 @@ inline void sleep(T time)
 
 #include "gpio.h"
 
-#if (UC_DEVICE == XMC4500)
-iopin::input<1,14> BUTTON1;
-iopin::output<1,0> LED0;
-iopin::output<1,1> LED1;
-iopin::output<1,2> LED2;
-iopin::output<1,3> LED3;
-iopin::input<15,8> CLK_RMII;
-iopin::input<15,9> CRS_DV;
-iopin::input<2,2> RXD0;
-iopin::input<2,3> RXD1;
-iopin::input<2,4> RXER;
-iopin::ETH0_MDC<2,7> MDC;
-iopin::ETH0_MDO<2,0> MDIO;
-iopin::ETH0_TXD0<2,8> TXD0;
-iopin::ETH0_TXD1<2,9> TXD1;
-iopin::ETH0_TX_EN<2,5> TX_EN;
-#else
-static iopin::output<3,6> LED0=1;
-static iopin::output<4,0> LED1=1;
-static iopin::output<4,1> LED2=1;
-static iopin::output<1,15> LED3=1;
-static iopin::output<2,14> LED4=1;
-static iopin::input<15,8> CLK_RMII;
-static iopin::input<5,2> CRS_DV;
-static iopin::input<5,0> RXD0;
-static iopin::input<5,1> RXD1;
-static iopin::input<0,11> RXER;
-static iopin::ETH0_MDC<2,7> MDC;
-static iopin::ETH0_MDO<2,0> MDIO;
-static iopin::ETH0_TXD0<2,8> TXD0;
-static iopin::ETH0_TXD1<2,9> TXD1;
-static iopin::ETH0_TX_EN<1,12> TX_EN;
-static iopin::output<2,10> ETH_RESET=1;
+static gpio::output<3,6> LED0=1;
+static gpio::output<4,0> LED1=1;
+static gpio::output<4,1> LED2=1;
+static gpio::output<1,15> LED3=1;
+static gpio::output<2,14> LED4=1;
+static gpio::pin<15,8> CLK_RMII;
+static gpio::pin<5,2> CRS_DV;
+static gpio::pin<5,0> RXD0;
+static gpio::pin<5,1> RXD1;
+static gpio::pin<0,11> RXER;
+static gpio::ETH0_MDC<2,7> MDC;
+static gpio::ETH0_MDO<2,0> MDIO;
+static gpio::ETH0_TXD0<2,8> TXD0;
+static gpio::ETH0_TXD1<2,9> TXD1;
+static gpio::ETH0_TX_EN<1,12> TX_EN;
+static gpio::output<2,10> ETH_RESET=1;
 
-static iopin::CCU80_OUT20<0,3> HB1;
-static iopin::CCU80_OUT00<0,5> HB0;
-static iopin::CCU80_OUT30<0,6> HB2;
+static gpio::CCU80_OUT20<0,3> HB1;
+static gpio::CCU80_OUT00<0,5> HB0;
+static gpio::CCU80_OUT30<0,6> HB2;
 extern pwm_3phase <decltype(HB0),decltype(HB1),decltype(HB2)>pwm;
 
-//static iopin::output<0,10> HBEN=1;
+//static gpio::output<0,10> HBEN=1;
 
-static iopin::output<1,2> ENC_5V=0;
-static iopin::output<1,3> ENC_12V=0;
-static iopin::output<1,10> ENC_DIR=0;
-static iopin::U0C0_DOUT0<1,5> ENC_TXD; // FIXME, HWCTRL should only be used fo SSI
-static iopin::input<1,4> ENC_RXD;
-//static iopin::input<0,0> ENC_RXD2;
+static gpio::output<1,2> ENC_5V=0;
+static gpio::output<1,3> ENC_12V=0;
+static gpio::output<1,10> ENC_DIR=0;
+static gpio::U0C0_DOUT0<1,5> ENC_TXD; // FIXME, HWCTRL should only be used fo SSI
+static gpio::pin<1,4> ENC_RXD;
+//static gpio::pin<0,0> ENC_RXD2;
 
-static iopin::input<14,7> ENC_SIN;
-static iopin::input<14,6> ENC_COS;
+static gpio::pin<14,7> ENC_SIN;
+static gpio::pin<14,6> ENC_COS;
 
-static iopin::input<2,5> ENC_A;
-static iopin::input<2,4> ENC_B;
-static iopin::input<2,3> ENC_Z;
+static gpio::pin<2,5> ENC_A;
+static gpio::pin<2,4> ENC_B;
+static gpio::pin<2,3> ENC_Z;
 
 
 /*
@@ -86,7 +69,5 @@ static iopin::input<2,3> ENC_Z;
     CCU41 -> POSIF1 (FIXME, do this)
     ERU1,ETLx,OGU2 -> x=pwm.spare_slice(), latch posif counter
 */
-
-#endif
 
 #endif

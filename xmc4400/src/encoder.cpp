@@ -177,9 +177,9 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
     uint32_t position
 ) {
     using namespace posif_ns;
-    iopin::input<enc_a::PORT,enc_a::PIN> s0;
-    iopin::input<enc_b::PORT,enc_b::PIN> s90;
-    iopin::input<enc_z::PORT,enc_z::PIN> z;
+    enc_a s0;
+    enc_b s90;
+    enc_z z;
 
     static_assert(unit(s90)==unit(s0),
 	"s90 and s0 must be part of the same POSIF unit");

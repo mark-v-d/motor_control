@@ -206,16 +206,16 @@ union SRS_t {
 
 
 #define BASE__FUNCTION(name, type) 			\
-template <int port, int pin> 				\
-constexpr type name(iopin::pinBase<port,pin> const &i)	\
+template <int PORT, int PIN> 				\
+constexpr type name(gpio::pin<PORT,PIN> const &i)	\
 { 							\
-    static_assert(port==-1, "Invalid pin");		\
+    static_assert(PORT==-1, "Invalid pin");		\
     return type(0);					\
 }
 
-#define SPECIALISATION(name, type, port, pin, value)		\
+#define SPECIALISATION(name, type, PORT, PIN, value)		\
 template<>							\
-constexpr type name<port,pin>(iopin::pinBase<port,pin> const &i)	\
+constexpr type name<PORT,PIN>(gpio::pin<PORT,PIN> const &i)	\
 {								\
     return value;						\
 }
@@ -232,7 +232,7 @@ template<> constexpr int unit<0,5>() { return 0; }
 template<> constexpr int unit<0,6>() { return 0; }
 
 template <class T>
-constexpr int unit(void) { return unit<T::PORT,T::PIN>(); }
+constexpr int unit(void) { return unit<T::PORT_c,T::PIN_c>(); }
 
 BASE__FUNCTION(slice, int);
 SPECIALISATION(slice, int, 0, 3, 2);
@@ -246,7 +246,7 @@ template<> constexpr int slice<0,5>() { return 0; }
 template<> constexpr int slice<0,6>() { return 3; }
 
 template <class T>
-constexpr int slice(void) { return slice<T::PORT,T::PIN>(); }
+constexpr int slice(void) { return slice<T::PORT_c,T::PIN_c>(); }
 
 BASE__FUNCTION(out, int);
 SPECIALISATION(out, int, 0, 3, 0);
