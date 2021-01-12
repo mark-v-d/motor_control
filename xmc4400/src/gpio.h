@@ -11,6 +11,11 @@
 
 #include "misc.h"
 
+inline XMC_GPIO_MODE_t operator | (XMC_GPIO_MODE_t a, XMC_GPIO_MODE_t b)
+{
+    return XMC_GPIO_MODE_t(int(a)|int(b));
+}
+
 namespace gpio {
 
 struct XMC_GPIO_PORT_padded:public XMC_GPIO_PORT
@@ -26,7 +31,7 @@ class pin
 public:
     static constexpr int PORT_c=PORT;
     static constexpr int PIN_c=PIN;
-    pin() { static_assert(PORT>=0 && PORT<=15,
+    constexpr pin() { static_assert(PORT>=0 && PORT<=15,
 	"Illegal port, should be 0..15");
     }
 

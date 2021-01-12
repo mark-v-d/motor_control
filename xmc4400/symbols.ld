@@ -1,4 +1,4 @@
-gpio_port = 0x48028000 ;
+_ZN4gpio4portE = 0x48028000 ;
 eth = 0x5000c000 ;
 ccu8 = 0x40020000 ;
 u0c0 = 0x40030000 ;

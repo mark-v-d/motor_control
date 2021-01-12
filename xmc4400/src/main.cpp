@@ -22,14 +22,20 @@ constexpr auto PI=acos(-1);
 #include "encoder.h"
 #include <arpa/inet.h>
 
+#include "usic.h"
+
+auto copro=usic::make_full_duplex_asc(COPRO_TXD,COPRO_RXD);
+
 std::atomic<uint32_t> sleep_counter(0);
 
 icmpProcessing icmp;
+/*
 Ethernet eth0(
     0,
     RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO,
     &icmp
 );
+*/
 
 udp_logger::input_t in;
 udp_logger::output_t out;
@@ -65,7 +71,6 @@ enum {
 float manual_angle;
 float angle_offset=0;
 
-#if 0
 extern "C" void CCU80_0_IRQHandler(void)
 {
     static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
@@ -76,7 +81,7 @@ extern "C" void CCU80_0_IRQHandler(void)
     LED2=0;
     for(int i=0;i<4;i++)
 	out.adc[i]=(int32_t(vadc.G[i].RES[0]&0xffff)-adc_offset[i])*adc_scale[i];
-    out.vservo=dsd.ch[dsd_ch_ns::channel(MDAT)].RESM*servo_factor;
+    //out.vservo=dsd.ch[dsd_ch_ns::channel(MDAT)].RESM*servo_factor;
 
     out.position2=encoder->position2(); // FIXME, need second encoder
     out.index2=encoder->index2();
@@ -98,7 +103,7 @@ extern "C" void CCU80_0_IRQHandler(void)
 
     switch(state) {
     case STARTUP:
-	HBEN=0;
+	//HBEN=0;
 	HB0=0;
 	HB1=0;
 	HB2=0;
@@ -146,7 +151,7 @@ extern "C" void CCU80_0_IRQHandler(void)
 	    // Intentionally no break
 	case VOLTAGE:
 	case MANUAL_VOLTAGE:
-	    HBEN=1;
+	    //HBEN=1;
 	    float sq_len=out.Vrotor[0]*out.Vrotor[0]
 		+out.Vrotor[1]*out.Vrotor[1];
 	    if(sq_len>float(in.lim*in.lim)) {
@@ -185,7 +190,7 @@ extern "C" void CCU80_0_IRQHandler(void)
 	}
     }
 
-    logger.transmit(&eth0,out);
+    //logger.transmit(&eth0,out);
 
     LED2=1;
 }
@@ -243,37 +248,45 @@ extern "C" void VADC0_G0_0_IRQHandler(void)
     vadc.G[0].REFCLR=vadc.G[0].REFLAG;
     LED3=1;
 }
-#endif
 
-volatile int counter, led;
+volatile uint32_t counter, led, txd=-1;
 
 void init_adc(void);
-void init_voltage_measurement(void);
 int main()
 {
-    #if 0
+    /*
     eth0.add_udp_receiver(&logger,ntohs(1));
     eth0.add_udp_receiver(&poker,ntohs(2));
     eth0.add_udp_receiver(&syncer,ntohs(3));
-    #endif
-    //pwm.start();
+    pwm.start();
+    */
 
-    // SysTick_Config(SystemCoreClock/1000);
+    SysTick_Config(SystemCoreClock/1000);
     //init_adc();
+
+    copro.init(38400);
 
     PPB->SCR=1;
 
-    //XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
+    XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
 
-    //init_voltage_measurement();
     //init_encoder();
 
+    auto old_led=led;
     for(;;) {
-	LED0=led&1;
-	LED1=(led>>1)&1;
-	LED2=(led>>2)&1;
-	LED3=(led>>3)&1;
-	counter++;
+	if(txd!=-1) {
+	    copro->TBUF[0]=txd;
+	    led^=1;
+	    txd=-1;
+	}
+	if(led!=old_led) {
+	    old_led=led;
+	    LED0=old_led&1;
+	    LED1=(old_led>>1)&1;
+	    LED2=(old_led>>2)&1;
+	    LED3=(old_led>>3)&1;
+	    counter++;
+	}
     }
     return 0;
 }
@@ -294,7 +307,6 @@ void __gnu_cxx::__verbose_terminate_handler(void)
     }
 }
 
-#if 0
 void init_adc(void)
 {
     using namespace vadc_g_ns;
@@ -318,18 +330,11 @@ void init_adc(void)
 	.diva=3,
 	.dcmsb=0,
 	.divd=1,
-	.divwc=1,
-	.dp_cal0=0,
-	.dp_cal1=0,
-	.dp_cal2=0,
-	.dp_cal3=0,
-	.sucal=0
+	.divwc=1
     }}).raw;
     vadc.GLOBICLASS[0]=iclass_t({{
 	.stcs=0,	// no additional cycles
-	.cms=0,		// 12-bit conversion
-	.stce=0,	// dnc
-	.cme=0		// dnc
+	.cms=0		// 12-bit conversion
     }}).raw;
 
     vadc.G[1].ALIAS=alias_t({{.alias0=6}}).raw;
@@ -339,16 +344,9 @@ void init_adc(void)
 	// Channel control
 	vadc.G[i].CHCTR[0]=chctr_t({{
 	    .iclsel=2,		// global class 0
-	    .bndsell=0,		// dnc
-	    .bndselu=0,		// dnc
 	    .chevmode=0,	// no event
 	    .sync=1,		// Synchronised conversion (G0 master)
-	    .refsel=0,
-	    .resreg=1,		// Top of 2 entry fifo
-	    .restbs=0,
-	    .respos=0,
-	    .bwdch=0,
-	    .bwden=0
+	    .resreg=1		// Top of 2 entry fifo
 	}}).raw;
 	vadc.G[i].RCR[0]=rcr_t({{
 	    .drctr=0,	// 4 results
@@ -382,9 +380,6 @@ void init_adc(void)
 	// slave
 	vadc.G[i].SYNCTR=synctr_t({{
 	    .stsel=1,	// synchronise to G0
-	    .evalr1=0,
-	    .evalr2=0,
-	    .evalr3=0
 	}}).raw;
     }
     {
@@ -394,22 +389,11 @@ void init_adc(void)
 	vadc.G[i].ARBPR=arbpr_t({{
 	    .prio0=3,
 	    .csm0=1,
-	    .prio1=0,
-	    .csm1=0,
-	    .prio2=0,
-	    .csm2=0,
 	    .asen0=1,
-	    .asen1=0,
-	    .asen2=0
 	}}).raw;
 	vadc.G[i].QMR0=qmr0_t({{
 	    .engt=1,
-	    .entr=1,
-	    .clrv=0,
-	    .trev=0,
-	    .flush=0,
-	    .cev=0,
-	    .rptdis=0
+	    .entr=1
 	}}).raw;
 	vadc.G[i].QINR0=qinr0_t({{
 	    .reqchnr=0,
@@ -422,14 +406,9 @@ void init_adc(void)
 	static_assert(ccu8_ns::unit(HB0)==0, "Wrong timer for ADC trigger");
 	static_assert(pwm.adc_irq==2, "Wrong ADC trigger");
 	vadc.G[i].QCTRL0=qctrl0_t({{
-	    .srcresreg=0,	// Use CHCTR.resreg
 	    .xtsel=8, 	// CCU80::SR2 (See asserts)
-	    .xtlvl=0,
 	    .xtmode=1,
 	    .xtwc=1,
-	    .gtsel=0,
-	    .gtlvl=0,
-	    .gtwc=0,
 	    .tmen=0,	// Uncertain
 	    .tmwc=1
 	}}).raw;
@@ -452,42 +431,3 @@ void init_adc(void)
     NVIC_EnableIRQ(VADC0_G0_0_IRQn);
 #endif
 }
-
-#include "xmc_dsd.h"
-
-void init_voltage_measurement(void)
-{
-    using namespace dsd_ch_ns;
-
-    XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_DSD);
-    XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_DSD);
-    dsd.CLC=0;
-    dsd.GLOBCFG=1;
-
-    constexpr int ch=channel(MDAT);
-    dsd.ch[ch].MODCFG=modcfg_t({{
-	.divm=15,
-	.dwc=1
-    }}).raw;
-    dsd.ch[ch].DICFG=dicfg_t({{
-	.dsrc=not_dsrc(MDAT), // data inverted because input is swapped
-	.dswc=1,	// Enable dsrc update
-	.itrmode=0,	// integrator bypassed
-	.tstrmode=0,	// No timestamp trigger
-	.trsel=0,	// Don't care, trigger not used
-	.trwc=1,	// Write Control for Trigger Parameters
-	.csrc=15, 	// Internal clock
-	.strobe=1,	// sample trigger is generated at each rising clock edge
-	.scwc=1		// write control
-    }}).raw;
-    dsd.ch[ch].FCFGC=fcfgc_t({{
-	.cfmdf=63,	// decimate by 256
-	.cfmc=2,	// 3rd order
-	.cfen=1,	// enable CIC
-	.srgm=0,	// no service requests
-	.cfmsv=3,	// start value ?!?
-	.cfmdcnt=10 	// Decimation counter
-    }}).raw;
-    dsd.GLOBRC|=1<<ch;
-}
-#endif

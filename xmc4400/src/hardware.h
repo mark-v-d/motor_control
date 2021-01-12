@@ -61,6 +61,8 @@ static gpio::pin<2,5> ENC_A;
 static gpio::pin<2,4> ENC_B;
 static gpio::pin<2,3> ENC_Z;
 
+static gpio::pin<0,0> COPRO_RXD;
+static gpio::pin<0,1> COPRO_TXD;
 
 /*
     Allocated units:
