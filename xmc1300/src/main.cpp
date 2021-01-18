@@ -6,8 +6,7 @@ int main(int argc, char **argv)
 {
     DAC.set(gpio::OUTPUT);
     for(;;) {
-	DAC=0;
-	DAC=1;
+	DAC.toggle();
     }
     return 0;
 }

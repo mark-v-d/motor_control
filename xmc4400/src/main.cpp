@@ -22,7 +22,9 @@ constexpr auto PI=acos(-1);
 #include "encoder.h"
 #include <arpa/inet.h>
 
-#include "usic.h"
+#include "bsl.h"
+
+
 
 auto copro=usic::make_full_duplex_asc(COPRO_TXD,COPRO_RXD);
 
@@ -264,18 +266,22 @@ int main()
     SysTick_Config(SystemCoreClock/1000);
     //init_adc();
 
-    copro.init(38400);
 
     PPB->SCR=1;
 
     XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
 
     //init_encoder();
+    bsl_init(COPRO_TXD,COPRO_RXD);
 
     auto old_led=led;
     for(;;) {
 	if(txd!=-1) {
-	    copro->TBUF[0]=txd;
+	//XMC_USIC_CH_TXFIFO_Configure(uart, 0, XMC_USIC_CH_FIFO_SIZE_8WORDS, 1);
+	//XMC_USIC_CH_RXFIFO_Configure(uart, 16, XMC_USIC_CH_FIFO_SIZE_8WORDS, 7);
+	//XMC_USIC_CH_TXFIFO_PutData(uart, uwaTxData[i]);
+	    copro->IN[0]=0;
+	    copro->IN[0]=txd;
 	    led^=1;
 	    txd=-1;
 	}

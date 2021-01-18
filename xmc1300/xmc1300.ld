@@ -75,10 +75,9 @@ MEMORY
     SRAM(!RX) : ORIGIN = 0x20000200, LENGTH = 0x3E00
 }
 
-stack_size = DEFINED(stack_size) ? stack_size : 1024;
+__fw_header_offset = 0x200;
 no_init_size = 4;
 
-__fw_header_offset = 0x200;
 
 SECTIONS
 {
@@ -161,18 +160,10 @@ SECTIONS
     VeneerStart = 0x2000000C;
     VeneerEnd = VeneerStart + VeneerSize;
     
-    /* Dummy section for stack */
-    Stack (NOLOAD) : AT(0)
-    {
-        . = ALIGN(8);
-        . = . + stack_size;
-        __initial_sp = .;
-    } > SRAM
-
      /* Standard DATA and user defined DATA/BSS/CONST sections */
     .data :
     {
-      . = ALIGN(4); /* section size must be multiply of 4. See startup.S file */
+      . = ALIGN(16); /* section size must be multiply of 4. See startup.S file */
       __data_start = .;
       * (.data);
       * (.data*);

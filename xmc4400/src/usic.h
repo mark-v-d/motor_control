@@ -26,9 +26,9 @@ constexpr info_t info(void)
     return info_t{-1};
 }
 
-template<> constexpr info_t info<0,0>() { return info_t{1,1,DX0D}; }
-template<> constexpr info_t info<0,1>() { return info_t{1,1,DOUT0,
-    XMC_GPIO_MODE_OUTPUT_ALT2}; }
+#define INFO template<> constexpr info_t info
+INFO<0,0>() { return info_t{1,1,DX0D,	XMC_GPIO_MODE_INPUT_TRISTATE	};}
+INFO<0,1>() { return info_t{1,1,DOUT0,	XMC_GPIO_MODE_OUTPUT_ALT2	};}
 
 
 #if 0
@@ -76,9 +76,6 @@ template<int PORT,int PIN>
 constexpr int dx0(gpio::pin<PORT,PIN> const&)
 {
     constexpr auto x=info<PORT,PIN>().function;
-    static_assert(x==DX0A || x==DX0B || x==DX0C || x==DX0D,
-	"Not a USIC DX0 pin"
-    );
     if constexpr(x==DX0A)
 	return 0;
     if constexpr(x==DX0B)
@@ -87,6 +84,7 @@ constexpr int dx0(gpio::pin<PORT,PIN> const&)
 	return 2;
     if constexpr(x==DX0D)
 	return 3;
+    return -1;
 }
 
 template <class TX_PIN, class RX_PIN>
@@ -99,9 +97,7 @@ public:
 	    ==uint32_t(channel_location(RX_PIN{})),
 	    "TX and RX not on the same channel");
 	static_assert(function(TX_PIN{})==DOUT0, "TX is not tx");
-	static_assert(function(RX_PIN{})==DX0A || function(RX_PIN{})==DX0B
-	    || function(RX_PIN{})==DX0C || function(RX_PIN{})==DX0D,
-	    "RX is not rx");
+	static_assert(dx0(RX_PIN{})!=-1, "RX is not rx");
     }
 
     XMC_USIC_CH_t* operator->() const { return channel; }
@@ -125,75 +121,32 @@ public:
 	XMC_UART_CH_Init(channel, &uart_config);
 	XMC_UART_CH_SetInputSource(channel,XMC_UART_CH_INPUT_RXD,dx0(RX_PIN{}));
 	XMC_UART_CH_EnableEvent(channel, XMC_UART_CH_EVENT_STANDARD_RECEIVE);
-	/*
-	XMC_UART_CH_SelectInterruptNodePointer(channel,
-	    XMC_UART_CH_INTERRUPT_NODE_POINTER_RECEIVE, fd_irq);
-	XMC_UART_CH_EnableInputInversion(channel,XMC_UART_CH_INPUT_RXD);
-	*/
 	XMC_UART_CH_Start(channel);
-	channel->RBCTR=usic_ch_ns::rbctr_t({{
-	    .dptr=0,
-	    .limit=0,
-	    .srbtm=0,
-	    .srbten=0,
-	    .srbinp=0,
-	    .arbinp=0,
-	    .rcim=0,
-	    .size=4,	// 16 entry fifo
-	    .rnm=0,
-	    .lof=0,
-	    .arbien=0,
-	    .srbien=0,
-	    .rberien=0
-	}}).raw;
-#if 0
-
-	channel->RBCTR=bitfield<USIC_CH_RBCTR_DPTR_Msk>(
-
-    // Receive interrupt
-    NVIC_SetPriority(irq<fd_irq>(ENC_TXD),  0);
-    NVIC_ClearPendingIRQ(irq<fd_irq>(ENC_TXD));
-    // NVIC_EnableIRQ(irq<fd_irq>(ENC_TXD));
-	NVIC_DisableIRQ(usic_ch_ns::irq<hd_irq>(ENC_TXD));
-
-	// Powerup and wait
-	p->serial_tx(0x1a);
-	ENC_5V=1;
-	sleep(100ms);
-
-	// First try to use half-duplex mode
-	p->serial_tx(0x1a);
-	if(p->putp==10) {
-	    p->posif_init(0);
-	    encoder=std::make_unique<mitsubishi_MFS13_t>();
-	    return 1;
-	}
-
-	init_full_duplex(uart_config);
-
-	p->serial_tx(0x92);
-	p->serial_tx(0x92);
-	p->serial_tx(0x7a);
-	p->serial_tx(0x7a);
-	p->serial_tx(0x7a);
-	p->serial_tx(0x7a);
-	p->serial_tx(0x7a);
-	p->serial_tx(0x7a);
-	p->serial_tx(0x1a);
-	if(p->putp!=9) {
-	    encoder=std::make_unique<dummy_encoder_t>();
-	    return 0;
-	}
-
-	p->posif_init(0);
-	encoder=std::make_unique<mitsubishi_PQ_t>();
-#endif
     }
     void disable(void) {
 	XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC1);
 	XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC1);
 	NVIC_DisableIRQ(USIC1_0_IRQn);
 	NVIC_DisableIRQ(USIC1_1_IRQn);
+    }
+
+    bool tx_busy(void) {
+	return channel->TCSR & XMC_USIC_CH_TBUF_STATUS_BUSY;
+    }
+    void tx(uint8_t d) {
+	while(channel->TCSR & XMC_USIC_CH_TBUF_STATUS_BUSY)
+	    ;
+	channel->PSCR=USIC_CH_PSR_ASCMode_TBIF_Msk;
+	channel->TBUF[0]=d;
+	//XMC_UART_CH_Transmit
+    }
+
+    int rx_now(void)
+    {
+	if(channel->RBUFSR & (USIC_CH_RBUFSR_RDV0_Msk | USIC_CH_RBUFSR_RDV1_Msk))
+	    return channel->RBUF;
+	else
+	    return -1;
     }
 
 };

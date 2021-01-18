@@ -76,6 +76,9 @@ Reset_Handler:
 	ldr	r3, =VeneerEnd
 	bl  __copy_data
 
+	ldr	r1, =__initial_sp
+	mov	sp,r1
+
 	ldr  r0, =SystemInit
 	blx  r0
 	

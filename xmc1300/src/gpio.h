@@ -107,6 +107,7 @@ public:
     void operator=(int i) {
 	port[PORT].OMR=1<<(PIN + (i? 0:16));
     }
+    void toggle(void) { port[PORT].OMR=0x10001<<PIN; }
 };
 
 void enable(uint32_t mask);

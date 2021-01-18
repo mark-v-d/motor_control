@@ -22,7 +22,7 @@ CPU = -g -mthumb -mcpu=cortex-m0
 CFLAGS   += $(CPU)
 CXXFLAGS += $(CPU) -std=c++17 -O
 ASFLAGS  += $(CPU)
-LDFLAGS  += $(CPU) -specs=nosys.specs
+LDFLAGS  += $(CPU) -nostartfiles -specs=nosys.specs
 
 %.o: Makefile
 
@@ -47,6 +47,10 @@ LDFLAGS  += $(CPU) -specs=nosys.specs
 main.elf: $(OBJS) 
 	$(CXX) $(LDFLAGS) -T $(LDSCRIPT) -T symbols.ld $+ -o $@
 
+xmc1300.bin: main.elf
+	$(CROSS)objcopy --adjust-vma=-0x20000200 -O binary -S $< $@ 
+
+
 ifneq ($(MAKECMDGOALS),clean)
 include $(OBJS:%.o=.%.d)
 endif
@@ -56,7 +60,7 @@ endif
 .PRECIOUS: .%.d
 
 clean:
-	rm -f *.o *.elf .*.d
+	rm -f *.o *.elf .*.d *.bin
 
 tags:
 	ctags $$(find . \( -name *.h -o -name *.cpp -o -name *.c \) -not -name xmc4* -not -name *_cm[0-35-9]*)

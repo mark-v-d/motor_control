@@ -1,6 +1,6 @@
 /******************************************************************************
  * @file     system_XMC1300.c
- * @brief    Device specific initialization for the XMC1300-Series according 
+ * @brief    Device specific initialization for the XMC1300-Series according
  * to CMSIS
  * @version  V1.7
  * @date     11 Dec 2014
@@ -10,12 +10,12 @@
 
  *
  * @par
- * Infineon Technologies AG (Infineon) is supplying this software for use with 
+ * Infineon Technologies AG (Infineon) is supplying this software for use with
  * Infineon’s microcontrollers.
- *   
- * This file can be freely distributed within development tools that are 
+ *
+ * This file can be freely distributed within development tools that are
  * supporting such microcontrollers.
- *  
+ *
  *
  * @par
  * THIS SOFTWARE IS PROVIDED "AS IS".  NO WARRANTIES, WHETHER EXPRESS, IMPLIED
@@ -31,7 +31,7 @@
  * V1.3, 20 Dec 2012, PKB : Fixed SystemCoreClock computation
  * V1.4, 02 Feb 2013, PKB : SCU_CLOCK -> SCU_CLK
  * V1.5, 27 Nov 2013, DNE : Comments added in SystemInit function for MCLK support
- * V1.6, 19 Feb 2014, JFT : Fixed SystemCoreClock when FDIV != 0 
+ * V1.6, 19 Feb 2014, JFT : Fixed SystemCoreClock when FDIV != 0
  * V1.7, 11 Dec 2014, JFT : SystemCoreClockSetup, SystemCoreSetup as weak functions
  */
 
@@ -80,7 +80,7 @@ uint32_t SystemCoreClock __at( 0x20003FFC );
  *******************************************************************************/
 
 __WEAK void SystemInit(void)
-{    
+{
   SystemCoreSetup();
   SystemCoreClockSetup();
 }
@@ -101,7 +101,7 @@ __WEAK void SystemCoreClockUpdate(void)
 
   IDIV = ((SCU_CLK->CLKCR) & SCU_CLK_CLKCR_IDIV_Msk) >> SCU_CLK_CLKCR_IDIV_Pos;
   FDIV = ((SCU_CLK->CLKCR) & SCU_CLK_CLKCR_FDIV_Msk) >> SCU_CLK_CLKCR_FDIV_Pos;
-  
+
   if (IDIV != 0)
   {
     /* Fractional divider is enabled and used */
@@ -112,4 +112,8 @@ __WEAK void SystemCoreClockUpdate(void)
     /* Fractional divider bypassed. Simply divide DCO_DCLK by 2 */
     SystemCoreClock = DCO1_FREQUENCY >> 1U;
   }
+}
+
+void _init(void)
+{
 }
