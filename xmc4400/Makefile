@@ -66,6 +66,10 @@ LDFLAGS  += $(CPU)
 %.pre: %.cpp
 	$(CPP) $(CPPFLAGS) $< > $@
 
+.PHONY: clean tags all xmc1300
+
+all: xmc1300 main.elf 
+
 main.elf: $(OBJS) 
 	$(CXX) $(LDFLAGS) -T $(LDSCRIPT) -T symbols.ld $+ -o $@
 
@@ -74,7 +78,6 @@ include $(OBJS:%.o=.%.d)
 endif
 
 
-.PHONY: clean tags
 .PRECIOUS: .%.d
 
 clean:
@@ -98,11 +101,9 @@ set_bmi.elf: startup_$(DEVICE).o system_$(DEVICE).o set_bmi.o
 .xmc1300_bsl.d:
 	touch $@
 
-.PHONY: ../xmc1300/xmc1300.bin
-
-../xmc1300/xmc1300.bin:
-	$(MAKE) -C ../xmc1300 xmc1300.bin
-
-xmc1300_bsl.o: ../xmc1300/xmc1300.bin
+xmc1300_bsl.o: ../xmc1300/xmc1300.bin 
 	echo|$(AS) $(ASFLAGS) -o $@
 	$(CROSS)objcopy --add-section xmc1300=$< $@ 
+
+xmc1300:
+	$(MAKE) -C ../xmc1300 xmc1300.bin
