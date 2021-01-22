@@ -14,13 +14,14 @@ CPPFLAGS+=-g -I ./include
 CPPFLAGS+=-I src
 CPPFLAGS+=-I ./Libraries/CMSIS/Infineon/XMC1300_series/Include/
 CPPFLAGS+=-I ./Libraries/CMSIS/Include/
+CPPFLAGS+=-I ../xmc4400/src
 CPPFLAGS+=-DCLOCK_CRYSTAL_FREQUENCY=12000000
 CPPFLAGS+=-D $(DEVICE)_$(PACKAGE)x$(MEMORY)
 
 CPU = -g -mthumb -mcpu=cortex-m0
 
 CFLAGS   += $(CPU)
-CXXFLAGS += $(CPU) -std=c++17 -O
+CXXFLAGS += $(CPU) -std=c++17 -O3
 ASFLAGS  += $(CPU)
 LDFLAGS  += $(CPU) -nostartfiles -specs=nosys.specs
 
