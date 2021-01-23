@@ -48,14 +48,7 @@ public:
 	port[PORT].IOCR[PIN/4]&=~(255<<8*(PIN%4));
 	port[PORT].IOCR[PIN/4]|=m<<8*(PIN%4);
     }
-    void set(XMC_GPIO_OUTPUT_STRENGTH_t m) {
-	port[PORT].PDR[PIN/8]&=~(15<<4*(PIN%8));
-	port[PORT].PDR[PIN/8]|=m<<4*(PIN%8);
-    }
-    void set(XMC_GPIO_HWCTRL_t i) {
-	port[PORT].HWSEL&=~(3<<2*PIN);
-	port[PORT].HWSEL|=(i&3)<<2*PIN;
-    }
+
 
     void pdisc(int i) {
 	if(i)
@@ -68,6 +61,16 @@ public:
 	    port[PORT].PPS|=1<<PIN;
 	else
 	    port[PORT].PPS&=~(1<<PIN);
+    }
+
+#if UC_FAMILY == XMC4
+    void set(XMC_GPIO_OUTPUT_STRENGTH_t m) {
+	port[PORT].PDR[PIN/8]&=~(15<<4*(PIN%8));
+	port[PORT].PDR[PIN/8]|=m<<4*(PIN%8);
+    }
+    void set(XMC_GPIO_HWCTRL_t i) {
+	port[PORT].HWSEL&=~(3<<2*PIN);
+	port[PORT].HWSEL|=(i&3)<<2*PIN;
     }
 
     /* REMOVE THIS !!!! */
@@ -96,12 +99,14 @@ public:
 	static_assert(PORT==-1, "Cannot use this pin as MDIO for ETH0");
 	return -1;
     }
+#endif
 };
 
 template <int PORT, int PIN>
 class output:public pin<PORT,PIN>
 {
 public:
+#if UC_FAMILY == XMC4
     output(void) {
 	static_assert(PORT<14,
 	    "Ports 14 and 15 are input only"
@@ -110,6 +115,9 @@ public:
 	gpio::pin<PORT,PIN>::set(XMC_GPIO_HWCTRL_DISABLED);
 	gpio::pin<PORT,PIN>::set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     }
+#else
+    constexpr output(void) {}
+#endif
     int operator=(int i) { port[PORT].OMR=(i? 1:0x10000)<<PIN; return i; }
     void operator^=(int i) { if(i) port[PORT].OMR=0x10001<<PIN; }
     output(int i) {
@@ -121,12 +129,19 @@ public:
 	gpio::pin<PORT,PIN>::set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
 	*this=i;
     }
+    void toggle(void) { port[PORT].OMR=0x10001<<PIN; }
 };
+}
 
+
+#if UC_FAMILY == XMC4
 // ETH0 Ports //////////////////////////////////////////////////////////////////
+// REMOVE THIS
+namespace gpio {
+
 #define type_conversion(type,PIN,PORT) \
 template <> \
-inline pin<PIN,PORT>::operator type() \
+inline gpio::pin<PIN,PORT>::operator type() \
 { \
     set(XMC_GPIO_MODE_INPUT_TRISTATE); \
     return type##_P##PIN##_##PORT; \
@@ -162,9 +177,10 @@ type_conversion(XMC_ETH_MAC_PORT_CTRL_MDIO,2,0);
 type_conversion(XMC_ETH_MAC_PORT_CTRL_MDIO,1,11);
 
 #undef type_conversion
-
 #include "gpio_output_conversions"
 }
 
 #include "input_conversions.h"
+#endif
+
 #endif

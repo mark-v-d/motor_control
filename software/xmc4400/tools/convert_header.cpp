@@ -8,7 +8,7 @@ using namespace std;
     output_pin[function][instantiation]=method
     where:
 	function is something like "U1C0_DOUT0"
-	instantiation is the port pin pair "1,5" 
+	instantiation is the port pin pair "1,5"
 	method is "XMC_GPIO_MODE_OUTPUT_ALT2"
 */
 
@@ -21,8 +21,8 @@ void print_output(ostream &s, string const &n)
 {
     s	<< "// " << device_name;
     s   << "\ntemplate <int port, int pin>\n"
-	<< "class " << n << ":public output<port,pin>\n"
-	<< "{\npublic:\n    " << n 
+	<< "class " << n << ":public gpio::output<port,pin>\n"
+	<< "{\npublic:\n    " << n
 	<< "(void) { static_assert(port<0,\"Illegal pin\");}\n";
 
     smatch m;
@@ -33,7 +33,7 @@ void print_output(ostream &s, string const &n)
 	    << "    operator XMC_CCU8_SLICE_t*() { return CCU8" << m[1] << "_CC8" << m[2] << ";}\n"
 	    << "    operator uint8_t() { return " << m[2] << "; }\n"
 	    << "    enum { module=" << m[1] << ", slice=" << m[2] << "};\n"
-	    << "    void operator=(uint32_t i) { CCU80_CC8" << m[2] << "->CR" 
+	    << "    void operator=(uint32_t i) { CCU80_CC8" << m[2] << "->CR"
 	    << atoi(m[3].str().c_str())/2+1 << "S=i; }\n";
     } else if(regex_search(n, m, regex("U([01])C([01])_"))) {
 	// UART functions
@@ -86,7 +86,7 @@ int device_function(smatch const &m)
 const regex usic_dout(
     "^#define P([0-9]+)_([0-9]+)_HWCTRL_U(.)C0_DOUT(.)[ \t]*([^[:space:]]+)");
 int usic_dout_function(smatch const &m)
-{ 
+{
     // m[1]=port
     // m[2]=pin
     // m[3]=usic
@@ -101,7 +101,7 @@ int usic_dout_function(smatch const &m)
 const regex output(
     "^#define P([0-9]+)_([0-9]+)_[^_]+_([^ \t]+)[ \t]*([^[:space:]]+)");
 int output_function(smatch const &m)
-{ 
+{
     // m[1]=port
     // m[2]=pin
     // m[3]=function

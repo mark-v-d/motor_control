@@ -12,7 +12,7 @@ CXX=$(CROSS)g++
 
 VPATH=src
 
-CPPFLAGS+=-g -I src -I ./include
+CPPFLAGS+=-g -I ../include
 CPPFLAGS+=-I $(XMCLIB)/CMSIS/Infineon/COMPONENT_XMC1300/Include/
 CPPFLAGS+=-I $(XMCLIB)/CMSIS/Core/Include/
 CPPFLAGS+=-I $(XMCLIB)/XMCLib/inc/
@@ -64,5 +64,10 @@ endif
 clean:
 	rm -f *.o *.elf .*.d *.bin
 
+TAG_PATTERN=\( -name *.h -o -name *.cpp -o -name *.c \) -not -name xmc4* -not -name *_cm[1-9]*)
 tags:
-	ctags $$(find . \( -name *.h -o -name *.cpp -o -name *.c \) -not -name xmc4* -not -name *_cm[0-35-9]*)
+	ctags $$(find src $(TAG_PATTERN) \
+		$$(find ../include $(TAG_PATTERN) \
+		$$(find $(XMCLIB)/CMSIS/Core $(TAG_PATTERN) \
+		$$(find $(XMCLIB)/CMSIS/Infineon/COMPONENT_XMC1300/ $(TAG_PATTERN) \
+		$$(find $(XMCLIB)/XMCLib $(TAG_PATTERN) 

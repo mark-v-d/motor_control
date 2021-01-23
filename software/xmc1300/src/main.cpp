@@ -10,7 +10,7 @@ extern "C" void SysTick_Handler(void)
 
 int main(int argc, char **argv)
 {
-    DAC.set(gpio::OUTPUT);
+    DAC.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
 
     SysTick_Config(10000);
     //NVIC_SetPriorityGrouping(0);

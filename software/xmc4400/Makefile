@@ -31,13 +31,13 @@ VPATH+=$(XMCLIB)/CMSIS/Infineon/COMPONENT_$(DEVICE)/Source/
 VPATH+=$(XMCLIB)/CMSIS/Infineon/COMPONENT_$(DEVICE)/Source/TOOLCHAIN_GCC_ARM/
 VPATH+=$(XMCLIB)/XMCLib/src/
 
-CPPFLAGS+=-g -I ./include
+CPPFLAGS+=-g -I ../include -I ./include
 CPPFLAGS+=-I $(XMCLIB)/CMSIS/Infineon/COMPONENT_$(DEVICE)/Include/
 CPPFLAGS+=-I $(XMCLIB)/XMCLib/inc/
 CPPFLAGS+=-I $(XMCLIB)/CMSIS/Core/Include/
 CPPFLAGS+=-I src
 CPPFLAGS+=-DCLOCK_CRYSTAL_FREQUENCY=12000000
-CPPFLAGS+=-D $(DEVICE)_$(PACKAGE)x$(MEMORY)
+CPPFLAGS+=-D $(DEVICE)_$(PACKAGE)x$(MEMORY) 
 #CPPFLAGS+=-D UC_ID -D OSCHP_FREQUENCY=12000000
 
 CPU = -g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16
@@ -84,8 +84,13 @@ endif
 clean:
 	rm -f *.o *.elf .*.d
 
+TAG_PATTERN=\( -name *.h -o -name *.cpp -o -name *.c \) -not -name xmc1* -not -name *_cm[0-35-9]*)
 tags:
-	ctags $$(find . \( -name *.h -o -name *.cpp -o -name *.c \) -not -name xmc1* -not -name *_cm[0-35-9]*)
+	ctags $$(find src $(TAG_PATTERN) \
+		$$(find ../include $(TAG_PATTERN) \
+		$$(find $(XMCLIB)/CMSIS/Core $(TAG_PATTERN) \
+		$$(find $(XMCLIB)/CMSIS/Infineon/COMPONENT_$(DEVICE)/ $(TAG_PATTERN) \
+		$$(find $(XMCLIB)/XMCLib $(TAG_PATTERN) 
 
 src/gpio_output_conversions: $(XMCLIB)/XMCLib/inc/xmc4_gpio_map.h tools/convert_header
 	./tools/convert_header < $< > $@
