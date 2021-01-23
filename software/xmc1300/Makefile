@@ -1,5 +1,7 @@
-DEVICE=XMC1301
+DEVICE=XMC1301_T016x0032
 OBJS=main.o startup_XMC1300.o system_XMC1300.o
+
+XMCLIB=../../mtb-xmclib-cat3/
 
 LDSCRIPT=xmc1300.ld
 
@@ -10,13 +12,12 @@ CXX=$(CROSS)g++
 
 VPATH=src
 
-CPPFLAGS+=-g -I ./include
-CPPFLAGS+=-I src
-CPPFLAGS+=-I ./Libraries/CMSIS/Infineon/XMC1300_series/Include/
-CPPFLAGS+=-I ./Libraries/CMSIS/Include/
+CPPFLAGS+=-g -I src -I ./include
+CPPFLAGS+=-I $(XMCLIB)/CMSIS/Infineon/COMPONENT_XMC1300/Include/
+CPPFLAGS+=-I $(XMCLIB)/CMSIS/Core/Include/
+CPPFLAGS+=-I $(XMCLIB)/XMCLib/inc/
 CPPFLAGS+=-I ../xmc4400/src
-CPPFLAGS+=-DCLOCK_CRYSTAL_FREQUENCY=12000000
-CPPFLAGS+=-D $(DEVICE)_$(PACKAGE)x$(MEMORY)
+CPPFLAGS+=-D $(DEVICE)
 
 CPU = -g -mthumb -mcpu=cortex-m0
 

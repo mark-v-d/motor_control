@@ -2,6 +2,7 @@
 #define gpio_h
 
 #include <XMC1300.h>
+#include <xmc_gpio.h>
 
 namespace gpio {
 

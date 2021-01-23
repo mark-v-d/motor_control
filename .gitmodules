@@ -1,0 +1,3 @@
+[submodule "mtb-xmclib-cat3"]
+	path = mtb-xmclib-cat3
+	url = https://github.com/cypresssemiconductorco/mtb-xmclib-cat3.git

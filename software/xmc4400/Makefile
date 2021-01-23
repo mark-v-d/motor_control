@@ -7,6 +7,8 @@ else
 	MEMORY=1024
 endif
 
+XMCLIB=../../mtb-xmclib-cat3/
+
 OBJS=main.o startup_$(DEVICE).o system_$(DEVICE).o ethernet.o icmp.o system.o 
 OBJS+=udp_sync.o
 OBJS+=xmc4_scu.o xmc_ccu8.o xmc_usic.o xmc_uart.o xmc4_gpio.o encoder.o 
@@ -25,15 +27,14 @@ AS=$(CROSS)as
 CXX=$(CROSS)g++
 
 VPATH=src
-VPATH+=XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/$(DEVICE)_series/Source/GCC/
-VPATH+=XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/$(DEVICE)_series/Source/
-VPATH+=XMC_Peripheral_Library_v2.1.6p1/XMCLib/src/
-
+VPATH+=$(XMCLIB)/CMSIS/Infineon/COMPONENT_$(DEVICE)/Source/
+VPATH+=$(XMCLIB)/CMSIS/Infineon/COMPONENT_$(DEVICE)/Source/TOOLCHAIN_GCC_ARM/
+VPATH+=$(XMCLIB)/XMCLib/src/
 
 CPPFLAGS+=-g -I ./include
-CPPFLAGS+=-I ./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Infineon/$(DEVICE)_series/Include/
-CPPFLAGS+=-I ./XMC_Peripheral_Library_v2.1.6p1/XMCLib/inc/
-CPPFLAGS+=-I ./XMC_Peripheral_Library_v2.1.6p1/CMSIS/Include/
+CPPFLAGS+=-I $(XMCLIB)/CMSIS/Infineon/COMPONENT_$(DEVICE)/Include/
+CPPFLAGS+=-I $(XMCLIB)/XMCLib/inc/
+CPPFLAGS+=-I $(XMCLIB)/CMSIS/Core/Include/
 CPPFLAGS+=-I src
 CPPFLAGS+=-DCLOCK_CRYSTAL_FREQUENCY=12000000
 CPPFLAGS+=-D $(DEVICE)_$(PACKAGE)x$(MEMORY)
@@ -86,7 +87,7 @@ clean:
 tags:
 	ctags $$(find . \( -name *.h -o -name *.cpp -o -name *.c \) -not -name xmc1* -not -name *_cm[0-35-9]*)
 
-src/gpio_output_conversions: ./XMC_Peripheral_Library_v2.1.6p1/XMCLib/inc/xmc4_gpio_map.h tools/convert_header
+src/gpio_output_conversions: $(XMCLIB)/XMCLib/inc/xmc4_gpio_map.h tools/convert_header
 	./tools/convert_header < $< > $@
 
 tools/convert_header: tools/convert_header.cpp
