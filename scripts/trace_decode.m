@@ -467,8 +467,6 @@ function result=exception_name(num)
 		"0",
 		"PendSV_Handler",
 		"SysTick_Handler",
-		"",
-		"rupt",
 		"SCU_0_IRQHandler",
 		"ERU0_0_IRQHandler",
 		"ERU0_1_IRQHandler",

@@ -49,7 +49,8 @@ decltype(pwm) pwm(4*trigger_HZ);
 
 extern "C" void SysTick_Handler(void)
 {
-    // counter++;
+    static uint8_t counter;
+    ITM->PORT[1].u8=counter++;
 }
 
 uint32_t hb[3];
@@ -205,6 +206,7 @@ extern "C" void CCU80_1_IRQHandler(void)
     static_assert(pwm.encoder_irq==1, "Wrong handler");
     encoder->trigger();
     sleep_counter++;
+    ITM->PORT[9].u32=sleep_counter;
     LED3=1;
 }
 
@@ -262,7 +264,8 @@ int main()
     eth0.add_udp_receiver(&syncer,ntohs(3));
     */
     SysTick_Config(1000000);
-
+    SysTick->CTRL&=~SysTick_CTRL_TICKINT_Msk;
+    NVIC_DisableIRQ(SysTick_IRQn);
 
     //init_adc();
 

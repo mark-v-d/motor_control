@@ -1,6 +1,6 @@
 function [r f]=trace_now(scope, make_vcd=1, analog=[])
 	tic
-	brd=120e6;
+	brd=120e6/2;
 
 	# Power board
 	if 1
