@@ -4,7 +4,35 @@
 #include <xmc_device.h>
 #include <xmc_scu.h>
 
-static constexpr int64_t frequency=120000000;
+#if UC_FAMILY!=XMC1
+
+struct DWT_Compare_type{
+__IO uint32_t comp;      /*!< Offset: 0x020 (R/W)  Comparator Register */
+__IO uint32_t mask;      /*!< Offset: 0x024 (R/W)  Mask Register */
+__IO uint32_t function;  /*!< Offset: 0x028 (R/W)  Function Register */
+   uint32_t RESERVED[1];
+};
+
+struct DWT_type
+{
+  __IO uint32_t CTRL;    /*!< Offset: 0x000 (R/W)  Control Register */
+  __IO uint32_t CYCCNT;  /*!< Offset: 0x004 (R/W)  Cycle Count Register */
+  __IO uint32_t CPICNT;  /*!< Offset: 0x008 (R/W)  CPI Count Register */
+  __IO uint32_t EXCCNT;  /*!< Offset: 0x00C (R/W)  Exception Overhead Count */
+  __IO uint32_t SLEEPCNT;/*!< Offset: 0x010 (R/W)  Sleep Count Register */
+  __IO uint32_t LSUCNT;  /*!< Offset: 0x014 (R/W)  LSU Count Register */
+  __IO uint32_t FOLDCNT; /*!< Offset: 0x018 (R/W)  Folded-instruction Count */
+  __I  uint32_t PCSR;    /*!< Offset: 0x01C (R/ )  Program Counter Sample */
+  DWT_Compare_type c[4];
+};
+
+extern DWT_type dwt;
+extern ITM_Type itm;
+extern TPI_Type tpi;
+//extern DBGMCU_TypeDef dbgmcu;
+#endif
+
+static constexpr int64_t frequency=FREQUENCY;
 
 extern SysTick_Type systick;
 

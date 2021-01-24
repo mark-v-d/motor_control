@@ -260,19 +260,21 @@ int main()
     eth0.add_udp_receiver(&logger,ntohs(1));
     eth0.add_udp_receiver(&poker,ntohs(2));
     eth0.add_udp_receiver(&syncer,ntohs(3));
-    pwm.start();
     */
+    SysTick_Config(1000000);
 
-    SysTick_Config(SystemCoreClock/1000);
+
     //init_adc();
 
 
     PPB->SCR=1;
 
-    XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
 
     //init_encoder();
     bsl_init(COPRO_TXD,COPRO_RXD);
+
+    pwm.start();
+    XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
 
     auto old_led=led;
     for(;;) {
