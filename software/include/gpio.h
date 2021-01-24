@@ -36,41 +36,45 @@ public:
     }
 
     operator int(void) {
-	return (port[PORT].IN>>PIN)&1;
+	return XMC_GPIO_GetInput(&port[PORT], PIN);
     }
 
     operator bool(void) {
-	return (port[PORT].IN>>PIN)&1;
+	return XMC_GPIO_GetInput(&port[PORT], PIN);
     }
 
     void set(XMC_GPIO_MODE_t m) {
 	// Isn't this byte adressable?
+	// XMC_GPIO_SetMode is not inline
 	port[PORT].IOCR[PIN/4]&=~(255<<8*(PIN%4));
 	port[PORT].IOCR[PIN/4]|=m<<8*(PIN%4);
     }
 
-
-    void pdisc(int i) {
-	if(i)
-	    port[PORT].PDISC|=1<<PIN;
-	else
-	    port[PORT].PDISC&=~(1<<PIN);
+    void set(XMC_GPIO_HWCTRL_t  m) {
+	// XMC_GPIO_SetHardwareControl is not inline
+	port[PORT].HWSEL&=~(3<<2*PIN);
+	port[PORT].HWSEL|=(m&3)<<2*PIN;
     }
-    void pps(int i) {
+
+    void input_enable(void) {
+	XMC_GPIO_EnableDigitalInput(&port[PORT],PIN);
+    }
+
+    void input_disable(void) {
+	XMC_GPIO_DisableDigitalInput(&port[PORT],PIN);
+    }
+
+    void powersave(int i) {
 	if(i)
-	    port[PORT].PPS|=1<<PIN;
+	    XMC_GPIO_EnablePowerSaveMode(&port[PORT], PIN);
 	else
-	    port[PORT].PPS&=~(1<<PIN);
+	    XMC_GPIO_DisablePowerSaveMode(&port[PORT], PIN);
     }
 
 #if UC_FAMILY == XMC4
     void set(XMC_GPIO_OUTPUT_STRENGTH_t m) {
 	port[PORT].PDR[PIN/8]&=~(15<<4*(PIN%8));
 	port[PORT].PDR[PIN/8]|=m<<4*(PIN%8);
-    }
-    void set(XMC_GPIO_HWCTRL_t i) {
-	port[PORT].HWSEL&=~(3<<2*PIN);
-	port[PORT].HWSEL|=(i&3)<<2*PIN;
     }
 
     /* REMOVE THIS !!!! */

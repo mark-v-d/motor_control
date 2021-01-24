@@ -73,8 +73,9 @@ protected:
 public:
     type_name_t(const dwarf::die &node) {
 	if(!node.has(dwarf::DW_AT::name))
-	    throw("Missing name"s);
-	name=node.resolve(dwarf::DW_AT::name).as_string();
+	    name="unnamed";
+	else
+	    name=node.resolve(dwarf::DW_AT::name).as_string();
     }
     std::string const &get_name(void) { return name; }
 protected:

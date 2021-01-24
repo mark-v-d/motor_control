@@ -11,6 +11,7 @@ AS=$(CROSS)as
 CXX=$(CROSS)g++
 
 VPATH=src
+VPATH+=:$(XMCLIB)/XMCLib/src
 
 CPPFLAGS+=-g -I ../include
 CPPFLAGS+=-I $(XMCLIB)/CMSIS/Infineon/COMPONENT_XMC1300/Include/

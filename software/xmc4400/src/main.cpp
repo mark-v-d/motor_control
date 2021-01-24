@@ -26,7 +26,7 @@ constexpr auto PI=acos(-1);
 
 
 
-auto copro=usic::make_full_duplex_asc(COPRO_TXD,COPRO_RXD);
+auto copro=uart::make_full_duplex_no_int(COPRO_TXD,COPRO_RXD);
 
 std::atomic<uint32_t> sleep_counter(0);
 
@@ -277,11 +277,8 @@ int main()
     auto old_led=led;
     for(;;) {
 	if(txd!=-1) {
-	//XMC_USIC_CH_TXFIFO_Configure(uart, 0, XMC_USIC_CH_FIFO_SIZE_8WORDS, 1);
-	//XMC_USIC_CH_RXFIFO_Configure(uart, 16, XMC_USIC_CH_FIFO_SIZE_8WORDS, 7);
-	//XMC_USIC_CH_TXFIFO_PutData(uart, uwaTxData[i]);
-	    copro->IN[0]=0;
-	    copro->IN[0]=txd;
+	    copro.tx(txd);
+	    copro.tx(txd);
 	    led^=1;
 	    txd=-1;
 	}

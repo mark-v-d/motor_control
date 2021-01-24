@@ -2,6 +2,7 @@
 #define MISC_H
 #include <chrono>
 #include <xmc_device.h>
+#include <xmc_scu.h>
 
 static constexpr int64_t frequency=120000000;
 
@@ -29,6 +30,20 @@ public:
     T* operator->() const { return operator T*(); }
 };
 
+inline void UngateClock(XMC_SCU_PERIPHERAL_CLOCK const &clock)
+{
+#if defined(CLOCK_GATING_SUPPORTED)
+#if UC_FAMILY==XMC1
+    SCU_CLK->CGATCLR0 |= (uint32_t)clock;
+    while ((SCU_CLK->CLKCR) & SCU_CLK_CLKCR_VDDC2LOW_Msk)
+	;
+#else
+    XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC0);
+    while(XMC_SCU_CLOCK_IsPeripheralClockGated(XMC_SCU_PERIPHERAL_CLOCK_USIC0))
+	;
+#endif
+#endif
+}
 
 #if UC_FAMILY == XMC4
 /******************************************************************************

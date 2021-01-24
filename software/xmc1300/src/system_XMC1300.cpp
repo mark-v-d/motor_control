@@ -1,6 +1,7 @@
 #include <XMC1300.h>
 #include "system_XMC1300.h"
 #include "misc.h"
+#include "xmc_scu.h"
 
 #define DCO1_FREQUENCY (64000000U)
 
@@ -19,8 +20,12 @@ extern "C" void SystemCoreSetup(void)
 
 extern "C" void SystemCoreClockSetup(void)
 {
-    /* Clock setup done during SSW using the CLOCK_VAL1 and CLOCK_VAL2 defined in vector table */
-    SCU_GENERAL->PASSWD=0xc0;
+    /* Clock setup done during SSW using the CLOCK_VAL1
+	and CLOCK_VAL2 defined in vector table
+    */
+    SCU_GENERAL->PASSWD=192UL;
+    while (((SCU_GENERAL->PASSWD) & SCU_GENERAL_PASSWD_PROTS_Msk))
+	; /* Loop until the lock is removed */
     SCU_CLK->CLKCR=0x3ff00000;	// 64MHz
     SystemCoreClockUpdate();
 }
@@ -41,6 +46,5 @@ extern "C" void SystemCoreClockUpdate(void)
     }
 }
 
-extern "C" void _init(void)
-{
-}
+extern "C" void _init(void) {}
+extern "C" void end(void) {}
