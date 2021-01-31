@@ -205,6 +205,7 @@ extern "C" void CCU80_1_IRQHandler(void)
     static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
     static_assert(pwm.encoder_irq==1, "Wrong handler");
     encoder->trigger();
+    copro.tx(sleep_counter&255);
     sleep_counter++;
     ITM->PORT[9].u32=sleep_counter;
     LED3=1;
@@ -263,9 +264,21 @@ int main()
     eth0.add_udp_receiver(&poker,ntohs(2));
     eth0.add_udp_receiver(&syncer,ntohs(3));
     */
+    ETH_RESET=1; ETH_RESET.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    ENC_5V=0; ENC_5V.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    ENC_12V=0; ENC_12V.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    ENC_DIR=0; ENC_DIR.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+
+    LED0.set(XMC_GPIO_HWCTRL_PERIPHERAL1); LED0.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    LED1.set(XMC_GPIO_HWCTRL_PERIPHERAL1); LED1.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    LED2.set(XMC_GPIO_HWCTRL_PERIPHERAL1); LED2.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    LED3.set(XMC_GPIO_HWCTRL_PERIPHERAL1); LED3.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    LED4.set(XMC_GPIO_HWCTRL_PERIPHERAL1); LED4.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+
     SysTick_Config(1000000);
     SysTick->CTRL&=~SysTick_CTRL_TICKINT_Msk;
     NVIC_DisableIRQ(SysTick_IRQn);
+    tpi;
 
     //init_adc();
 
@@ -275,6 +288,7 @@ int main()
 
     //init_encoder();
     bsl_init(COPRO_TXD,COPRO_RXD);
+    copro.SetBaudrate(1e6);
 
     pwm.start();
     XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);

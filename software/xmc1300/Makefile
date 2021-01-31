@@ -1,7 +1,7 @@
 DEVICE=XMC1301_T016x0032
-OBJS=main.o startup_XMC1300.o system_XMC1300.o
+OBJS=main.o startup_XMC1300.o system_XMC1300.o xmc_vadc_reduced.o
 
-XMCLIB=../../mtb-xmclib-cat3/
+XMCLIB=../../mtb-xmclib-cat3
 
 LDSCRIPT=xmc1300.ld
 
@@ -17,7 +17,6 @@ CPPFLAGS+=-g -I ../include
 CPPFLAGS+=-I $(XMCLIB)/CMSIS/Infineon/COMPONENT_XMC1300/Include/
 CPPFLAGS+=-I $(XMCLIB)/CMSIS/Core/Include/
 CPPFLAGS+=-I $(XMCLIB)/XMCLib/inc/
-CPPFLAGS+=-I ../xmc4400/src
 CPPFLAGS+=-D FREQUENCY=32000000
 CPPFLAGS+=-D $(DEVICE)
 

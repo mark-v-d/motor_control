@@ -16,18 +16,18 @@ inline void sleep(T time)
 {
     using tick_t=std::chrono::duration<uint32_t,std::ratio<1,int(trigger_HZ)>>;
     auto ticks=std::chrono::duration_cast<tick_t>(time);
-    sleep_counter=0;
+    sleep_counter;
     while(sleep_counter<ticks.count())
 	;
 }
 
 #include "gpio.h"
 
-static gpio::output<3,6> LED0=1;
-static gpio::output<4,0> LED1=1;
-static gpio::output<4,1> LED2=1;
-static gpio::output<1,15> LED3=1;
-static gpio::output<2,14> LED4=1;
+static gpio::output<3,6> LED0; // TRACED3
+static gpio::output<4,0> LED1; // TRACED2
+static gpio::output<4,1> LED2; // TRACED1
+static gpio::output<1,15> LED3; // TRACED0
+static gpio::output<2,14> LED4; // TRACECLK
 static gpio::pin<15,8> CLK_RMII;
 static gpio::pin<5,2> CRS_DV;
 static gpio::pin<5,0> RXD0;
@@ -38,18 +38,18 @@ static gpio::ETH0_MDO<2,0> MDIO;
 static gpio::ETH0_TXD0<2,8> TXD0;
 static gpio::ETH0_TXD1<2,9> TXD1;
 static gpio::ETH0_TX_EN<1,12> TX_EN;
-static gpio::output<2,10> ETH_RESET=1;
+static gpio::output<2,10> ETH_RESET;
 
 static gpio::CCU80_OUT20<0,3> HB1;
 static gpio::CCU80_OUT00<0,5> HB0;
 static gpio::CCU80_OUT30<0,6> HB2;
 extern pwm_3phase <decltype(HB0),decltype(HB1),decltype(HB2)>pwm;
 
-//static gpio::output<0,10> HBEN=1;
+//static gpio::output<0,10> HBEN;
 
-static gpio::output<1,2> ENC_5V=0;
-static gpio::output<1,3> ENC_12V=0;
-static gpio::output<1,10> ENC_DIR=0;
+static gpio::output<1,2> ENC_5V;
+static gpio::output<1,3> ENC_12V;
+static gpio::output<1,10> ENC_DIR;
 static gpio::U0C0_DOUT0<1,5> ENC_TXD; // FIXME, HWCTRL should only be used fo SSI
 static gpio::pin<1,4> ENC_RXD;
 //static gpio::pin<0,0> ENC_RXD2;

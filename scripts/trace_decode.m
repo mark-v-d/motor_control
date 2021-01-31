@@ -51,10 +51,14 @@ function result=trace_decode(serial, varargin)
 	#
 	# Serial communication info
 	#
-	result.serial.byte.time=serial.time;
-	result.serial.byte.data=serial.data;
-	result.serial.quality.time=serial.time;
-	result.serial.quality.data=serial.q;
+	if isfield(serial,"q")
+		result.serial.byte.time=serial.time;
+		result.serial.byte.data=serial.data;
+		result.serial.quality.time=serial.time;
+		result.serial.quality.data=serial.q;
+	else
+		result=rmfield(result,"serial");
+	end
 
 	#
 	# Scope data

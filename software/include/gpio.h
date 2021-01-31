@@ -116,23 +116,14 @@ public:
 	    "Ports 14 and 15 are input only"
 	);
 	// REMOVE THIS init code
-	gpio::pin<PORT,PIN>::set(XMC_GPIO_HWCTRL_DISABLED);
-	gpio::pin<PORT,PIN>::set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+	//gpio::pin<PORT,PIN>::set(XMC_GPIO_HWCTRL_DISABLED);
+	//gpio::pin<PORT,PIN>::set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     }
 #else
     constexpr output(void) {}
 #endif
     int operator=(int i) { port[PORT].OMR=(i? 1:0x10000)<<PIN; return i; }
     void operator^=(int i) { if(i) port[PORT].OMR=0x10001<<PIN; }
-    output(int i) {
-	static_assert(PORT<14,
-	    "Ports 14 and 15 are input only"
-	);
-	// REMOVE THIS init code
-	gpio::pin<PORT,PIN>::set(XMC_GPIO_HWCTRL_DISABLED);
-	gpio::pin<PORT,PIN>::set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
-	*this=i;
-    }
     void toggle(void) { port[PORT].OMR=0x10001<<PIN; }
 };
 }

@@ -100,12 +100,11 @@ public:
     }
 
     void init(int baud) {
-	/* Unfortunately using XMC_UART_CH_Init would not fit */
-
-	TX_PIN{}.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL | dout0(TX_PIN{}).gpio_mode);
+	TX_PIN{}.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL |dout0(TX_PIN{}).gpio_mode);
 	TX_PIN{}.set(XMC_GPIO_HWCTRL_DISABLED);
 	RX_PIN{}.set(XMC_GPIO_MODE_INPUT_TRISTATE);
 #if 0
+	/* Unfortunately using XMC_UART_CH_Init would not fit */
 	XMC_UART_CH_CONFIG_t config{
 	  .baudrate=baud,
 	  .data_bits=8,
@@ -115,10 +114,14 @@ public:
 	XMC_UART_CH_Init(channel,&config);
 #else
 	if constexpr (channel==USIC0_CH0_BASE || channel==USIC0_CH1_BASE)  {
-	    //UngateClock(XMC_SCU_PERIPHERAL_CLOCK_USIC0);
+	    UngateClock(XMC_SCU_PERIPHERAL_CLOCK_USIC0);
 	    #if defined(PERIPHERAL_RESET_SUPPORTED)
-		XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC0);
-		while (XMC_SCU_RESET_IsPeripheralResetAsserted(XMC_SCU_PERIPHERAL_RESET_USIC0));
+		XMC_SCU_RESET_DeassertPeripheralReset(
+		    XMC_SCU_PERIPHERAL_RESET_USIC0);
+		while (XMC_SCU_RESET_IsPeripheralResetAsserted(
+		    XMC_SCU_PERIPHERAL_RESET_USIC0)
+		) {
+		}
 	    #endif
 	}
 
@@ -126,8 +129,12 @@ public:
 	if constexpr (channel==USIC1_CH0_BASE || channel==USIC1_CH1_BASE)  {
 	    UngateClock(XMC_SCU_PERIPHERAL_CLOCK_USIC0);
 	    #if defined(PERIPHERAL_RESET_SUPPORTED)
-		XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC1);
-		while (XMC_SCU_RESET_IsPeripheralResetAsserted(XMC_SCU_PERIPHERAL_RESET_USIC1));
+		XMC_SCU_RESET_DeassertPeripheralReset(
+		    XMC_SCU_PERIPHERAL_RESET_USIC1);
+		while(XMC_SCU_RESET_IsPeripheralResetAsserted(
+		    XMC_SCU_PERIPHERAL_RESET_USIC1)
+		) {
+		}
 	    #endif
 	}
 	#endif
@@ -136,8 +143,12 @@ public:
 	if constexpr (channel==USIC2_CH0_BASE || channel==USIC2_CH1_BASE)  {
 	    UngateClock(XMC_SCU_PERIPHERAL_CLOCK_USIC2);
 	    #if defined(PERIPHERAL_RESET_SUPPORTED)
-		XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC2);
-		while (XMC_SCU_RESET_IsPeripheralResetAsserted(XMC_SCU_PERIPHERAL_RESET_USIC2));
+		XMC_SCU_RESET_DeassertPeripheralReset(
+		    XMC_SCU_PERIPHERAL_RESET_USIC2);
+		while(XMC_SCU_RESET_IsPeripheralResetAsserted(
+		    XMC_SCU_PERIPHERAL_RESET_USIC2)
+		) {
+		}
 	    #endif
 	}
 	#endif

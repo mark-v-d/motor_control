@@ -7574,7 +7574,8 @@
   (text "HROUT01" (at 77.47 358.14 180)
     (effects (font (size 1.27 1.27)) (justify right bottom))
   )
-  (text "FIXME,\n\nC-E optocoupler\nxmc1300 reset" (at 400.05 29.21 0)
+  (text "FIXME,\n\nC-E optocoupler\nxmc1300 reset\nSingle ended current measurement.\nSupply xmc1300 with 5V"
+    (at 400.05 29.21 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
   )
 

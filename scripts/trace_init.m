@@ -20,9 +20,15 @@ function trace_init(a,varargin)
 	if isfield(a.var,"dbgmcu")
 		a.dbgmcu.CR=bitor(a.dbgmcu.CR,0x20);
 	end
-	a.tpi.ACPR=1;	# Asynchronous Clock Prescaler Register, TPIU_ACPR
-	a.tpi.SPPR=2;
-	a.tpi.FFCR=0x100;
+	if 0
+		a.tpi.ACPR=1;	# Asynchronous Clock Prescaler Register, TPIU_ACPR
+		a.tpi.SPPR=2;
+		a.tpi.FFCR=0x100;
+	else
+		a.tpi.CSPSR=8;
+		a.tpi.SPPR=0;
+		a.tpi.FFCR=0x100;
+	endif
 
 	# See ARM DDI0403D ID021310 page C1-881 for more details
 	control=a.dwt.CTRL;
