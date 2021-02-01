@@ -38,15 +38,19 @@ function [vcd legend]=recurse_struct(r,scope,legend)
 	end
 
 	if isfield(r,"time") && isfield(r,"data")
-		switch typeinfo(r.data)
-		case {"bool matrix" "bool"} bits=1;
-		case {"uint8 matrix" "uint8 scalar"} bits=8;
-		case {"uint16 matrix" "uint16 scalar"} bits=16;
-		case {"uint32 matrix" "uint32 scalar"} bits=32;
-		case {"float matrix" "float scalar" "matrix"} bits=0;
-		otherwise
-			type=typeinfo(r.data)
-			scope=scope
+		if isfield(r,"bits")
+			bits=r.bits;
+		else
+			switch typeinfo(r.data)
+			case {"bool matrix" "bool"} bits=1;
+			case {"uint8 matrix" "uint8 scalar"} bits=8;
+			case {"uint16 matrix" "uint16 scalar"} bits=16;
+			case {"uint32 matrix" "uint32 scalar"} bits=32;
+			case {"float matrix" "float scalar" "matrix"} bits=0;
+			otherwise
+				type=typeinfo(r.data)
+				scope=scope
+			end
 		end
 
 		if bits==1

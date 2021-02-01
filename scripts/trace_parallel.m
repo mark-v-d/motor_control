@@ -33,7 +33,7 @@ period_interp=linspace(periods-0.5,periods+0.5,10);
 carrier=exp(linspace(0,2i*pi*period_interp,length(B)));
 corr=carrier*(B(:,1)-0.5);
 per_index=find(abs(corr)==max(abs(corr)));
-periods=period_interp(per_index)
+periods=period_interp(per_index);
 carrier=carrier(per_index,:);
 corr=corr(per_index);
 corr/=abs(corr);
@@ -59,7 +59,7 @@ deskew_pos=carrier*edge_pos;
 deskew_neg=carrier*edge_neg;
 deskew_tot=arg(deskew_pos.*deskew_neg);
 deskew_tot+=pi*((deskew_tot<-3*pi/4)-(deskew_tot>3*pi/4));
-deskew_tot/=2
+deskew_tot/=2;
 
 if 0
 	sig=[2,3];
@@ -103,11 +103,11 @@ bitstream_time=repmat(result.bitstream_time,1,size(B,2)-1)'(:);
 bitstream_q=repmat(result.bitstream_q,1,size(B,2)-1)'(:);
 
 # find sync frames
-words=floor(length(bitstream)/16)-1
+words=floor(length(bitstream)/16)-1;
 for x=0:15
 	result.words=reshape(bitstream(x+(1:words*16)),[16,words]); 
 	if max(sum(result.words==[ones(15,1);0]))==16
-		frame_skip=x
+		frame_skip=x;
 		break;
 	end
 end
@@ -137,7 +137,9 @@ sof=1;x=1; frame={}; unit=0;
 sof_time=serial.data=serial.time=[];
 do
 	eof=sof+7;
-	[eof length(data)]
+	if(eof>length(data))
+		break;
+	end
 	frame{end+1}=data(sof:eof); 
 	if length(frame{end})!=8
 		sof=eof+1;
@@ -155,7 +157,7 @@ do
 	end
 	unit=u(end);
 	u(end)=0;
-	u.*=!control
+	u.*=!control;
 	# FIXME, only unit 1 is supported
 	serial.data=[serial.data;bytes(find(u==1))];
 	t=time(sof:eof)';
@@ -163,7 +165,7 @@ do
 	serial.time=[serial.time;t(find(u==1))];
 	sof_time(end+1)=time(sof);
 
-	sof=eof+1
+	sof=eof+1;
 until(sof>length(data))
 
 result.frame=frame;
@@ -171,18 +173,20 @@ serial.data=uint8(serial.data);
 
 if 1
 	vcd=[];
-	vcd.scope.d.data=uint8(B*2.^(4:-1:0)');
-	vcd.scope.d.time=0:length(B)-1;
-	vcd.trace.sampled.data=uint8(2.^(7:-1:3)*result.bitstream');
-	vcd.trace.sampled.time=result.bitstream_time;
-	vcd.trace.quality.data=min(abs(result.bitstream_q),[],2);
-	vcd.trace.quality.time=result.bitstream_time;
+	vcd.trace.clk.data=result.bitstream(:,1)>0;
+	vcd.trace.clk.time=result.bitstream_time;
+	vcd.trace.d.data=uint8(2.^(size(result.bitstream,2)-2:-1:0)*...
+		result.bitstream(:,2:end)');
+	vcd.trace.d.bits=size(result.bitstream,2)-1;
+	vcd.trace.d.time=result.bitstream_time;
+	#vcd.trace.quality.data=min(abs(result.bitstream_q),[],2);
+	#vcd.trace.quality.time=result.bitstream_time;
 
 	vcd.trace.words.data=uint16(result.data);
 	vcd.trace.words.time=result.data_time;
 
-	vcd.trace.carrier.data=real(carrier);
-	vcd.trace.carrier.time=1:length(carrier);
+	#vcd.trace.carrier.data=real(carrier);
+	#vcd.trace.carrier.time=1:length(carrier);
 
 	vcd.trace.sync.time=result.data_time(find(syncs));
 	vcd.trace.sof.time=sof_time;

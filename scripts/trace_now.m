@@ -17,7 +17,20 @@ function [r f]=trace_now(scope, make_vcd=1, analog=[])
 		printf("Data fetched %f\n",fetch); fflush(stdout);
 		fflush(stdout);
 
-		if strcmp(typeinfo(d),"uint8 matrix")
+		if 1
+			clk=bitand(d',0x80)>0;
+			td=[	bitand(d',0x40)>0, ...
+				bitand(d',0x20)>0, ...
+				bitand(d',0x10)>0, ...
+				bitand(d',0x08)>0, ...
+			];
+
+			[result vcd]=trace_parallel([clk,td]); 
+			r.motor=trace_decode(result,d);
+			r.scope=r.motor.scope;
+			r.motor=rmfield(r.motor,"scope");
+			r.trace=vcd.trace;
+		elseif strcmp(typeinfo(d),"uint8 matrix")
 			sdata=bitand(d,1);
 			result=trace_deserialize(sdata,f.srate/brd);
 			r.power=trace_decode(result,d);
