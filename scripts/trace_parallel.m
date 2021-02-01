@@ -28,14 +28,13 @@ function [serial vcd]=trace_parallel(B)
 #
 # Clock recovery
 #
-periods=sum(diff(B(:,1))>0);
-period_interp=linspace(periods-0.5,periods+0.5,10);
-carrier=exp(linspace(0,2i*pi*period_interp,length(B)));
-corr=carrier*(B(:,1)-0.5);
-per_index=find(abs(corr)==max(abs(corr)));
-periods=period_interp(per_index);
-carrier=carrier(per_index,:);
-corr=corr(per_index);
+t=toc;
+periods=sum(diff(B(:,1))>0)
+[periods,v,nev]=nelder_mead_min(@m,{periods,B(:,1)},
+	"isz",0.125, "maxev",100)
+printf("Clock estimation: %f\n",toc-t);
+carrier=exp(linspace(0,2i*pi*periods,length(B)));
+corr=carrier*B(:,1);
 corr/=abs(corr);
 carrier/=corr;
 carrier_phase=linspace(0,2*pi*periods,length(B))+arg(carrier(1));
@@ -196,3 +195,5 @@ if 1
 end
 
 endfunction
+
+function r=m(p,B) r=1/abs(exp(linspace(0,2i*pi*p,length(B)))*B); end

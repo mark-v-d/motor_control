@@ -15,7 +15,7 @@ function vcd=trace_vcd(r,vcd_name,format)
 	legend=1;
 	[vcd legend]=recurse_struct(r,"",legend);
 
-	[vcd.time idx]=sort(vcd.time);
+	[vcd.time idx]=sort(int64(vcd.time));
 	vcd.data={vcd.data{idx}};
 	save vcd vcd
 
