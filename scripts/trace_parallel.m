@@ -21,6 +21,11 @@ trace_vcd(vcd,"test.vcd",f);
 
 figure(1)
 plot(B(:,end:-1:1)+linspace(0,8,5), ";orig;")
+
+periods =  2881996.15129
+v =  0.00000013416
+nev =  28
+
 #}
 function [serial vcd]=trace_parallel(B)
 
@@ -30,9 +35,11 @@ function [serial vcd]=trace_parallel(B)
 #
 t=toc;
 periods=sum(diff(B(:,1))>0)
-[periods,v,nev]=nelder_mead_min(@m,{periods,B(:,1)},
-	"isz",0.125, "maxev",100)
-printf("Clock estimation: %f\n",toc-t);
+
+[periods,v,nev]=nelder_mead_min(@(p,B) ...
+	1/abs(exp(linspace(0,2i*pi*p,length(B)))*B),
+	{periods,B(:,1)}, "isz",0.25, "maxev",100)
+printf("Clock recovery %f (%f)\n",toc,toc-t);
 carrier=exp(linspace(0,2i*pi*periods,length(B)));
 corr=carrier*B(:,1);
 corr/=abs(corr);
@@ -42,6 +49,7 @@ if(floor(carrier_phase(1)/pi)<1)
 	carrier_phase+=2*pi;
 end
 carrier_time=(carrier_phase-carrier_phase(1))*length(B)/(2*pi*periods);
+
 
 #
 # Deskew the data
@@ -195,5 +203,3 @@ if 1
 end
 
 endfunction
-
-function r=m(p,B) r=1/abs(exp(linspace(0,2i*pi*p,length(B)))*B); end
