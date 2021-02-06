@@ -25,7 +25,7 @@ function trace_init(a,varargin)
 		a.tpi.SPPR=2;
 		a.tpi.FFCR=0x100;
 	else
-		a.tpi.CSPSR=8;
+		a.tpi.CSPSR=8; # 8=4-bit, 2=2-bit and 1=1-bit data
 		a.tpi.SPPR=0;
 		a.tpi.FFCR=0x100;
 	endif

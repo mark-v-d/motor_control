@@ -26,20 +26,11 @@ function [serial vcd]=trace_parallel(B)
 #
 # Clock recovery
 #
-t=toc;
-periods=sum(diff(B(:,1))>0)
-if 0
-	# If ltfat is not installed
-	[periods,v,nev]=nelder_mead_min(@(p,B) ...
-		1/abs(exp(linspace(0,2i*pi*p,length(B)))*B),
-		{periods,double(B(:,1))}, "isz",0.25, "maxev",100)
-else
-	# 10 times faster
-	[periods,v,nev]=nelder_mead_min(@(p,B) ...
-		1/abs(gga(B,p/(length(B)-1))),
-		{periods,double(B(:,1))}, "isz",0.25, "maxev",100)
-end
-printf("Clock recovery %f (%f)\n",toc,toc-t);
+f=fft(B(:,1));
+periods=find(abs(f(2:end))==max(abs(f(2:end))))(1)
+[periods,v,nev]=nelder_mead_min(@(p,B) ...
+	1/abs(gga(B,p/(length(B)-1))),
+	{periods,double(B(:,1))}, "isz",0.25, "maxev",100)
 carrier=exp(linspace(0,2i*pi*periods,length(B)));
 corr=carrier*B(:,1);
 corr/=abs(corr);
@@ -49,7 +40,6 @@ if(floor(carrier_phase(1)/pi)<1)
 	carrier_phase+=2*pi;
 end
 carrier_time=(carrier_phase-carrier_phase(1))*length(B)/(2*pi*periods);
-
 
 #
 # Deskew the data
