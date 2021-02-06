@@ -19,13 +19,6 @@ B=[clk,d];
 
 trace_vcd(vcd,"test.vcd",f);
 
-figure(1)
-plot(B(:,end:-1:1)+linspace(0,8,5), ";orig;")
-
-periods =  2881996.15129
-v =  0.00000013416
-nev =  28
-
 #}
 function [serial vcd]=trace_parallel(B)
 
@@ -35,10 +28,17 @@ function [serial vcd]=trace_parallel(B)
 #
 t=toc;
 periods=sum(diff(B(:,1))>0)
-
-[periods,v,nev]=nelder_mead_min(@(p,B) ...
-	1/abs(exp(linspace(0,2i*pi*p,length(B)))*B),
-	{periods,B(:,1)}, "isz",0.25, "maxev",100)
+if 0
+	# If ltfat is not installed
+	[periods,v,nev]=nelder_mead_min(@(p,B) ...
+		1/abs(exp(linspace(0,2i*pi*p,length(B)))*B),
+		{periods,double(B(:,1))}, "isz",0.25, "maxev",100)
+else
+	# 10 times faster
+	[periods,v,nev]=nelder_mead_min(@(p,B) ...
+		1/abs(gga(B,p/(length(B)-1))),
+		{periods,double(B(:,1))}, "isz",0.25, "maxev",100)
+end
 printf("Clock recovery %f (%f)\n",toc,toc-t);
 carrier=exp(linspace(0,2i*pi*periods,length(B)));
 corr=carrier*B(:,1);
