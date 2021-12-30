@@ -63,7 +63,8 @@ class full_duplex_no_int {
     constexpr static int oversampling=16;
     constexpr static int stop_bits=1;
     constexpr static int data_bits=8;
-    constexpr static XMC_USIC_CH_PARITY_MODE parity_mode=XMC_USIC_CH_PARITY_MODE_NONE;
+    constexpr static XMC_USIC_CH_PARITY_MODE parity_mode=
+	XMC_USIC_CH_PARITY_MODE_NONE;
 public:
     full_duplex_no_int(void) {
 	static_assert(
@@ -172,12 +173,14 @@ public:
 	    | bitfield<USIC_CH_SCTR_FLE_Msk>(data_bits-1)
 	    | bitfield<USIC_CH_SCTR_TRM_Msk>(1)
 	    | USIC_CH_SCTR_PDL_Msk;
-	channel->TCSR=bitfield<USIC_CH_TCSR_TDEN_Msk>(1) | USIC_CH_TCSR_TDSSM_Msk;
+	channel->TCSR=bitfield<USIC_CH_TCSR_TDEN_Msk>(1)
+	    | USIC_CH_TCSR_TDSSM_Msk;
 	channel->PSCR=0xFFFFFFFFUL;
 	channel->CCR=parity_mode;
 #endif
 
-	XMC_UART_CH_SetInputSource(channel,XMC_UART_CH_INPUT_RXD,dx<0>(RX_PIN{}));
+	XMC_UART_CH_SetInputSource(channel,
+	    XMC_UART_CH_INPUT_RXD,dx<0>(RX_PIN{}));
 	//XMC_UART_CH_EnableEvent(channel, XMC_UART_CH_EVENT_STANDARD_RECEIVE);
 	XMC_UART_CH_Start(channel);
     }
@@ -192,6 +195,7 @@ public:
 	channel->TBUF[0]=d;
     }
 
+    /* Not to be called from interrupt handlers. */
     template <class T>
     int rx(T time)
     {
@@ -205,6 +209,19 @@ public:
 		return channel->RBUF;
 	return -1;
     }
+
+    void enable_rx_interrupt(int num) {
+	auto x=channel->INPR;
+	x&=~USIC_CH_INPR_RINP_Msk;
+	x|=bitfield<USIC_CH_INPR_RINP_Msk>(num);
+	channel->INPR=x;
+	channel->CCR|=USIC_CH_CCR_RIEN_Msk;
+	/* PCR ASC, xmc4400 15-66. not used */
+    }
+
+    void disable_rx_interrupt(int num) {
+	channel->CCR&=~USIC_CH_CCR_RIEN_Msk;
+    }
 };
 
 
@@ -213,5 +230,38 @@ full_duplex_no_int<TX_PIN,RX_PIN> make_full_duplex_no_int(TX_PIN tx,RX_PIN rx)
 {
     return full_duplex_no_int<TX_PIN,RX_PIN>{};
 }
+
+
+template <class TX_PIN, class RX_PIN,int TX_FIFO_SIZE>
+class full_duplex_tx_fifo_no_int:public full_duplex_no_int<TX_PIN,RX_PIN> {
+    constexpr static auto channel=location(dout0(TX_PIN{}));
+public:
+    void init(int baud) {
+	static_assert(TX_FIFO_SIZE==2 || TX_FIFO_SIZE==4 || TX_FIFO_SIZE==8 ||
+	    TX_FIFO_SIZE==16 || TX_FIFO_SIZE==32 || TX_FIFO_SIZE==64,
+	    "Invalid tx_fifo size (valid sizes are 2,4,8,16,32 and 64)");
+	constexpr int size=
+	    (TX_FIFO_SIZE==2? 1:
+	    (TX_FIFO_SIZE==4? 2:
+	    (TX_FIFO_SIZE==8? 3:
+	    (TX_FIFO_SIZE==16? 4:
+	    (TX_FIFO_SIZE==32? 5:6
+	)))));
+	full_duplex_no_int<TX_PIN,RX_PIN>::init(baud);
+	channel->TBCTR=
+	    bitfield<USIC_CH_TBCTR_DPTR_Msk>(0)
+	    | bitfield<USIC_CH_TBCTR_LIMIT_Msk>(0)
+	    | bitfield<USIC_CH_TBCTR_SIZE_Msk>(size);
+    }
+
+    template <class T>
+    void tx(T const &d) {
+	static_assert(sizeof(T)<=TX_FIFO_SIZE,
+	    "TX packet to big for FIFO");
+	auto p=reinterpret_cast<uint8_t const*>(&d);
+	for(int c=0; c<sizeof(T); c++)
+	    channel->IN[0]=uint32_t(*p++);
+    }
+};
 
 }

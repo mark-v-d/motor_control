@@ -21,7 +21,8 @@ function trace_init(a,varargin)
 		a.dbgmcu.CR=bitor(a.dbgmcu.CR,0x20);
 	end
 	if 0
-		a.tpi.ACPR=1;	# Asynchronous Clock Prescaler Register, TPIU_ACPR
+		# Asynchronous Clock Prescaler Register, TPIU_ACPR
+		a.tpi.ACPR=1;
 		a.tpi.SPPR=2;
 		a.tpi.FFCR=0x100;
 	else

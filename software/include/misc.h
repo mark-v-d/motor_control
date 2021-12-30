@@ -132,8 +132,9 @@ constexpr uint32_t find_lsb<0>(void)
 {
     return 0;
 }
+
 template <uint32_t mask>
-uint32_t bitfield(uint32_t value)
+constexpr uint32_t bitfield(uint32_t value)
 {
     static_assert(mask!=0, "Invalid bitfield");
     constexpr uint32_t shift=find_lsb<mask>();

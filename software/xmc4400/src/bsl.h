@@ -5,18 +5,28 @@
 
 extern char xmc1300_start[], xmc1300_end[];
 
-template <class TX_PIN, class RX_PIN>
-void bsl_init(TX_PIN const&,RX_PIN const&) {
+template <class POWER_ENABLE, class TX_PIN, class RX_PIN>
+void bsl_init(POWER_ENABLE &power_enable, TX_PIN const&,RX_PIN const&) {
     using namespace std::chrono_literals;
     auto copro=uart::make_full_duplex_no_int(TX_PIN{},RX_PIN{});
     copro.init(57600); // This seems to be the max
-    main_sleep(10ms);
 
     uint32_t rx_data;
-    do {
-	copro.tx(0);
-	copro.tx(0x6c);
-    } while(copro.rx(2ms)!=0x5d);
+
+    for(;;) {
+	power_enable=0;
+	main_sleep(10ms);
+	power_enable=1;
+	main_sleep(10ms);
+	for(int x=0; x<100; x++) {
+	    copro.tx(0);
+	    copro.tx(0x6c);
+	    if(copro.rx(2ms)==0x5d)
+		goto upload;
+	}
+    }
+
+    upload:
 
     int length=xmc1300_end-xmc1300_start;
     do {

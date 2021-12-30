@@ -40,6 +40,8 @@ static gpio::ETH0_TXD1<2,9> TXD1;
 static gpio::ETH0_TX_EN<1,12> TX_EN;
 static gpio::output<2,10> ETH_RESET;
 
+static gpio::output<3,3> IO7;
+
 static gpio::CCU80_OUT20<0,3> HB1;
 static gpio::CCU80_OUT00<0,5> HB0;
 static gpio::CCU80_OUT30<0,6> HB2;
