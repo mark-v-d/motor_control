@@ -27,6 +27,7 @@ using namespace std::chrono_literals;
 
 ccu8::half_bridge test_out(HBH0,HBL0);
 
+hrpwm0::slice_t<0> hr;
 
 auto copro=uart::make_full_duplex_no_int(COPRO_TXD,COPRO_RXD);
 
@@ -80,9 +81,20 @@ volatile uint32_t chc=0, dtc=0;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
+    static int x=0;
     test_out=out.output[0];
     test_out->CHC=chc;
     test_out->DTC=dtc;
+    ++x;
+    if(x==100) {
+	hr->SCR1=50;
+	hr->SCR2=50;
+    } else if(x>=200) {
+	hr->SCR1=0;
+	hr->SCR2=0;
+	x=0;
+    }
+    //hr.shadow_transfer();
     ccu8::shadow_transfer(test_out);
 }
 
@@ -135,7 +147,7 @@ extern "C" void VADC0_G0_0_IRQHandler(void)
     LED3=1;
 }
 
-volatile uint32_t counter, led, txd=-1;
+volatile uint32_t counter, led, txd=-1, hrpwm_status;
 
 void init_adc(void);
 int main()
@@ -190,10 +202,50 @@ int main()
     NVIC_SetPriority(test_out.irq<0>(), 0);
     NVIC_EnableIRQ(test_out.irq<0>());
 
+
     ccu8::shadow_transfer(test_out);
     ccu8::start(test_out);
 
+
     out.output[0]=0.1f;
+
+    HBH0_HR.enable();
+    HBL0_HR.enable();
+    hrpwm_status=hrpwm0::init();
+    hrpwm0::dev.HRCCFG|=0x10;
+    hr->GSEL=
+	bitfield<HRPWM0_HRC_GSEL_S0M_Msk>(0) | // use timer
+	bitfield<HRPWM0_HRC_GSEL_C0M_Msk>(0) | // use timer
+	bitfield<HRPWM0_HRC_GSEL_S0ES_Msk>(1) | // rising edge
+	bitfield<HRPWM0_HRC_GSEL_C0ES_Msk>(2)| // falling edge
+	bitfield<HRPWM0_HRC_GSEL_S1M_Msk>(0) | // use timer
+	bitfield<HRPWM0_HRC_GSEL_C1M_Msk>(0) | // use timer
+	bitfield<HRPWM0_HRC_GSEL_S1ES_Msk>(1) | // rising edge
+	bitfield<HRPWM0_HRC_GSEL_C1ES_Msk>(2); // falling edge
+    //hr->SSC=1;
+    hr->GC|=HRPWM0_HRC_GC_STC_Msk|HRPWM0_HRC_GC_DSTC_Msk
+	| HRPWM0_HRC_GC_DTE_Msk;
+    hr->PL=3;
+    hr->SDCR=0x100;
+    hr->SDCF=0x100;
+    hr->SCR1=25;
+    hr->SCR2=25;
+    hr.shadow_transfer();
+    /*
+    hr.low_resolution();
+	hr->TSEL0 -->O
+	hr->GSEL.S0M Source selector 0 set configuration
+	    = 0 -> timer, 1->CSG (moet 0 zijn)
+	hr->GSEL.C0M Source selector 0 sclea configuration
+	    = 0 -> timer, 1->CSG (moet 0 zijn)
+	hr->GSEL.S0ES Source selector 0 set edge configuration
+	    0 disabled
+	    1 rising
+	    2 falling
+	    3 both
+	C0ES
+    hr->TSEL=0;	// Use CCU80.CC0
+    */
 
     auto old_led=led;
     for(;;) {

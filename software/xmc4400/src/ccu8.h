@@ -22,8 +22,10 @@ extern ccu8_t dev[2];
 // Output pins
 ////////////////////////////////////////////////////////////////////////////////
 template <int port, int pin, int unit, int slice, int output>
-class out_t:public gpio::pin<port,pin> {
+class out:public gpio::pin<port,pin> {
 public:
+    static constexpr int PORT=port;
+    static constexpr int PIN=pin;
     static constexpr int UNIT=unit;
     static constexpr int SLICE=slice;
     static constexpr int OUTPUT=output;
@@ -35,43 +37,43 @@ public:
 
     void enable(XMC_GPIO_MODE_t i=XMC_GPIO_MODE_OUTPUT_PUSH_PULL) {
 	this->set(XMC_GPIO_MODE_t(i|alt()));
-	//set(XMC_GPIO_HWCTRL_DISABLED);
+	this->set(XMC_GPIO_HWCTRL_DISABLED);
     }
 };
 
-template<> inline XMC_GPIO_MODE_t out_t<0,0,0,2,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<0,1,0,1,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<0,2,0,0,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<0,3,0,2,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<0,4,0,1,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<0,5,0,0,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<0,6,0,3,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<0,9,0,1,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<0,10,0,0,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<0,11,0,3,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<1,4,0,3,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<1,4,1,2,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out_t<1,5,0,2,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<1,5,1,1,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out_t<1,10,1,2,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<1,11,1,1,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<1,12,1,0,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<1,13,1,2,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<1,14,1,1,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<1,15,1,0,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<2,0,1,2,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT2; }
-template<> inline XMC_GPIO_MODE_t out_t<2,1,1,1,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT2; }
-template<> inline XMC_GPIO_MODE_t out_t<2,2,1,0,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT2; }
-template<> inline XMC_GPIO_MODE_t out_t<2,6,0,1,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<2,7,0,0,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<2,8,0,3,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<2,9,0,2,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<2,14,0,2,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<2,15,0,1,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<5,0,1,3,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<5,1,1,3,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<5,2,1,2,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
-template<> inline XMC_GPIO_MODE_t out_t<5,7,1,0,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<0,0,0,2,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<0,1,0,1,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<0,2,0,0,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<0,3,0,2,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<0,4,0,1,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<0,5,0,0,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<0,6,0,3,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<0,9,0,1,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<0,10,0,0,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<0,11,0,3,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<1,4,0,3,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<1,4,1,2,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
+template<> inline XMC_GPIO_MODE_t out<1,5,0,2,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<1,5,1,1,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
+template<> inline XMC_GPIO_MODE_t out<1,10,1,2,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<1,11,1,1,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<1,12,1,0,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<1,13,1,2,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<1,14,1,1,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<1,15,1,0,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<2,0,1,2,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT2; }
+template<> inline XMC_GPIO_MODE_t out<2,1,1,1,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT2; }
+template<> inline XMC_GPIO_MODE_t out<2,2,1,0,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT2; }
+template<> inline XMC_GPIO_MODE_t out<2,6,0,1,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<2,7,0,0,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<2,8,0,3,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<2,9,0,2,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<2,14,0,2,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<2,15,0,1,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<5,0,1,3,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<5,1,1,3,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<5,2,1,2,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
+template<> inline XMC_GPIO_MODE_t out<5,7,1,0,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT3; }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global functions
@@ -83,29 +85,9 @@ void init(XMC_CCU8_CLOCK_t clock_source,XMC_CCU8_SLICE_MCMS_ACTION_t shadow_tran
     auto &module=dev[UNIT];
 
     auto xmc=reinterpret_cast<XMC_CCU8_MODULE_t*>(&module);
-    XMC_CCU8_SetModuleClock(xmc, XMC_CCU8_CLOCK_SCU);
+    XMC_CCU8_SetModuleClock(xmc, clock_source);
     XMC_CCU8_EnableModule(xmc);
-    XMC_CCU8_Init(xmc, XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
-    return;
-
-    auto gctrl=module.GCTRL;
-    gctrl&=~CCU8_GCTRL_PCIS_Msk;
-    gctrl|=bitfield<CCU8_GCTRL_PCIS_Msk>(clock_source);
-    module.GCTRL=gctrl;
-
-    if constexpr(UNIT) {
-	XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_CCU81);
-	XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_CCU81);
-    } else {
-	XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_CCU80);
-	XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_CCU80);
-    }
-    // Start prescaler
-    module.GIDLC = (uint32_t) CCU8_GIDLC_SPRB_Msk;
-
-    gctrl&=~CCU8_GCTRL_MSDE_Msk;
-    gctrl|=bitfield<CCU8_GCTRL_MSDE_Msk>(XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
-    module.GCTRL=gctrl;
+    XMC_CCU8_Init(xmc, shadow_transfer);
 }
 
 enum edge_t {
@@ -174,6 +156,12 @@ public:
     static constexpr int OUTPUT=HIGH::OUTPUT;
 
     constexpr half_bridge(HIGH h, LOW l) {
+	static_assert(std::is_same<
+	    out<HIGH::PORT,HIGH::PIN,UNIT,SLICE,OUTPUT>,
+	    HIGH>::value, "Pin must be a ccu8::out");
+	static_assert(std::is_same<
+	    out<LOW::PORT,LOW::PIN,UNIT,SLICE,OUTPUT-1>,
+	    LOW>::value, "Pin must be a ccu8::out");
 	static_assert(UNIT==0 || UNIT==1, "Oops");
 	static_assert(h.UNIT==l.UNIT,
 	    "Pins should belong to the same UNIT"
@@ -203,7 +191,7 @@ public:
 
 	// We cannot invert anyway, since the deadtime will not work
 	cc.PSL&=~((1<<LOW::OUTPUT)|(1<<HIGH::OUTPUT));
-	cc.CHC&=~((2<<LOW::OUTPUT)|(2<<LOW::OUTPUT));
+	//cc.CHC&=~((2<<LOW::OUTPUT)|(2<<LOW::OUTPUT));
 
 	HIGH{}.enable();
 	LOW{}.enable();
