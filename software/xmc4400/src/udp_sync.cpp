@@ -1,7 +1,5 @@
 #include "udp_sync.h"
 #include "hardware.h"
-#include "ccu8.h"
-#include "pwm_3phase.h"
 #include "bitfields.h"
 #include <cmath>
 

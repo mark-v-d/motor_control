@@ -5,7 +5,7 @@
 #include <atomic>
 #include <stdint.h>
 #include "gpio.h"
-#include "ccu8_2.h"
+#include "ccu8.h"
 
 constexpr float trigger_HZ=4500.0;
 
@@ -42,12 +42,8 @@ static gpio::output<2,10> ETH_RESET;
 
 static gpio::output<3,3> IO7;
 
-static gpio::CCU80_OUT20<0,3> HB1;
-static gpio::CCU80_OUT00<0,5> HB0;
-static gpio::CCU80_OUT30<0,6> HB2;
-
-static ccu8_2::out_t<0,5,0,0,0> HBL0;
-static ccu8_2::out_t<0,2,0,0,1> HBH0;
+static ccu8::out_t<0,5,0,0,0> HBL0;
+static ccu8::out_t<0,2,0,0,1> HBH0;
 
 //static gpio::output<0,10> HBEN;
 

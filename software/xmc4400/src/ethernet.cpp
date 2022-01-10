@@ -2,7 +2,6 @@
 #include "hardware.h"
 #include "xmc_scu.h"
 #include "bitfields.h"
-#include "pwm_3phase.h"
 
 Ethernet *Ethernet::instance=0;
 

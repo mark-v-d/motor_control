@@ -13,7 +13,7 @@ constexpr auto PI=acos(-1);
 #include "hardware.h"
 #include "ethernet.h"
 #include "icmp.h"
-#include "ccu8.h"
+//#include "ccu8.h"
 #include "udp_logger.h"
 #include "udp_poker.h"
 #include "udp_sync.h"
@@ -25,7 +25,7 @@ constexpr auto PI=acos(-1);
 // using namespace std::complex_literals;
 using namespace std::chrono_literals;
 
-ccu8_2::half_bridge test_out(HBH0,HBL0);
+ccu8::half_bridge test_out(HBH0,HBL0);
 
 
 auto copro=uart::make_full_duplex_no_int(COPRO_TXD,COPRO_RXD);
@@ -76,17 +76,21 @@ enum {
 float manual_angle;
 float angle_offset=0;
 
+volatile uint32_t chc=0, dtc=0;
+
 extern "C" void CCU80_0_IRQHandler(void)
 {
     test_out=out.output[0];
-    ccu8_2::shadow_transfer(test_out);
+    test_out->CHC=chc;
+    test_out->DTC=dtc;
+    ccu8::shadow_transfer(test_out);
 }
 
 /* This interrupt is used to trigger the encoder */
 extern "C" void CCU80_1_IRQHandler(void)
 {
     LED3=0;
-    static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
+    static_assert(test_out.UNIT==0, "Wrong interrupt handler for HB0");
     encoder->trigger();
     copro.tx(sleep_counter&255);
     sleep_counter++;
@@ -98,12 +102,7 @@ extern "C" void CCU80_1_IRQHandler(void)
 extern "C" void CCU80_3_IRQHandler(void)
 {
     LED3=0;
-    static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
-    constexpr uint32_t shadow_transfer=0x1111
-	| (2<<4*ccu8_ns::slice(HB0))
-	| (2<<4*ccu8_ns::slice(HB1))
-	| (2<<4*ccu8_ns::slice(HB2));
-    ccu8[ccu8_ns::unit(HB0)].GCSS=shadow_transfer;
+    static_assert(test_out.UNIT==0, "Wrong interrupt handler for HB0");
     LED3=1;
 }
 
@@ -177,7 +176,7 @@ int main()
     bsl_init(IO7,COPRO_TXD,COPRO_RXD);
     copro.SetBaudrate(1e6);
 
-    ccu8_2::init<test_out.UNIT>(
+    ccu8::init<test_out.UNIT>(
 	XMC_CCU8_CLOCK_SCU,
 	XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR
     );
@@ -191,8 +190,8 @@ int main()
     NVIC_SetPriority(test_out.irq<0>(), 0);
     NVIC_EnableIRQ(test_out.irq<0>());
 
-    ccu8_2::shadow_transfer(test_out);
-    ccu8_2::start(test_out);
+    ccu8::shadow_transfer(test_out);
+    ccu8::start(test_out);
 
     out.output[0]=0.1f;
 
@@ -328,7 +327,7 @@ void init_adc(void)
 
 	}}).raw;
 	// FIXME, make the xtsel mapping automatic
-	static_assert(ccu8_ns::unit(HB0)==0, "Wrong timer for ADC trigger");
+	//static_assert(ccu8_ns::unit(HB0)==0, "Wrong timer for ADC trigger");
 	vadc.G[i].QCTRL0=qctrl0_t({{
 	    .xtsel=8, 	// CCU80::SR2 (See asserts)
 	    .xtmode=1,
