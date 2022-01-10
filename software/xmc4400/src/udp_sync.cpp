@@ -104,7 +104,7 @@ void udp_sync::Received(Ethernet *p_eth, Ethernet::descriptor const &desc)
 	pkt.tx_nanoseconds=p->tx_nanoseconds;
 	pkt.rx_seconds=desc.seconds;
 	pkt.rx_nanoseconds=desc.nanoseconds;
-	pkt.timer=pwm.get_timestamp();
+	//pkt.timer=pwm.get_timestamp();
 	transmit(p_eth);
     }
 }

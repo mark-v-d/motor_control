@@ -14,7 +14,6 @@ constexpr auto PI=acos(-1);
 #include "ethernet.h"
 #include "icmp.h"
 #include "ccu8.h"
-#include "pwm_3phase.h"
 #include "udp_logger.h"
 #include "udp_poker.h"
 #include "udp_sync.h"
@@ -48,7 +47,6 @@ udp_logger::output_t out;
 udp_logger logger __attribute__((section ("ETH_RAM"))) (&in);
 udp_poker poker __attribute__((section ("ETH_RAM")));
 udp_sync syncer __attribute__((section ("ETH_RAM")));
-decltype(pwm) pwm(4*trigger_HZ);
 
 extern "C" void SysTick_Handler(void)
 {
@@ -80,132 +78,8 @@ float angle_offset=0;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
-    static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
-    static_assert(pwm.control_irq==0, "Wrong handler");
-    static uint32_t counter;
-    uint32_t output_scale=pwm.get_period();
-
-    LED2=0;
-    for(int i=0;i<4;i++)
-	out.adc[i]=(int32_t(vadc.G[i].RES[0]&0xffff)-adc_offset[i])*adc_scale[i];
-    //out.vservo=dsd.ch[dsd_ch_ns::channel(MDAT)].RESM*servo_factor;
-
-    out.position2=encoder->position2(); // FIXME, need second encoder
-    out.index2=encoder->index2();
-
-    float current[3];
-    current[0]=out.adc[0];
-    current[1]=out.adc[3];
-    current[2]=-current[0]-current[1];
-
-    int valid=encoder->valid();
-
-    if(!valid) {
-	out.angle=1000;
-	LED1=0;
-    } else {
-	LED1=1;
-	out.position=encoder->position();
-    }
-
-    switch(state) {
-    case STARTUP:
-	//HBEN=0;
-	HB0=0;
-	HB1=0;
-	HB2=0;
-	state=OFFSET_DELAY;
-	counter=0;
-	break;
-    case OFFSET_DELAY:
-	if(++counter>=1000) {
-	    state=OFFSET_CALIBRATE;
-	    counter=0;
-	    adc_offset[0]=adc_offset[3]=0;
-	}
-	break;
-    case OFFSET_CALIBRATE:
-	if(++counter>=4096) {
-	    state=CURRENT;
-	    for(int i:{0,3})
-		adc_offset[i]/=counter;
-	} else {
-	    for(int i:{0,3})
-		adc_offset[i]+=vadc.G[i].RES[0]&0xffff;
-	}
-	break;
-    }
-
-
-    if(state==OVERRIDE) {
-	//HB0=output_scale*(1.0001F-out.output[0]);
-	test_out=out.output[0];
-	HB1=output_scale*(1.0001F-out.output[1]);
-	HB2=output_scale*(1.0001F-out.output[2]);
-    } else if(valid) {
-	float angle=encoder->angle()+angle_offset;
-	if(state==MANUAL_ANGLE || state==MANUAL_VOLTAGE)
-	    angle=manual_angle;
-	float Istator[2];
-	Istator[0]=float(3.0/2)*current[0];
-	Istator[1]=float(sqrt(3))*current[1]+float(sqrt(3)/2)*current[0];
-	out.Irotor[0]= cosf(angle)*Istator[0]+sinf(angle)*Istator[1];
-	out.Irotor[1]=-sinf(angle)*Istator[0]+cosf(angle)*Istator[1];
-	out.angle=angle;
-
-	switch(state) {
-	case MANUAL_ANGLE:
-	case CURRENT:
-	    for(int i=0;i<2;i++) {
-		float err=in.Iset[i]-out.Irotor[i];
-		out.I[i]+=in.kI[i]*err;
-		out.Vrotor[i]=err*in.kP[i]+out.I[i];
-	    }
-	    // Intentionally no break
-	case VOLTAGE:
-	case MANUAL_VOLTAGE:
-	    //HBEN=1;
-	    float sq_len=out.Vrotor[0]*out.Vrotor[0]
-		+out.Vrotor[1]*out.Vrotor[1];
-	    if(sq_len>float(in.lim*in.lim)) {
-		out.Vrotor[0]*=in.lim/sqrtf(sq_len);
-		out.Vrotor[1]*=in.lim/sqrtf(sq_len);
-		out.I[0]*=in.lim/sqrtf(sq_len);
-		out.I[1]*=in.lim/sqrtf(sq_len);
-	    }
-	    angle_offset=in.angle_offset;
-
-	    float Vstator[2];
-	    Vstator[0]=cosf(angle)*out.Vrotor[0]-sinf(angle)*out.Vrotor[1];
-	    Vstator[1]=sinf(angle)*out.Vrotor[0]+cosf(angle)*out.Vrotor[1];
-
-	    float output[3];
-	    if(	(output[0]=float(sqrt(3)/3)*Vstator[1]+Vstator[0])>=0 &&
-		(output[1]=float(2/sqrt(3))*Vstator[1])>=0
-	    ) {
-		output[2]=0;
-	    } else if(
-		(output[1]=-Vstator[0]+float(sqrt(3)/3)*Vstator[1])>=0 &&
-		(output[2]=-float(sqrt(3)/3)*Vstator[1]-Vstator[0])>=0
-	    ) {
-		output[0]=0;
-	    } else {
-		output[0]=Vstator[0]-float(sqrt(3)/3)*Vstator[1];
-		output[1]=0;
-		output[2]=-float(2/sqrt(3))*Vstator[1];
-	    }
-	    for(int i=0;i<3;i++)
-		out.output[i]=output[i];
-	    HB0=output_scale*(1.0001F-output[0]);
-	    HB1=output_scale*(1.0001F-output[1]);
-	    HB2=output_scale*(1.0001F-output[2]);
-	    break;
-	}
-    }
-
-    //logger.transmit(&eth0,out);
-
-    LED2=1;
+    test_out=out.output[0];
+    ccu8_2::shadow_transfer(test_out);
 }
 
 /* This interrupt is used to trigger the encoder */
@@ -213,7 +87,6 @@ extern "C" void CCU80_1_IRQHandler(void)
 {
     LED3=0;
     static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
-    static_assert(pwm.encoder_irq==1, "Wrong handler");
     encoder->trigger();
     copro.tx(sleep_counter&255);
     sleep_counter++;
@@ -226,7 +99,6 @@ extern "C" void CCU80_3_IRQHandler(void)
 {
     LED3=0;
     static_assert(ccu8_ns::unit(HB0)==0, "Wrong interrupt handler for HB0");
-    static_assert(pwm.transfer_irq==3, "Wrong handler");
     constexpr uint32_t shadow_transfer=0x1111
 	| (2<<4*ccu8_ns::slice(HB0))
 	| (2<<4*ccu8_ns::slice(HB1))
@@ -299,20 +171,30 @@ int main()
 
     //init_adc();
 
-
     PPB->SCR=1;
-
 
     //init_encoder();
     bsl_init(IO7,COPRO_TXD,COPRO_RXD);
     copro.SetBaudrate(1e6);
 
-    pwm.start();
-    XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
-
-    HBH0.enable();
-    test_out.deadtime(1us);
+    ccu8_2::init<test_out.UNIT>(
+	XMC_CCU8_CLOCK_SCU,
+	XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR
+    );
+    test_out.init();
     test_out.period(1s/20000.0f);
+    test_out.deadtime(1us);
+    test_out=0.25f;
+
+    test_out->INTE=CCU8_CC8_INTE_PME_Msk;
+    test_out->SRS=bitfield<CCU8_CC8_SRS_POSR_Msk>(0);
+    NVIC_SetPriority(test_out.irq<0>(), 0);
+    NVIC_EnableIRQ(test_out.irq<0>());
+
+    ccu8_2::shadow_transfer(test_out);
+    ccu8_2::start(test_out);
+
+    out.output[0]=0.1f;
 
     auto old_led=led;
     for(;;) {
@@ -447,7 +329,6 @@ void init_adc(void)
 	}}).raw;
 	// FIXME, make the xtsel mapping automatic
 	static_assert(ccu8_ns::unit(HB0)==0, "Wrong timer for ADC trigger");
-	static_assert(pwm.adc_irq==2, "Wrong ADC trigger");
 	vadc.G[i].QCTRL0=qctrl0_t({{
 	    .xtsel=8, 	// CCU80::SR2 (See asserts)
 	    .xtmode=1,

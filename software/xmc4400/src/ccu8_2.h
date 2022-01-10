@@ -79,11 +79,17 @@ template<> inline XMC_GPIO_MODE_t out_t<5,7,1,0,2>::alt(void) { return XMC_GPIO_
 ////////////////////////////////////////////////////////////////////////////////
 // Global functions
 ////////////////////////////////////////////////////////////////////////////////
-// start(XMC_CCU8_CLOCK_SCU,XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR)
+// init(XMC_CCU8_CLOCK_SCU,XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR)
 template <int UNIT>
 void init(XMC_CCU8_CLOCK_t clock_source,XMC_CCU8_SLICE_MCMS_ACTION_t shadow_transfer) {
     static_assert(UNIT==0 || UNIT==1, "Only units 0 and 1 are valid");
     auto &module=dev[UNIT];
+
+    auto xmc=reinterpret_cast<XMC_CCU8_MODULE_t*>(&module);
+    XMC_CCU8_SetModuleClock(xmc, XMC_CCU8_CLOCK_SCU);
+    XMC_CCU8_EnableModule(xmc);
+    XMC_CCU8_Init(xmc, XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+    return;
 
     auto gctrl=module.GCTRL;
     gctrl&=~CCU8_GCTRL_PCIS_Msk;
@@ -105,23 +111,37 @@ void init(XMC_CCU8_CLOCK_t clock_source,XMC_CCU8_SLICE_MCMS_ACTION_t shadow_tran
     module.GCTRL=gctrl;
 }
 
-template <int u,int i> constexpr IRQn_Type irq()
-{ static_assert(u==-1,"Oops"); return -1; }
-template <> constexpr IRQn_Type irq<0,0>() { return CCU80_0_IRQn; }
-template <> constexpr IRQn_Type irq<0,1>() { return CCU80_1_IRQn; }
-template <> constexpr IRQn_Type irq<0,2>() { return CCU80_2_IRQn; }
-template <> constexpr IRQn_Type irq<0,3>() { return CCU80_3_IRQn; }
-template <> constexpr IRQn_Type irq<1,0>() { return CCU81_0_IRQn; }
-template <> constexpr IRQn_Type irq<1,1>() { return CCU81_1_IRQn; }
-template <> constexpr IRQn_Type irq<1,2>() { return CCU81_2_IRQn; }
-template <> constexpr IRQn_Type irq<1,3>() { return CCU81_3_IRQn; }
-
 enum edge_t {
     EDGE_NONE=0,
     EDGE_RISING=1,
     EDGE_FALLING=2,
     EDGE_BOTH=3
 };
+
+template <typename ...Args>
+void shadow_transfer(Args &...x)
+{
+    if(uint32_t gcss=((x.UNIT==0 ? (1<<(4*x.SLICE)):0) | ...))
+	dev[0].GCSS=gcss;
+    if(uint32_t gcss=((x.UNIT==1 ? (1<<(4*x.SLICE)):0) | ...))
+	dev[1].GCSS=gcss;
+}
+
+template <typename ...Args>
+void start(Args &...x)
+{
+    if(uint32_t ccu80_gidlc=((x.UNIT==0 ? (1<<x.SLICE):0) | ...))
+	dev[0].GIDLC=ccu80_gidlc | CCU8_GIDLC_SPRB_Msk;
+    if(uint32_t ccu81_gidlc=((x.UNIT==1 ? (1<<x.SLICE):0) | ...))
+	dev[1].GIDLC=ccu81_gidlc | CCU8_GIDLC_SPRB_Msk;
+
+    uint32_t mask=(
+	(x.UNIT? SCU_GENERAL_CCUCON_GSC81_Msk:SCU_GENERAL_CCUCON_GSC80_Msk)|...
+    );
+    SCU_GENERAL->CCUCON|=mask;
+    SCU_GENERAL->CCUCON&=~mask;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Slice types
@@ -133,7 +153,20 @@ public:
     static constexpr int SLICE=SLICE_PAR;
     CCU8_CC8_TypeDef *operator->(void) { return &dev[UNIT].cc[SLICE]; }
 
-    template <int i> IRQn_Type irq(void) { return irq<UNIT,i>(); }
+    template <int i> IRQn_Type irq(void) {
+	static_assert(0<=i && i<=3, "Only three interrupts");
+	if constexpr(UNIT==0) {
+	    if constexpr (i==0) return CCU80_0_IRQn;
+	    if constexpr (i==1) return CCU80_1_IRQn;
+	    if constexpr (i==2) return CCU80_2_IRQn;
+	    if constexpr (i==3) return CCU80_3_IRQn;
+	} else {
+	    if constexpr (i==0) return CCU81_0_IRQn;
+	    if constexpr (i==1) return CCU81_1_IRQn;
+	    if constexpr (i==2) return CCU81_2_IRQn;
+	    if constexpr (i==3) return CCU81_3_IRQn;
+	}
+    }
 };
 
 template <typename HIGH, typename LOW>
@@ -164,6 +197,7 @@ public:
 	    bitfield<CCU8_CC8_INS_EV0IS_Msk>(7) |
 	    bitfield<CCU8_CC8_INS_EV0EM_Msk>(EDGE_RISING);
 	cc.CMC=bitfield<CCU8_CC8_CMC_STRTS_Msk>(1);
+	cc.TCCLR=CCU8_CC8_TCCLR_TRBC_Msk | CCU8_CC8_TCCLR_TCC_Msk;
 
 	cc.TC=CCU8_CC8_TC_TCM_Msk | // center aligned
 	    CCU8_CC8_TC_CLST_Msk | // Shadow transfer on clear

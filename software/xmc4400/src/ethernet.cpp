@@ -270,7 +270,7 @@ void Ethernet::erase_udp_transmitter(Transmitter *tx,int16_t port)
 inline void ETH0_0_IRQHandler(uint32_t event)
 {
     if(eth.TIMESTAMP_STATUS&0x2) {
-	pwm.set_timestamp();
+	//pwm.set_timestamp();
     }
     if(event&XMC_ETH_MAC_EVENT_RECEIVE) {
 	Ethernet::instance->receiveIRQ();

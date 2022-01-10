@@ -205,8 +205,8 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
     XMC_POSIF_Start(p);
 
     XMC_ERU_Enable(XMC_ERU1);
-    XMC_ERU_ETL_SetInput(XMC_ERU1, pwm.spare_slice(), XMC_ERU_ETL_INPUT_A0,
-	ERU1_ETL0_INPUTB_CCU80_ST0);
+#if 0
+    XMC_ERU_ETL_SetInput(XMC_ERU1, pwm.spare_slice(), XMC_ERU_ETL_INPUT_A0, ERU1_ETL0_INPUTB_CCU80_ST0);
     XMC_ERU_ETL_SetSource(XMC_ERU1, pwm.spare_slice(), XMC_ERU_ETL_SOURCE_B);
     XMC_ERU_ETL_SetEdgeDetection(XMC_ERU1, pwm.spare_slice(),
 	XMC_ERU_ETL_EDGE_DETECTION_FALLING);
@@ -214,6 +214,7 @@ void posif_t<enc_a,enc_b,enc_z>::posif_init(
 	XMC_ERU_ETL_STATUS_FLAG_MODE_HWCTRL);
     XMC_ERU_ETL_EnableOutputTrigger(XMC_ERU1, pwm.spare_slice(),
 	XMC_ERU_ETL_OUTPUT_TRIGGER_CHANNEL1);
+#endif
 
     XMC_ERU_OGU_DisablePatternDetection(XMC_ERU1, 1);
     XMC_ERU_OGU_DisablePeripheralTrigger(XMC_ERU1, 1);

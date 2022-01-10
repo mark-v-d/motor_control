@@ -5,7 +5,6 @@
 #include <atomic>
 #include <stdint.h>
 #include "gpio.h"
-#include "pwm_3phase.h"
 #include "ccu8_2.h"
 
 constexpr float trigger_HZ=4500.0;
@@ -46,7 +45,6 @@ static gpio::output<3,3> IO7;
 static gpio::CCU80_OUT20<0,3> HB1;
 static gpio::CCU80_OUT00<0,5> HB0;
 static gpio::CCU80_OUT30<0,6> HB2;
-extern pwm_3phase <decltype(HB0),decltype(HB1),decltype(HB2)>pwm;
 
 static ccu8_2::out_t<0,5,0,0,0> HBL0;
 static ccu8_2::out_t<0,2,0,0,1> HBH0;
