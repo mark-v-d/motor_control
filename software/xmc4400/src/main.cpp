@@ -23,7 +23,10 @@ constexpr auto PI=acos(-1);
 #include <arpa/inet.h>
 
 #include "bsl.h"
+// using namespace std::complex_literals;
+using namespace std::chrono_literals;
 
+ccu8_2::half_bridge test_out(HBH0,HBL0);
 
 
 auto copro=uart::make_full_duplex_no_int(COPRO_TXD,COPRO_RXD);
@@ -68,7 +71,8 @@ enum {
     MANUAL_ANGLE,
     MANUAL_VOLTAGE,
     CURRENT,
-    VOLTAGE
+    VOLTAGE,
+    OVERRIDE
 } state;
 
 float manual_angle;
@@ -132,7 +136,13 @@ extern "C" void CCU80_0_IRQHandler(void)
 	break;
     }
 
-    if(valid) {
+
+    if(state==OVERRIDE) {
+	//HB0=output_scale*(1.0001F-out.output[0]);
+	test_out=out.output[0];
+	HB1=output_scale*(1.0001F-out.output[1]);
+	HB2=output_scale*(1.0001F-out.output[2]);
+    } else if(valid) {
 	float angle=encoder->angle()+angle_offset;
 	if(state==MANUAL_ANGLE || state==MANUAL_VOLTAGE)
 	    angle=manual_angle;
@@ -270,11 +280,17 @@ int main()
     ENC_DIR=0; ENC_DIR.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     IO7=0; IO7.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);	// power enable copro
 
-    LED0.set(XMC_GPIO_HWCTRL_PERIPHERAL1); LED0.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
-    LED1.set(XMC_GPIO_HWCTRL_PERIPHERAL1); LED1.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
-    LED2.set(XMC_GPIO_HWCTRL_PERIPHERAL1); LED2.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
-    LED3.set(XMC_GPIO_HWCTRL_PERIPHERAL1); LED3.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
-    LED4.set(XMC_GPIO_HWCTRL_PERIPHERAL1); LED4.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    // Turn traceport on.
+    LED0.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
+    LED0.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    LED1.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
+    LED1.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    LED2.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
+    LED2.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    LED3.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
+    LED3.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    LED4.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
+    LED4.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
 
     SysTick_Config(1000000);
     SysTick->CTRL&=~SysTick_CTRL_TICKINT_Msk;
@@ -293,6 +309,10 @@ int main()
 
     pwm.start();
     XMC_CCU8_EnableShadowTransfer(HB0, 0x1111);
+
+    HBH0.enable();
+    test_out.deadtime(1us);
+    test_out.period(1s/20000.0f);
 
     auto old_led=led;
     for(;;) {

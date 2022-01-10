@@ -4,6 +4,7 @@
 #include <xmc_scu.h>
 #include <xmc_vadc.h>
 #include "ccu8.h"
+#include "ccu8_2.h"
 #include "meta.h"
 #include "bitfields.h"
 
@@ -188,7 +189,7 @@ inline void pwm_3phase<A,B,C>::set_timestamp(void)
     if(remaining>limit) {
 	remaining=limit;
 	integrator-=kI*error;
-    } else if(remaining<-limit){ 
+    } else if(remaining<-limit){
 	remaining=-limit;
 	integrator-=kI*error;
     }

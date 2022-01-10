@@ -1,4 +1,7 @@
 _ZN4gpio4portE = 0x48028000 ;
+_ZN5hrpwm3devE = 0x40021300 ;
+_ZN6ccu8_23devE = 0x40020000 ;
+ccu8 = 0x40020000 ;
 eth = 0x5000c000 ;
 ccu8 = 0x40020000 ;
 u0c0 = 0x40030000 ;
