@@ -2,6 +2,8 @@
 #define HRPWM0_H
 
 #include <xmc_hrpwm.h>
+#include <cmath>
+#include "ccu8.h"
 
 namespace hrpwm0 {
 
@@ -51,7 +53,6 @@ public:
     static constexpr int PIN=pin;
     static constexpr int SLICE=slice;
     static constexpr int OUTPUT=output;
-    static constexpr int UNIT=0;
 
     XMC_GPIO_MODE_t alt(void) {
 	static_assert(port<0, "Not a HRPWM0 output");
@@ -73,6 +74,12 @@ template<> inline XMC_GPIO_MODE_t out<0,7,1,1>::alt(void) { return XMC_GPIO_MODE
 template<> inline XMC_GPIO_MODE_t out<0,8,1,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
 template<> inline XMC_GPIO_MODE_t out<0,9,3,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT1; }
 
+/* Execute before hrpwm0::init
+    ccu8::init<test_out.UNIT>(
+	XMC_CCU8_CLOCK_SCU,
+	XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR
+    );
+*/
 inline auto init(void)
 {
      auto status=XMC_HRPWM_Init(&dev);
@@ -81,21 +88,65 @@ inline auto init(void)
      //return status;
 }
 
-template <int UNIT_PAR>
-class slice_t {
+template <typename HIGH, typename LOW>
+class half_bridge:public ccu8::center_aligned<0,HIGH::SLICE,0> {
 public:
-    static constexpr int UNIT=UNIT_PAR;
+    static constexpr int SLICE=HIGH::SLICE;
+    static constexpr int OUTPUT=0; // ccu8 output
+    static constexpr int UNIT=0; // ccu8 unit
 
-    HRPWM0_HRC_Type* operator->(void) { return &hrc[UNIT]; }
-
-    void low_resolution(void) {
-	dev.HRCCFG&=~(HRPWM0_HRCCFG_HRC0E_Msk<<UNIT);
-	dev.HRCCFG|=(HRPWM0_HRCCFG_LRC1E_Msk|HRPWM0_HRCCFG_LRC0E_Msk)<<UNIT;
+    constexpr half_bridge(HIGH h, LOW l) {
+	static_assert(std::is_same<
+	    out<HIGH::PORT,HIGH::PIN,SLICE,HIGH::OUTPUT>,
+	    HIGH>::value, "Pin must be a hrpwm0::out");
+	static_assert(std::is_same<
+	    out<LOW::PORT,LOW::PIN,SLICE,LOW::OUTPUT>,
+	    LOW>::value, "Pin must be a hrpwm0::out");
+	static_assert(h.SLICE==l.SLICE,
+	    "Pins should belong to the same SLICE"
+	);
     }
-    void shadow_transfer(void) {
-	dev.HRCSTRG=(HRPWM0_HRCSTRG_H0ES_Msk|HRPWM0_HRCSTRG_H0DES_Msk)<<(4*UNIT);
+
+    // HRPWM0_HRC_Type* operator->(void) { return &hrc[UNIT]; }
+
+    void deadtime(ccu8::resolution_t rising, ccu8::resolution_t falling) {
+	hrc[SLICE].SDCR=rising.count();
+	hrc[SLICE].SDCF=falling.count();
+    }
+
+    void init(bool invert_h, bool invert_l) {
+	ccu8::center_aligned<UNIT,SLICE,OUTPUT>::init();
+	dev.HRCCFG|=0x10;
+
+	auto hr=&hrc[SLICE];
+	hr->GSEL=
+	    bitfield<HRPWM0_HRC_GSEL_S0M_Msk>(0) | // use timer
+	    bitfield<HRPWM0_HRC_GSEL_C0M_Msk>(0) | // use timer
+	    bitfield<HRPWM0_HRC_GSEL_S0ES_Msk>(1) | // rising edge
+	    bitfield<HRPWM0_HRC_GSEL_C0ES_Msk>(2)| // falling edge
+	    bitfield<HRPWM0_HRC_GSEL_S1M_Msk>(0) | // use timer
+	    bitfield<HRPWM0_HRC_GSEL_C1M_Msk>(0) | // use timer
+	    bitfield<HRPWM0_HRC_GSEL_S1ES_Msk>(1) | // rising edge
+	    bitfield<HRPWM0_HRC_GSEL_C1ES_Msk>(2); // falling edge
+	hr->GC|=HRPWM0_HRC_GC_STC_Msk|HRPWM0_HRC_GC_DSTC_Msk
+	    | HRPWM0_HRC_GC_DTE_Msk;
+	hr->PL=(invert_h? 2:0)|(invert_l? 1:0);
+
+	HIGH{}.enable();
+	LOW{}.enable();
+    }
+
+    float operator=(float i) {
+	float b=ccu8::dev[UNIT].cc[SLICE].PRS*i;
+	if constexpr (OUTPUT==0 || OUTPUT==1)
+	    ccu8::dev[UNIT].cc[SLICE].CR1S=std::floor(b);
+	else
+	    ccu8::dev[UNIT].cc[SLICE].CR2S=std::floor(b);
+	return i;
     }
 };
+
+
 
 }
 

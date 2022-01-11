@@ -26,8 +26,7 @@ constexpr auto PI=acos(-1);
 using namespace std::chrono_literals;
 
 ccu8::half_bridge test_out(HBH0,HBL0);
-
-hrpwm0::slice_t<0> hr;
+hrpwm0::half_bridge hr_out(HBH0_HR,HBL0_HR);
 
 auto copro=uart::make_full_duplex_no_int(COPRO_TXD,COPRO_RXD);
 
@@ -85,6 +84,7 @@ extern "C" void CCU80_0_IRQHandler(void)
     test_out=out.output[0];
     test_out->CHC=chc;
     test_out->DTC=dtc;
+#if 0
     ++x;
     if(x==100) {
 	hr->SCR1=50;
@@ -95,6 +95,7 @@ extern "C" void CCU80_0_IRQHandler(void)
 	x=0;
     }
     //hr.shadow_transfer();
+#endif
     ccu8::shadow_transfer(test_out);
 }
 
@@ -188,13 +189,14 @@ int main()
     bsl_init(IO7,COPRO_TXD,COPRO_RXD);
     copro.SetBaudrate(1e6);
 
-    ccu8::init<test_out.UNIT>(
+    ccu8::init<0>(
 	XMC_CCU8_CLOCK_SCU,
 	XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR
     );
+    hrpwm_status=hrpwm0::init();
     test_out.init();
     test_out.period(1s/20000.0f);
-    test_out.deadtime(1us);
+    test_out.deadtime(1us,1us);
     test_out=0.25f;
 
     test_out->INTE=CCU8_CC8_INTE_PME_Msk;
@@ -202,50 +204,10 @@ int main()
     NVIC_SetPriority(test_out.irq<0>(), 0);
     NVIC_EnableIRQ(test_out.irq<0>());
 
-
     ccu8::shadow_transfer(test_out);
     ccu8::start(test_out);
 
-
     out.output[0]=0.1f;
-
-    HBH0_HR.enable();
-    HBL0_HR.enable();
-    hrpwm_status=hrpwm0::init();
-    hrpwm0::dev.HRCCFG|=0x10;
-    hr->GSEL=
-	bitfield<HRPWM0_HRC_GSEL_S0M_Msk>(0) | // use timer
-	bitfield<HRPWM0_HRC_GSEL_C0M_Msk>(0) | // use timer
-	bitfield<HRPWM0_HRC_GSEL_S0ES_Msk>(1) | // rising edge
-	bitfield<HRPWM0_HRC_GSEL_C0ES_Msk>(2)| // falling edge
-	bitfield<HRPWM0_HRC_GSEL_S1M_Msk>(0) | // use timer
-	bitfield<HRPWM0_HRC_GSEL_C1M_Msk>(0) | // use timer
-	bitfield<HRPWM0_HRC_GSEL_S1ES_Msk>(1) | // rising edge
-	bitfield<HRPWM0_HRC_GSEL_C1ES_Msk>(2); // falling edge
-    //hr->SSC=1;
-    hr->GC|=HRPWM0_HRC_GC_STC_Msk|HRPWM0_HRC_GC_DSTC_Msk
-	| HRPWM0_HRC_GC_DTE_Msk;
-    hr->PL=3;
-    hr->SDCR=0x100;
-    hr->SDCF=0x100;
-    hr->SCR1=25;
-    hr->SCR2=25;
-    hr.shadow_transfer();
-    /*
-    hr.low_resolution();
-	hr->TSEL0 -->O
-	hr->GSEL.S0M Source selector 0 set configuration
-	    = 0 -> timer, 1->CSG (moet 0 zijn)
-	hr->GSEL.C0M Source selector 0 sclea configuration
-	    = 0 -> timer, 1->CSG (moet 0 zijn)
-	hr->GSEL.S0ES Source selector 0 set edge configuration
-	    0 disabled
-	    1 rising
-	    2 falling
-	    3 both
-	C0ES
-    hr->TSEL=0;	// Use CCU80.CC0
-    */
 
     auto old_led=led;
     for(;;) {

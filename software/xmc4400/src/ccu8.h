@@ -148,8 +148,41 @@ public:
     }
 };
 
+template <int UNIT_PAR, int SLICE_PAR, int OUTPUT_PAR>
+class center_aligned:public slice_t<UNIT_PAR,SLICE_PAR> {
+public:
+    static constexpr int UNIT=UNIT_PAR;
+    static constexpr int SLICE=SLICE_PAR;
+    static constexpr int OUTPUT=OUTPUT_PAR;
+
+    void init(void) {
+	auto &cc=dev[UNIT].cc[SLICE];
+
+	// Use GSC8x from SCU_GENERAL.CCUCON mapped to EVENT0 to start timer
+	cc.INS=
+	    bitfield<CCU8_CC8_INS_EV0IS_Msk>(7) |
+	    bitfield<CCU8_CC8_INS_EV0EM_Msk>(EDGE_RISING);
+	cc.CMC=bitfield<CCU8_CC8_CMC_STRTS_Msk>(1);
+	cc.TCCLR=CCU8_CC8_TCCLR_TRBC_Msk | CCU8_CC8_TCCLR_TCC_Msk;
+
+	cc.TC=CCU8_CC8_TC_TCM_Msk | // center aligned
+	    CCU8_CC8_TC_CLST_Msk | // Shadow transfer on clear
+	    CCU8_CC8_TC_STRM_Msk; // external start also clears timer
+	cc.STC=0; // FIXME, not sure if this is best
+    }
+    void period(resolution_t t) {
+	dev[UNIT].cc[SLICE].PRS=t.count()/2;
+    }
+    void operator=(float i) {
+	if constexpr (OUTPUT==0 || OUTPUT==1)
+	    dev[UNIT].cc[SLICE].CR1S=i*dev[UNIT].cc[SLICE].PRS;
+	else
+	    dev[UNIT].cc[SLICE].CR2S=i*dev[UNIT].cc[SLICE].PRS;
+    }
+};
+
 template <typename HIGH, typename LOW>
-class half_bridge:public slice_t<HIGH::UNIT,HIGH::SLICE> {
+class half_bridge:public center_aligned<HIGH::UNIT,HIGH::SLICE,HIGH::OUTPUT> {
 public:
     static constexpr int UNIT=HIGH::UNIT;
     static constexpr int SLICE=HIGH::SLICE;
@@ -175,43 +208,23 @@ public:
     }
 
     void init(void) {
-	auto &cc=dev[UNIT].cc[SLICE];
-
-	// Use GSC8x from SCU_GENERAL.CCUCON mapped to EVENT0 to start timer
-	cc.INS=
-	    bitfield<CCU8_CC8_INS_EV0IS_Msk>(7) |
-	    bitfield<CCU8_CC8_INS_EV0EM_Msk>(EDGE_RISING);
-	cc.CMC=bitfield<CCU8_CC8_CMC_STRTS_Msk>(1);
-	cc.TCCLR=CCU8_CC8_TCCLR_TRBC_Msk | CCU8_CC8_TCCLR_TCC_Msk;
-
-	cc.TC=CCU8_CC8_TC_TCM_Msk | // center aligned
-	    CCU8_CC8_TC_CLST_Msk | // Shadow transfer on clear
-	    CCU8_CC8_TC_STRM_Msk; // external start also clears timer
-	cc.STC=0; // FIXME, not sure if this is best
-
-	// We cannot invert anyway, since the deadtime will not work
-	cc.PSL&=~((1<<LOW::OUTPUT)|(1<<HIGH::OUTPUT));
-	//cc.CHC&=~((2<<LOW::OUTPUT)|(2<<LOW::OUTPUT));
-
+	center_aligned<UNIT,SLICE,OUTPUT>::init();
 	HIGH{}.enable();
 	LOW{}.enable();
     }
-    void period(resolution_t t) {
-	dev[UNIT].cc[SLICE].PRS=t.count()/2;
-    }
-    void deadtime(resolution_t t) {
+    void deadtime(resolution_t rising, resolution_t falling) {
 	if constexpr(OUTPUT==0 || OUTPUT==1) {
 	    dev[UNIT].cc[SLICE].DTC|= CCU8_CC8_DTC_DCEN2_Msk |
 		CCU8_CC8_DTC_DCEN1_Msk | CCU8_CC8_DTC_DTE1_Msk;
 	    dev[UNIT].cc[SLICE].DC1R=
-		bitfield<CCU8_CC8_DC1R_DT1R_Msk>(t.count()) |
-		bitfield<CCU8_CC8_DC1R_DT1F_Msk>(t.count());
+		bitfield<CCU8_CC8_DC1R_DT1R_Msk>(rising.count()) |
+		bitfield<CCU8_CC8_DC1R_DT1F_Msk>(falling.count());
 	} else {
 	    dev[UNIT].cc[SLICE].DTC|= CCU8_CC8_DTC_DCEN3_Msk |
 		CCU8_CC8_DTC_DCEN4_Msk | CCU8_CC8_DTC_DTE2_Msk;
 	    dev[UNIT].cc[SLICE].DC2R=
-		bitfield<CCU8_CC8_DC2R_DT2R_Msk>(t.count()) |
-		bitfield<CCU8_CC8_DC2R_DT2F_Msk>(t.count());
+		bitfield<CCU8_CC8_DC2R_DT2R_Msk>(rising.count()) |
+		bitfield<CCU8_CC8_DC2R_DT2F_Msk>(falling.count());
 	}
     }
     void operator=(float i) {
