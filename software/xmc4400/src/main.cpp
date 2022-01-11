@@ -75,14 +75,27 @@ enum {
 float manual_angle;
 float angle_offset=0;
 
-volatile uint32_t chc=0, dtc=0;
+struct debug_t {
+    uint32_t CCU8_CR1, HRC_CR1, HRC_CR2;
+    float out, flr, rem;
+};
+
+debug_t deb;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
     static int x=0;
     hr_out=out.output[0];
-    hr_out->CHC=chc;
-    hr_out->DTC=dtc;
+
+    constexpr auto UNIT=hr_out.UNIT;
+    constexpr auto SLICE=hr_out.SLICE;
+
+    deb.out=ccu8::dev[UNIT].cc[SLICE].PRS*out.output[0];
+    deb.flr=floor(deb.out);
+    deb.rem=deb.out-deb.flr;
+    deb.CCU8_CR1=deb.flr;
+    deb.HRC_CR1=54*deb.rem;
+    deb.HRC_CR2=54*(1-deb.rem);
 #if 0
     ++x;
     if(x==100) {
@@ -188,6 +201,9 @@ int main()
     bsl_init(IO7,COPRO_TXD,COPRO_RXD);
     copro.SetBaudrate(1e6);
 
+    HBH0_HR.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    HBL0_HR.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+
     ccu8::init<0>(
 	XMC_CCU8_CLOCK_SCU,
 	XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR
@@ -195,7 +211,7 @@ int main()
     hrpwm_status=hrpwm0::init();
     hr_out.init(1,1);
     hr_out.period(1s/20000.0f);
-    hr_out.deadtime(1us,1us);
+    hr_out.deadtime(20ns,20ns);
     hr_out=0.25f;
 
     hr_out->INTE=CCU8_CC8_INTE_PME_Msk;

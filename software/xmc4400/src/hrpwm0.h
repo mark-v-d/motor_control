@@ -142,6 +142,10 @@ public:
 	    ccu8::dev[UNIT].cc[SLICE].CR1S=std::floor(b);
 	else
 	    ccu8::dev[UNIT].cc[SLICE].CR2S=std::floor(b);
+	b-=std::floor(b);
+	hrc[SLICE].SCR1=54*b;
+	hrc[SLICE].SCR2=54*(1-b);
+
 	return i;
     }
 };
