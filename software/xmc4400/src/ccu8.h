@@ -97,17 +97,15 @@ enum edge_t {
     EDGE_BOTH=3
 };
 
-template <typename ...Args>
-void shadow_transfer(Args &...x)
+auto shadow_transfer=[](auto& ...x)
 {
     if(uint32_t gcss=((x.UNIT==0 ? (1<<(4*x.SLICE)):0) | ...))
 	dev[0].GCSS=gcss;
     if(uint32_t gcss=((x.UNIT==1 ? (1<<(4*x.SLICE)):0) | ...))
 	dev[1].GCSS=gcss;
-}
+};
 
-template <typename ...Args>
-void start(Args &...x)
+auto start=[](auto& ... x)
 {
     if(uint32_t ccu80_gidlc=((x.UNIT==0 ? (1<<x.SLICE):0) | ...))
 	dev[0].GIDLC=ccu80_gidlc | CCU8_GIDLC_SPRB_Msk;
@@ -119,7 +117,7 @@ void start(Args &...x)
     );
     SCU_GENERAL->CCUCON|=mask;
     SCU_GENERAL->CCUCON&=~mask;
-}
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////

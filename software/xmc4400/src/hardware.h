@@ -45,8 +45,10 @@ static gpio::output<3,3> IO7;
 
 static ccu8::out<0,5,0,0,0> HBL0;
 static ccu8::out<0,2,0,0,1> HBH0;
-static hrpwm0::out<0,5,0,0> HBL0_HR;
-static hrpwm0::out<0,2,0,1> HBH0_HR;
+static hrpwm0::out<0,5> HBL0_HR;
+static hrpwm0::out<0,2> HBH0_HR;
+//static hrpwm0::out<0,8,0,0> HBL1_HR;
+//static hrpwm0::out<0,7,0,1> HBH1_HR;
 
 //static gpio::output<0,10> HBEN;
 

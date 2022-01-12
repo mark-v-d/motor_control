@@ -17,33 +17,38 @@ extern HRPWM0_HRC_Type hrc[4];
 ////////////////////////////////////////////////////////////////////////////////
 // Output pins
 ////////////////////////////////////////////////////////////////////////////////
-template <int port, int pin, int slice, int output>
+struct par_t {
+    int SLICE, OUTPUT;
+    XMC_GPIO_MODE_t mode;
+};
+
+template <int port,int pin>
+constexpr par_t alt(void) {
+    static_assert(port<0, "Not a HRPWM0 output");
+    return par_t{-2,-2,XMC_GPIO_MODE_OUTPUT_ALT1};
+}
+template<> constexpr par_t alt<0,2>(void) { return par_t{0,1,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,3>(void) { return par_t{2,0,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,4>(void) { return par_t{2,1,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,5>(void) { return par_t{0,0,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,6>(void) { return par_t{3,0,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,7>(void) { return par_t{1,1,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,8>(void) { return par_t{1,0,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,9>(void) { return par_t{3,1,XMC_GPIO_MODE_OUTPUT_ALT1}; }
+
+template <int port, int pin>
 class out:public gpio::pin<port,pin> {
 public:
     static constexpr int PORT=port;
     static constexpr int PIN=pin;
-    static constexpr int SLICE=slice;
-    static constexpr int OUTPUT=output;
-
-    XMC_GPIO_MODE_t alt(void) {
-	static_assert(port<0, "Not a HRPWM0 output");
-	return XMC_GPIO_MODE_INPUT_TRISTATE;
-    }
+    static constexpr int SLICE=alt<port,pin>().SLICE;
+    static constexpr int OUTPUT=alt<port,pin>().OUTPUT;;
 
     void enable(XMC_GPIO_MODE_t i=XMC_GPIO_MODE_OUTPUT_PUSH_PULL) {
-	this->set(XMC_GPIO_MODE_t(i|alt()));
+	this->set(XMC_GPIO_MODE_t(i|alt<port,pin>().mode));
 	this->set(XMC_GPIO_HWCTRL_DISABLED);
     }
 };
-
-template<> inline XMC_GPIO_MODE_t out<0,2,0,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,3,2,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,4,2,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,5,0,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,6,3,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,7,1,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,8,1,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,9,3,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT1; }
 
 /* Execute before hrpwm0::init
     ccu8::init<test_out.UNIT>(
@@ -80,12 +85,10 @@ public:
     static constexpr int UNIT=0; // ccu8 unit
 
     constexpr half_bridge(HIGH h, LOW l) {
-	static_assert(std::is_same<
-	    out<HIGH::PORT,HIGH::PIN,SLICE,HIGH::OUTPUT>,
-	    HIGH>::value, "Pin must be a hrpwm0::out");
-	static_assert(std::is_same<
-	    out<LOW::PORT,LOW::PIN,SLICE,LOW::OUTPUT>,
-	    LOW>::value, "Pin must be a hrpwm0::out");
+	static_assert(std::is_same<out<HIGH::PORT,HIGH::PIN>, HIGH>::value,
+	    "Pin must be a hrpwm0::out");
+	static_assert(std::is_same<out<LOW::PORT,LOW::PIN>, LOW>::value,
+	    "Pin must be a hrpwm0::out");
 	static_assert(h.SLICE==l.SLICE,
 	    "Pins should belong to the same SLICE"
 	);
@@ -104,19 +107,16 @@ public:
 	dev.HRCCFG|=0x10;
 
 	auto hr=&hrc[SLICE];
-	hr->GSEL=
-	    bitfield<HRPWM0_HRC_GSEL_S0M_Msk>(0) | // use timer
-	    bitfield<HRPWM0_HRC_GSEL_C0M_Msk>(0) | // use timer
-	    bitfield<HRPWM0_HRC_GSEL_S0ES_Msk>(1) | // rising edge
-	    bitfield<HRPWM0_HRC_GSEL_C0ES_Msk>(2)| // falling edge
-	    bitfield<HRPWM0_HRC_GSEL_S1M_Msk>(0) | // use timer
-	    bitfield<HRPWM0_HRC_GSEL_C1M_Msk>(0) | // use timer
-	    bitfield<HRPWM0_HRC_GSEL_S1ES_Msk>(1) | // rising edge
-	    bitfield<HRPWM0_HRC_GSEL_C1ES_Msk>(2); // falling edge
 	hr->GC|=HRPWM0_HRC_GC_STC_Msk|HRPWM0_HRC_GC_DSTC_Msk
 	    | HRPWM0_HRC_GC_DTE_Msk
 	    | bitfield<HRPWM0_HRC_GC_HRM0_Msk>(2);
 	hr->PL=(invert_h? 2:0)|(invert_l? 1:0);
+	hr->GSEL=
+	    bitfield<HRPWM0_HRC_GSEL_S0M_Msk>(0) | // use timer
+	    bitfield<HRPWM0_HRC_GSEL_C0M_Msk>(0) | // use timer
+	    bitfield<HRPWM0_HRC_GSEL_S0ES_Msk>(1) | // rising edge
+	    bitfield<HRPWM0_HRC_GSEL_C0ES_Msk>(2); // falling edge
+	hr->TSEL=bitfield<HRPWM0_HRC_TSEL_TSEL0_Msk>(SLICE);
 
 	HIGH{}.enable();
 	LOW{}.enable();

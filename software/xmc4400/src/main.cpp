@@ -25,7 +25,9 @@ constexpr auto PI=acos(-1);
 // using namespace std::complex_literals;
 using namespace std::chrono_literals;
 
-hrpwm0::half_bridge hr_out(HBH0_HR,HBL0_HR);
+std::tuple hr_out{
+    hrpwm0::half_bridge(HBH0_HR,HBL0_HR)
+};
 
 auto copro=uart::make_full_duplex_no_int(COPRO_TXD,COPRO_RXD);
 
@@ -87,45 +89,20 @@ debug_t deb;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
-    static int x=0;
-    hr_out=out.output[0];
+    int x=0;
+    std::apply([&x](auto& ...hr) {
+	((hr=out.output[x++]), ...);
+    }, hr_out);
 
-    constexpr auto UNIT=hr_out.UNIT;
-    constexpr auto SLICE=hr_out.SLICE;
-
-    deb.out=ccu8::dev[UNIT].cc[SLICE].PRS*out.output[0];
-    deb.flr=floor(deb.out);
-    deb.rem=deb.out-deb.flr;
-    deb.CCU8_CR1=deb.flr;
-    constexpr int factor=ccu8::resolution_t(1)/0.15ns;
-    deb.tot=factor*deb.rem;
-    deb.HRC_CR1=factor*deb.rem;
-    deb.HRC_CR2=factor*(1-deb.rem)-1;
-
-deb.cr1=    hr_out->ccu8->CR1S;
-deb.cr1h=    hr_out->hrc->SCR1;
-deb.cr2h=    hr_out->hrc->SCR2;
-
-#if 0
-    ++x;
-    if(x==100) {
-	hr->SCR1=50;
-	hr->SCR2=50;
-    } else if(x>=200) {
-	hr->SCR1=0;
-	hr->SCR2=0;
-	x=0;
-    }
-    //hr.shadow_transfer();
-#endif
-    ccu8::shadow_transfer(hr_out);
+    std::apply(ccu8::shadow_transfer,hr_out);
 }
 
 /* This interrupt is used to trigger the encoder */
 extern "C" void CCU80_1_IRQHandler(void)
 {
     LED3=0;
-    static_assert(hr_out.UNIT==0, "Wrong interrupt handler for HB0");
+    static_assert(std::get<0>(hr_out).UNIT==0,
+	"Wrong interrupt handler for HB0");
     encoder->trigger();
     copro.tx(sleep_counter&255);
     sleep_counter++;
@@ -137,7 +114,8 @@ extern "C" void CCU80_1_IRQHandler(void)
 extern "C" void CCU80_3_IRQHandler(void)
 {
     LED3=0;
-    static_assert(hr_out.UNIT==0, "Wrong interrupt handler for HB0");
+    static_assert(std::get<0>(hr_out).UNIT==0,
+	"Wrong interrupt handler for HB0");
     LED3=1;
 }
 
@@ -219,18 +197,21 @@ int main()
 	XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR
     );
     hrpwm_status=hrpwm0::init();
-    hr_out.init(1,1);
-    hr_out.period(1s/20000.0f);
-    //hr_out.deadtime(20ns,20ns);
-    hr_out=0.25f;
 
-    hr_out->ccu8->INTE=CCU8_CC8_INTE_PME_Msk;
-    hr_out->ccu8->SRS=bitfield<CCU8_CC8_SRS_POSR_Msk>(0);
-    NVIC_SetPriority(hr_out.irq<0>(), 0);
-    NVIC_EnableIRQ(hr_out.irq<0>());
+    std::apply([](auto& ... hr) {
+	(hr.init(1,1), ...);
+	(hr.period(1s/20000.0f), ...);
+	(hr.deadtime(20ns, 20ns), ...);
+	((hr=0.25f), ...);
+    }, hr_out);
 
-    ccu8::shadow_transfer(hr_out);
-    ccu8::start(hr_out);
+    std::get<0>(hr_out)->ccu8->INTE=CCU8_CC8_INTE_PME_Msk;
+    std::get<0>(hr_out)->ccu8->SRS=bitfield<CCU8_CC8_SRS_POSR_Msk>(0);
+    NVIC_SetPriority(std::get<0>(hr_out).irq<0>(), 0);
+    NVIC_EnableIRQ(std::get<0>(hr_out).irq<0>());
+
+    std::apply(ccu8::shadow_transfer,hr_out);
+    std::apply(ccu8::start,hr_out);
 
     out.output[0]=0.1f;
 
