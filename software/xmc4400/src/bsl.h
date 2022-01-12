@@ -15,9 +15,9 @@ void bsl_init(POWER_ENABLE &power_enable, TX_PIN const&,RX_PIN const&) {
 
     for(;;) {
 	power_enable=0;
-	main_sleep(10ms);
+	main_sleep(20ms);
 	power_enable=1;
-	main_sleep(10ms);
+	main_sleep(20ms);
 	for(int x=0; x<100; x++) {
 	    copro.tx(0);
 	    copro.tx(0x6c);

@@ -78,6 +78,9 @@ float angle_offset=0;
 struct debug_t {
     uint32_t CCU8_CR1, HRC_CR1, HRC_CR2;
     float out, flr, rem;
+    int factor=ccu8::resolution_t(1)/0.150ns;
+    int tot;
+    int cr1, cr1h, cr2h;
 };
 
 debug_t deb;
@@ -94,8 +97,15 @@ extern "C" void CCU80_0_IRQHandler(void)
     deb.flr=floor(deb.out);
     deb.rem=deb.out-deb.flr;
     deb.CCU8_CR1=deb.flr;
-    deb.HRC_CR1=54*deb.rem;
-    deb.HRC_CR2=54*(1-deb.rem);
+    constexpr int factor=ccu8::resolution_t(1)/0.15ns;
+    deb.tot=factor*deb.rem;
+    deb.HRC_CR1=factor*deb.rem;
+    deb.HRC_CR2=factor*(1-deb.rem)-1;
+
+deb.cr1=    hr_out->ccu8->CR1S;
+deb.cr1h=    hr_out->hrc->SCR1;
+deb.cr2h=    hr_out->hrc->SCR2;
+
 #if 0
     ++x;
     if(x==100) {
@@ -211,11 +221,11 @@ int main()
     hrpwm_status=hrpwm0::init();
     hr_out.init(1,1);
     hr_out.period(1s/20000.0f);
-    hr_out.deadtime(20ns,20ns);
+    //hr_out.deadtime(20ns,20ns);
     hr_out=0.25f;
 
-    hr_out->INTE=CCU8_CC8_INTE_PME_Msk;
-    hr_out->SRS=bitfield<CCU8_CC8_SRS_POSR_Msk>(0);
+    hr_out->ccu8->INTE=CCU8_CC8_INTE_PME_Msk;
+    hr_out->ccu8->SRS=bitfield<CCU8_CC8_SRS_POSR_Msk>(0);
     NVIC_SetPriority(hr_out.irq<0>(), 0);
     NVIC_EnableIRQ(hr_out.irq<0>());
 

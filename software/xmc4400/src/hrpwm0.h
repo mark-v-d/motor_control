@@ -11,35 +11,6 @@ struct HRPWM0_HRC_Type_padded:public HRPWM0_HRC_Type {
     uint32_t RESERVED[50];
 };
 
-struct CSG_GLOBAL_t {
-  __IO uint32_t  HRBSC;                             /*!< (@ 0x40020900) Bias and suspend configuration                         */
-  __I  uint32_t  RESERVED;
-  __I  uint32_t  MIDR;                              /*!< (@ 0x40020908) Module identification register                         */
-  __I  uint32_t  RESERVED1[2];
-  __IO uint32_t  GLBANA;                            /*!< (@ 0x40020914) Global Analog Configuration                            */
-  __I  uint32_t  RESERVED2[2];
-  __IO uint32_t  CSGCFG;                            /*!< (@ 0x40020920) Global CSG configuration                               */
-  __O  uint32_t  CSGSETG;                           /*!< (@ 0x40020924) Global CSG run bit set                                 */
-  __O  uint32_t  CSGCLRG;                           /*!< (@ 0x40020928) Global CSG run bit clear                               */
-  __I  uint32_t  CSGSTATG;                          /*!< (@ 0x4002092C) Global CSG run bit status                              */
-  __O  uint32_t  CSGFCG;                            /*!< (@ 0x40020930) Global CSG slope/prescaler control                     */
-  __I  uint32_t  CSGFSG;                            /*!< (@ 0x40020934) Global CSG slope/prescaler status                      */
-  __O  uint32_t  CSGTRG;                            /*!< (@ 0x40020938) Global CSG shadow/switch trigger                       */
-  __O  uint32_t  CSGTRC;                            /*!< (@ 0x4002093C) Global CSG shadow trigger clear                        */
-  __I  uint32_t  CSGTRSG;                           /*!< (@ 0x40020940) Global CSG shadow/switch status                        */
-};
-
-struct HRC_GLOBAL_t {
-  __IO uint32_t  HRCCFG;                            /*!< (@ 0x40020960) Global HRC configuration                               */
-  __O  uint32_t  HRCSTRG;                           /*!< (@ 0x40020964) Global HRC shadow trigger set                          */
-  __O  uint32_t  HRCCTRG;                           /*!< (@ 0x40020968) Global HRC shadow trigger clear                        */
-  __I  uint32_t  HRCSTSG;                           /*!< (@ 0x4002096C) Global HRC shadow transfer status                      */
-  __I  uint32_t  HRGHRS;                            /*!< (@ 0x40020970) High Resolution Generation Status                      */
-};
-
-extern CSG_GLOBAL_t csg_global;
-extern HRC_GLOBAL_t hrc_global;
-
 extern HRPWM0_Type dev;
 extern HRPWM0_HRC_Type hrc[4];
 
@@ -88,6 +59,19 @@ inline auto init(void)
      //return status;
 }
 
+
+template <int SLICE>
+struct hrc_registers_t {
+    HRPWM0_HRC_Type *operator->(void) { return &hrc[SLICE]; }
+};
+
+template <int UNIT,int SLICE, int OUTPUT>
+struct all_registers_t {
+    ccu8::slice_t<UNIT,SLICE> ccu8;
+    hrc_registers_t<SLICE> hrc;
+};
+
+
 template <typename HIGH, typename LOW>
 class half_bridge:public ccu8::center_aligned<0,HIGH::SLICE,0> {
 public:
@@ -108,6 +92,7 @@ public:
     }
 
     // HRPWM0_HRC_Type* operator->(void) { return &hrc[UNIT]; }
+    auto operator ->(void) { static all_registers_t<UNIT,SLICE,OUTPUT> x;  return &x; }
 
     void deadtime(ccu8::resolution_t rising, ccu8::resolution_t falling) {
 	hrc[SLICE].SDCR=rising.count();
@@ -129,7 +114,8 @@ public:
 	    bitfield<HRPWM0_HRC_GSEL_S1ES_Msk>(1) | // rising edge
 	    bitfield<HRPWM0_HRC_GSEL_C1ES_Msk>(2); // falling edge
 	hr->GC|=HRPWM0_HRC_GC_STC_Msk|HRPWM0_HRC_GC_DSTC_Msk
-	    | HRPWM0_HRC_GC_DTE_Msk;
+	    | HRPWM0_HRC_GC_DTE_Msk
+	    | bitfield<HRPWM0_HRC_GC_HRM0_Msk>(2);
 	hr->PL=(invert_h? 2:0)|(invert_l? 1:0);
 
 	HIGH{}.enable();
@@ -137,15 +123,17 @@ public:
     }
 
     float operator=(float i) {
-	float b=ccu8::dev[UNIT].cc[SLICE].PRS*i;
+	using namespace std::chrono_literals;
+
+	float b=ccu8::dev[UNIT].cc[SLICE].PRS*i+1.5f;
 	if constexpr (OUTPUT==0 || OUTPUT==1)
 	    ccu8::dev[UNIT].cc[SLICE].CR1S=std::floor(b);
 	else
 	    ccu8::dev[UNIT].cc[SLICE].CR2S=std::floor(b);
 	b-=std::floor(b);
-	hrc[SLICE].SCR1=54*b;
-	hrc[SLICE].SCR2=54*(1-b);
-
+	constexpr int factor=ccu8::resolution_t(1)/0.15ns;
+	hrc[SLICE].SCR1=factor*b;
+	hrc[SLICE].SCR2=factor*(1.0f-b)-0.5f;
 	return i;
     }
 };
