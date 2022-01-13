@@ -12,7 +12,7 @@ struct HRPWM0_HRC_Type_padded:public HRPWM0_HRC_Type {
 };
 
 extern HRPWM0_Type dev;
-extern HRPWM0_HRC_Type hrc[4];
+extern HRPWM0_HRC_Type_padded hrc[4];
 
 ////////////////////////////////////////////////////////////////////////////////
 // Output pins
@@ -94,8 +94,10 @@ public:
 	);
     }
 
-    // HRPWM0_HRC_Type* operator->(void) { return &hrc[UNIT]; }
-    auto operator ->(void) { static all_registers_t<UNIT,SLICE,OUTPUT> x;  return &x; }
+    auto operator ->(void) {
+	static all_registers_t<UNIT,SLICE,OUTPUT> x;
+	return &x;
+    }
 
     void deadtime(ccu8::resolution_t rising, ccu8::resolution_t falling) {
 	hrc[SLICE].SDCR=rising.count();
@@ -104,7 +106,7 @@ public:
 
     void init(bool invert_h, bool invert_l) {
 	ccu8::center_aligned<UNIT,SLICE,OUTPUT>::init();
-	dev.HRCCFG|=0x10;
+	dev.HRCCFG|=(HRPWM0_HRCCFG_HRC0E_Msk<<SLICE);
 
 	auto hr=&hrc[SLICE];
 	hr->GC|=HRPWM0_HRC_GC_STC_Msk|HRPWM0_HRC_GC_DSTC_Msk
@@ -137,7 +139,6 @@ public:
 	return i;
     }
 };
-
 
 
 }

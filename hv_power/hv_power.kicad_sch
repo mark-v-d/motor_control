@@ -471,7 +471,8 @@
     (uuid 4ab1d9d8-1dbb-4356-9859-7db3a3b0709b)
   )
 
-  (text "FIXME\n\nSnubbers\nSingle sided current measurement" (at 45.72 29.21 0)
+  (text "FIXME\n\nSnubbers (before and after the L)\nSingle sided current measurement\nNo negative gate drive"
+    (at 45.72 29.21 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 314e5302-c0f7-4ead-a14c-1a5bfbdc93a1)
   )

@@ -26,7 +26,9 @@ constexpr auto PI=acos(-1);
 using namespace std::chrono_literals;
 
 std::tuple hr_out{
-    hrpwm0::half_bridge(HBH0_HR,HBL0_HR)
+    hrpwm0::half_bridge(HBH0_HR,HBL0_HR),
+    hrpwm0::half_bridge(HBH1_HR,HBL1_HR),
+    hrpwm0::half_bridge(HBH2_HR,HBL2_HR)
 };
 
 auto copro=uart::make_full_duplex_no_int(COPRO_TXD,COPRO_RXD);
@@ -201,7 +203,7 @@ int main()
     std::apply([](auto& ... hr) {
 	(hr.init(1,1), ...);
 	(hr.period(1s/20000.0f), ...);
-	(hr.deadtime(20ns, 20ns), ...);
+	(hr.deadtime(100ns, 100ns), ...);
 	((hr=0.25f), ...);
     }, hr_out);
 
