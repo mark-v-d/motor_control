@@ -1,6 +1,7 @@
 #include "gpio.h"
 #include "uart.h"
 #include "vadc.h"
+#include "ccu8.h"
 #include <initializer_list>
 
 using namespace std::chrono_literals;
@@ -18,7 +19,7 @@ gpio::pin<2,9> V;
 gpio::pin<0,9> RXD_TIMER;
 
 
-uart::full_duplex_tx_fifo_no_int<decltype(TXD),decltype(RXD),8> serial;
+uart::full_duplex_no_int serial(TXD,RXD);
 
 extern "C" void SysTick_Handler(void)
 {
@@ -28,9 +29,10 @@ extern "C" void SysTick_Handler(void)
 
 extern "C" void USIC0_0_IRQHandler(void)
 {
-    auto data=adc::vadc.G[0].RES[1];
+    static_assert(serial.UNIT==0, "Wrong uart");
+    uint16_t data=adc::vadc.G[0].RES[1]&0xffff;
 
-    serial.tx(data);
+    serial.tx_fifo(data);
     serial->PSCR=USIC_CH_PSCR_CRIF_Msk;
 }
 
@@ -43,10 +45,11 @@ int main(int argc, char **argv)
     //NVIC_SetPriority(SysTick_IRQn,0);
     NVIC_DisableIRQ(SysTick_IRQn);
 
+    uart::fifo_configure<0,0,8,0>(serial,serial);
 
     serial.init(1e6);
-    serial.enable_rx_interrupt(0);
-    NVIC_EnableIRQ(USIC0_0_IRQn);
+    serial.enable_rx_interrupt<0>();
+    NVIC_EnableIRQ(serial.irq<0>());
 
     adc::init();
     adc::global_class<0>(XMC_VADC_CONVMODE_12BIT, 0);
@@ -55,18 +58,23 @@ int main(int argc, char **argv)
     adc::channel_control<0>(V,	  XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 1);
     adc::channel_control<1>(I1_P, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
     adc::channel_control<1>(I2_P, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 1);
-    adc::queue<0>(I0_P,	adc::REFILL | adc::EXTERNAL_TRIGGER);
+    adc::queue<0>(I0_P,	adc::REFILL);// | adc::EXTERNAL_TRIGGER);
     adc::queue<0>(V,	adc::REFILL);
     adc::queue<1>(I1_P,	adc::REFILL | adc::EXTERNAL_TRIGGER);
     adc::queue<1>(I2_P,	adc::REFILL);
 
+    ccu8::init<0>(
+	XMC_CCU8_CLOCK_SCU,
+	XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR
+    );
+
     adc::queue_config<0>( 0, // Use channel result register
 	XMC_VADC_GATEMODE_IGNORE,
-	XMC_VADC_REQ_TR_CCU40_SR2, XMC_VADC_TRIGGER_EDGE_RISING
+	XMC_VADC_REQ_TR_CCU80_SR2, XMC_VADC_TRIGGER_EDGE_RISING
     );
     adc::queue_config<1>( 0, // Use channel result register
 	XMC_VADC_GATEMODE_IGNORE,
-	XMC_VADC_REQ_TR_CCU40_SR2, XMC_VADC_TRIGGER_EDGE_RISING
+	XMC_VADC_REQ_TR_CCU80_SR2, XMC_VADC_TRIGGER_EDGE_RISING
     );
 
     for(int i: {0,1}) {

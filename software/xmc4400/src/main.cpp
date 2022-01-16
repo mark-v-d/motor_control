@@ -31,7 +31,7 @@ std::tuple hr_out{
     hrpwm0::half_bridge(HBH2_HR,HBL2_HR)
 };
 
-auto copro=uart::make_full_duplex_no_int(COPRO_TXD,COPRO_RXD);
+uart::full_duplex_no_int copro(COPRO_TXD,COPRO_RXD);
 
 std::atomic<uint32_t> sleep_counter(0);
 
@@ -92,6 +92,17 @@ debug_t deb;
 extern "C" void CCU80_0_IRQHandler(void)
 {
     int x=0;
+    constexpr char data=0x05a;
+    copro.tx(data);
+
+    for(auto sr=copro->RBUFSR;
+	itm.PORT[0].u32=sr,
+	sr&(USIC_CH_RBUFSR_RDV0_Msk | USIC_CH_RBUFSR_RDV1_Msk);
+	sr=copro->RBUFSR
+    ) {
+	itm.PORT[1].u32=copro->RBUF;
+    }
+
     std::apply([&x](auto& ...hr) {
 	((hr=out.output[x++]), ...);
     }, hr_out);
@@ -106,7 +117,6 @@ extern "C" void CCU80_1_IRQHandler(void)
     static_assert(std::get<0>(hr_out).UNIT==0,
 	"Wrong interrupt handler for HB0");
     encoder->trigger();
-    copro.tx(sleep_counter&255);
     sleep_counter++;
     ITM->PORT[9].u32=sleep_counter;
     LED3=1;
@@ -207,6 +217,7 @@ int main()
 	((hr=0.25f), ...);
     }, hr_out);
 
+    out.output[0]=0.2f;
     std::get<0>(hr_out)->ccu8->INTE=CCU8_CC8_INTE_PME_Msk;
     std::get<0>(hr_out)->ccu8->SRS=bitfield<CCU8_CC8_SRS_POSR_Msk>(0);
     NVIC_SetPriority(std::get<0>(hr_out).irq<0>(), 0);
@@ -218,13 +229,9 @@ int main()
     out.output[0]=0.1f;
 
     auto old_led=led;
+    std::atomic_thread_fence(std::memory_order_release);
+
     for(;;) {
-	if(txd!=-1) {
-	    copro.tx(txd);
-	    copro.tx(txd);
-	    led^=1;
-	    txd=-1;
-	}
 	if(led!=old_led) {
 	    old_led=led;
 	    LED0=old_led&1;

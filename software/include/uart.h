@@ -54,6 +54,70 @@ constexpr int dx(gpio::pin<PORT,PIN> const&)
     return -1;
 }
 
+
+
+template <int FIFO_SIZE>
+constexpr int validate_fifo_size(void) {
+    static_assert(FIFO_SIZE==0 || FIFO_SIZE==2 || FIFO_SIZE==4 ||
+	FIFO_SIZE==8 || FIFO_SIZE==16 || FIFO_SIZE==32 || FIFO_SIZE==64,
+	"Invalid fifo size (valid sizes are 2,4,8,16,32 and 64)");
+    return
+	(FIFO_SIZE==0? 0:
+	(FIFO_SIZE==2? 1:
+	(FIFO_SIZE==4? 2:
+	(FIFO_SIZE==8? 3:
+	(FIFO_SIZE==16? 4:
+	(FIFO_SIZE==32? 5:6
+    ))))));
+}
+
+template <int tx0,int rx0, int tx1, int rx1, typename UART0, typename UART1>
+void fifo_configure(UART0 &&ch0, UART1 &&ch1) {
+    static_assert(tx0+rx0+tx1+rx1<=64, "Only 64 fifo entries available");
+    validate_fifo_size<tx0>();
+    validate_fifo_size<rx0>();
+    validate_fifo_size<tx1>();
+    validate_fifo_size<rx1>();
+    static_assert(ch0.UNIT == ch1.UNIT, "Not the same UART");
+
+    ch0->RBCTR=0;
+    ch1->RBCTR=0;
+    ch0->TBCTR=0;
+    ch1->TBCTR=0;
+
+    int base=0;
+    for(int pr_size=6, size=64; size>=2; size>>=1, pr_size--) {
+	if(tx0>=size) {
+	    ch0->TBCTR=
+		bitfield<USIC_CH_TBCTR_DPTR_Msk>(base)
+		| bitfield<USIC_CH_TBCTR_LIMIT_Msk>(0)
+		| bitfield<USIC_CH_TBCTR_SIZE_Msk>(pr_size);
+	    base+=size;
+	}
+	if(tx1>=size) {
+	    ch1->TBCTR=
+		bitfield<USIC_CH_TBCTR_DPTR_Msk>(base)
+		| bitfield<USIC_CH_TBCTR_LIMIT_Msk>(0)
+		| bitfield<USIC_CH_TBCTR_SIZE_Msk>(pr_size);
+	    base+=size;
+	}
+	if(rx0>=size) {
+	    ch0->RBCTR=
+		bitfield<USIC_CH_RBCTR_DPTR_Msk>(base)
+		| bitfield<USIC_CH_RBCTR_LIMIT_Msk>(0)
+		| bitfield<USIC_CH_RBCTR_SIZE_Msk>(pr_size);
+	    base+=size;
+	}
+	if(rx1>=size) {
+	    ch1->RBCTR=
+		bitfield<USIC_CH_RBCTR_DPTR_Msk>(base)
+		| bitfield<USIC_CH_RBCTR_LIMIT_Msk>(0)
+		| bitfield<USIC_CH_RBCTR_SIZE_Msk>(pr_size);
+	    base+=size;
+	}
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Full duplex serial, no interrupts
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +130,10 @@ class full_duplex_no_int {
     constexpr static XMC_USIC_CH_PARITY_MODE parity_mode=
 	XMC_USIC_CH_PARITY_MODE_NONE;
 public:
-    full_duplex_no_int(void) {
+    static constexpr int UNIT=dout0(TX_PIN{}).unit;
+    static constexpr int CHANNEL=dout0(TX_PIN{}).channel;
+
+    full_duplex_no_int(TX_PIN t, RX_PIN r) {
 	static_assert(
 	    uint32_t(location(dout0(TX_PIN{})))
 	    ==uint32_t(location(dx0(RX_PIN{}))),
@@ -195,6 +262,13 @@ public:
 	channel->TBUF[0]=d;
     }
 
+    template <class T>
+    void tx_fifo(T const &d) {
+       auto p=reinterpret_cast<uint8_t const*>(&d);
+       for(int c=0; c<sizeof(T); c++)
+           channel->IN[0]=uint32_t(*p++);
+    }
+
     /* Not to be called from interrupt handlers. */
     template <class T>
     int rx(T time)
@@ -210,7 +284,15 @@ public:
 	return -1;
     }
 
-    void enable_rx_interrupt(int num) {
+    int rx(void)
+    {
+	if(channel->RBUFSR & (USIC_CH_RBUFSR_RDV0_Msk|USIC_CH_RBUFSR_RDV1_Msk))
+	    return channel->RBUF;
+	return -1;
+    }
+
+    template <int num>
+    void enable_rx_interrupt(void) {
 	auto x=channel->INPR;
 	x&=~USIC_CH_INPR_RINP_Msk;
 	x|=bitfield<USIC_CH_INPR_RINP_Msk>(num);
@@ -222,46 +304,17 @@ public:
     void disable_rx_interrupt(int num) {
 	channel->CCR&=~USIC_CH_CCR_RIEN_Msk;
     }
-};
 
-
-template <class TX_PIN, class RX_PIN>
-full_duplex_no_int<TX_PIN,RX_PIN> make_full_duplex_no_int(TX_PIN tx,RX_PIN rx)
-{
-    return full_duplex_no_int<TX_PIN,RX_PIN>{};
-}
-
-
-template <class TX_PIN, class RX_PIN,int TX_FIFO_SIZE>
-class full_duplex_tx_fifo_no_int:public full_duplex_no_int<TX_PIN,RX_PIN> {
-    constexpr static auto channel=location(dout0(TX_PIN{}));
-public:
-    void init(int baud) {
-	static_assert(TX_FIFO_SIZE==2 || TX_FIFO_SIZE==4 || TX_FIFO_SIZE==8 ||
-	    TX_FIFO_SIZE==16 || TX_FIFO_SIZE==32 || TX_FIFO_SIZE==64,
-	    "Invalid tx_fifo size (valid sizes are 2,4,8,16,32 and 64)");
-	constexpr int size=
-	    (TX_FIFO_SIZE==2? 1:
-	    (TX_FIFO_SIZE==4? 2:
-	    (TX_FIFO_SIZE==8? 3:
-	    (TX_FIFO_SIZE==16? 4:
-	    (TX_FIFO_SIZE==32? 5:6
-	)))));
-	full_duplex_no_int<TX_PIN,RX_PIN>::init(baud);
-	channel->TBCTR=
-	    bitfield<USIC_CH_TBCTR_DPTR_Msk>(0)
-	    | bitfield<USIC_CH_TBCTR_LIMIT_Msk>(0)
-	    | bitfield<USIC_CH_TBCTR_SIZE_Msk>(size);
+    template <int i>
+    constexpr IRQn_Type irq(void) {
+	constexpr auto unit=dout0(TX_PIN{}).unit;
+	if constexpr (unit==0) {
+	    return IRQn_Type(USIC0_0_IRQn+i);
+	} else if constexpr (unit==1) {
+	    return IRQn_Type(USIC0_0_IRQn+6+i); // FIXME, always true?
+	}
     }
 
-    template <class T>
-    void tx(T const &d) {
-	static_assert(sizeof(T)<=TX_FIFO_SIZE,
-	    "TX packet to big for FIFO");
-	auto p=reinterpret_cast<uint8_t const*>(&d);
-	for(int c=0; c<sizeof(T); c++)
-	    channel->IN[0]=uint32_t(*p++);
-    }
 };
 
 }
