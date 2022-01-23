@@ -31,7 +31,7 @@ std::tuple hr_out{
     hrpwm0::half_bridge(HBH2_HR,HBL2_HR)
 };
 
-uart::full_duplex_no_int copro(COPRO_TXD,COPRO_RXD);
+uart::full_duplex copro(COPRO_TXD,COPRO_RXD);
 
 std::atomic<uint32_t> sleep_counter(0);
 
@@ -89,19 +89,31 @@ struct debug_t {
 
 debug_t deb;
 
+std::array<uint16_t,16> rx_data;
+
 extern "C" void CCU80_0_IRQHandler(void)
 {
     int x=0;
     constexpr char data=0x05a;
     copro.tx(data);
 
-    for(auto sr=copro->RBUFSR;
-	itm.PORT[0].u32=sr,
-	sr&(USIC_CH_RBUFSR_RDV0_Msk | USIC_CH_RBUFSR_RDV1_Msk);
-	sr=copro->RBUFSR
-    ) {
-	itm.PORT[1].u32=copro->RBUF;
+    int rxd_counter=0;
+
+    FCE_KE2->CFG=0;
+    FCE_KE2->CRC=0xffff;
+    itm.PORT[1].u16=FCE_KE2->CRC;
+    uint16_t d;
+    while(copro->TRBSR & USIC_CH_TRBSR_RBFLVL_Msk) {
+	d>>=8;
+	d|=copro->OUTR<<8;
+	rx_data[rxd_counter++/2]=d;
+	if(!(rxd_counter&1)) {
+	    FCE_KE2->IR=d;
+	    itm.PORT[0].u16=d;
+	    itm.PORT[1].u16=FCE_KE2->CRC;
+	}
     }
+    itm.PORT[11].f=out.output[0];
 
     std::apply([&x](auto& ...hr) {
 	((hr=out.output[x++]), ...);
@@ -188,6 +200,8 @@ int main()
     LED4.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
     LED4.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
 
+    FCE->CLC=0;
+
     SysTick_Config(1000000);
     SysTick->CTRL&=~SysTick_CTRL_TICKINT_Msk;
     NVIC_DisableIRQ(SysTick_IRQn);
@@ -199,7 +213,8 @@ int main()
 
     //init_encoder();
     bsl_init(IO7,COPRO_TXD,COPRO_RXD);
-    copro.SetBaudrate(1e6);
+    copro.SetBaudrate(uart::Baudrate(2e6));
+    uart::fifo_configure<0,16>(copro);
 
     HBH0_HR.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
     HBL0_HR.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);

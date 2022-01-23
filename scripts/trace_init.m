@@ -28,7 +28,7 @@ function trace_init(a,varargin)
 	else
 		a.tpi.CSPSR=8; # 8=4-bit, 2=2-bit and 1=1-bit data
 		a.tpi.SPPR=0;
-		a.tpi.FFCR=0x100;
+		a.tpi.FFCR=0;
 	endif
 
 	# See ARM DDI0403D ID021310 page C1-881 for more details

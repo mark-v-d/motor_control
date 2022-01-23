@@ -5,11 +5,14 @@
 
 extern char xmc1300_start[], xmc1300_end[];
 
+
 template <class POWER_ENABLE, class TX_PIN, class RX_PIN>
 void bsl_init(POWER_ENABLE &power_enable, TX_PIN const&,RX_PIN const&) {
+    constexpr auto BSL_BAUDRATE=uart::Baudrate(115200);
+
     using namespace std::chrono_literals;
-    uart::full_duplex_no_int copro(TX_PIN{},RX_PIN{});
-    copro.init(57600); // This seems to be the max
+    uart::full_duplex copro(TX_PIN{},RX_PIN{});
+    copro.init(BSL_BAUDRATE);
 
     uint32_t rx_data;
 

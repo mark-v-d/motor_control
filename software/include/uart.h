@@ -1,5 +1,6 @@
 #include "gpio.h"
 #include "misc.h"
+#include <tuple>
 
 namespace uart {
 
@@ -71,8 +72,12 @@ constexpr int validate_fifo_size(void) {
     ))))));
 }
 
+struct fifo_config_t {
+    uint32_t tx0, rx0, tx1, rx1;
+};
+
 template <int tx0,int rx0, int tx1, int rx1, typename UART0, typename UART1>
-void fifo_configure(UART0 &&ch0, UART1 &&ch1) {
+fifo_config_t fifo_configure(UART0 ch0, UART1 ch1) {
     static_assert(tx0+rx0+tx1+rx1<=64, "Only 64 fifo entries available");
     validate_fifo_size<tx0>();
     validate_fifo_size<rx0>();
@@ -85,46 +90,121 @@ void fifo_configure(UART0 &&ch0, UART1 &&ch1) {
     ch0->TBCTR=0;
     ch1->TBCTR=0;
 
+    fifo_config_t result{0xdeadface,0xdeadface,0xdeadface,0xdeadface};
+
     int base=0;
     for(int pr_size=6, size=64; size>=2; size>>=1, pr_size--) {
-	if(tx0>=size) {
-	    ch0->TBCTR=
+	if constexpr (ch1.CHANNEL!=ch0.CHANNEL) {
+	    if(tx0==size) {
+		ch0->TBCTR=result.tx0=
+		    bitfield<USIC_CH_TBCTR_DPTR_Msk>(base)
+		    | bitfield<USIC_CH_TBCTR_LIMIT_Msk>(0)
+		    | bitfield<USIC_CH_TBCTR_SIZE_Msk>(pr_size);
+		base+=size;
+	    }
+	    if(rx0==size) {
+		ch0->RBCTR=result.rx0=
+		    bitfield<USIC_CH_RBCTR_DPTR_Msk>(base)
+		    | bitfield<USIC_CH_RBCTR_LIMIT_Msk>(0)
+		    | bitfield<USIC_CH_RBCTR_SIZE_Msk>(pr_size);
+		base+=size;
+	    }
+	}
+	if(tx1==size) {
+	    ch1->TBCTR=result.tx1=
 		bitfield<USIC_CH_TBCTR_DPTR_Msk>(base)
 		| bitfield<USIC_CH_TBCTR_LIMIT_Msk>(0)
 		| bitfield<USIC_CH_TBCTR_SIZE_Msk>(pr_size);
 	    base+=size;
 	}
-	if(tx1>=size) {
-	    ch1->TBCTR=
-		bitfield<USIC_CH_TBCTR_DPTR_Msk>(base)
-		| bitfield<USIC_CH_TBCTR_LIMIT_Msk>(0)
-		| bitfield<USIC_CH_TBCTR_SIZE_Msk>(pr_size);
-	    base+=size;
-	}
-	if(rx0>=size) {
-	    ch0->RBCTR=
-		bitfield<USIC_CH_RBCTR_DPTR_Msk>(base)
-		| bitfield<USIC_CH_RBCTR_LIMIT_Msk>(0)
-		| bitfield<USIC_CH_RBCTR_SIZE_Msk>(pr_size);
-	    base+=size;
-	}
-	if(rx1>=size) {
-	    ch1->RBCTR=
+	if(rx1==size) {
+	    ch1->RBCTR=result.rx1=
 		bitfield<USIC_CH_RBCTR_DPTR_Msk>(base)
 		| bitfield<USIC_CH_RBCTR_LIMIT_Msk>(0)
 		| bitfield<USIC_CH_RBCTR_SIZE_Msk>(pr_size);
 	    base+=size;
 	}
     }
+    return result;
 }
+
+template <int tx0,int rx0, typename UART0>
+fifo_config_t fifo_configure(UART0 &ch0) {
+    return fifo_configure<0,0,tx0,rx0>(ch0,ch0);
+}
+
+constexpr auto Baudrate2(unsigned rate)
+{
+    uint32_t den=frequency;
+    while(rate>0x003fffff) {
+	den/=2;
+	rate/=2;
+    }
+    uint32_t num=1024UL*rate;
+
+    int error_min=num, num_min=0, den_min=0, ovs_min=0;
+    for(int factor=num/1024; factor<num; factor++) {
+	auto NUM=num/factor;
+	auto DEN=den/factor;
+	for(int oversampling=DEN>16? 16:DEN; oversampling>=8;oversampling--){
+	    auto error=num*(DEN/oversampling)*oversampling-den*NUM;
+	    if(error<0)
+		error=-error;
+	    if(error<error_min) {
+		error_min=error;
+		num_min=NUM;
+		den_min=DEN/oversampling;
+		ovs_min=oversampling;
+		if(!error)
+		    return std::tuple(num_min,den_min,ovs_min);
+	    }
+	}
+    }
+    return std::tuple(num_min,den_min,ovs_min);
+}
+
+constexpr auto Baudrate(unsigned rate)
+{
+    uint32_t den=frequency;
+    while(rate>0x003fffff) {
+	den/=2;
+	rate/=2;
+    }
+    uint32_t num=1024UL*rate;
+    int ev=0;
+
+    int error_min=num, num_min=0, den_min=0, ovs_min=0;
+    for(int factor=num/1024; factor<num; factor++) {
+	auto NUM=num/factor;
+	auto DEN=den/factor;
+	for(int oversampling=DEN>16? 16:DEN; oversampling>=8;oversampling--){
+	    auto error=num*(DEN/oversampling)*oversampling-den*NUM;
+	    if(error<0)
+		error=-error;
+	    if(error<error_min) {
+		constexpr uint64_t accuracy=100000;
+
+		uint32_t brd=accuracy*frequency*NUM/
+		    (1024*(DEN/oversampling)*oversampling)/rate;
+		error_min=error;
+		num_min=NUM;
+		den_min=DEN/oversampling;
+		ovs_min=oversampling;
+		if(!error || (brd>=accuracy-1 && brd<=accuracy+1))
+		    return std::tuple(num_min,den_min,ovs_min);
+	    }
+	}
+    }
+    return std::tuple(num_min,den_min,ovs_min);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Full duplex serial, no interrupts
 ////////////////////////////////////////////////////////////////////////////////
 template <class TX_PIN, class RX_PIN>
-class full_duplex_no_int {
+class full_duplex {
     constexpr static auto channel=location(dout0(TX_PIN{}));
-    constexpr static int oversampling=16;
     constexpr static int stop_bits=1;
     constexpr static int data_bits=8;
     constexpr static XMC_USIC_CH_PARITY_MODE parity_mode=
@@ -133,7 +213,7 @@ public:
     static constexpr int UNIT=dout0(TX_PIN{}).unit;
     static constexpr int CHANNEL=dout0(TX_PIN{}).channel;
 
-    full_duplex_no_int(TX_PIN t, RX_PIN r) {
+    full_duplex(TX_PIN t, RX_PIN r) {
 	static_assert(
 	    uint32_t(location(dout0(TX_PIN{})))
 	    ==uint32_t(location(dx0(RX_PIN{}))),
@@ -142,45 +222,21 @@ public:
 
     XMC_USIC_CH_t* operator->() const { return channel; }
 
-    inline void SetBaudrate(int rate)
+    inline void SetBaudrate(std::tuple<int,int,int> baud)
     {
-	// XMC_UART_CH_Init causes the binary to be too large
-	uint32_t r=oversampling*rate/100;
-	uint32_t f=frequency/100;
-
-	uint32_t rem_min=1024;
-	uint32_t pdiv_opt=0, step_opt=0;
-	for(uint32_t step=1; step<1025; step++) {
-	    uint32_t pdiv=f*step/r; // pdiv*1024
-	    if((pdiv&0x3ff) < rem_min && pdiv>1024) {
-		pdiv_opt=pdiv>>10;
-		step_opt=step;
-		rem_min=pdiv&0x3ff;
-
-	    }
-	}
 	channel->FDR=XMC_USIC_CH_BRG_CLOCK_DIVIDER_MODE_FRACTIONAL
-	    | bitfield<USIC_CH_FDR_STEP_Msk>(step_opt-1);
+	    | bitfield<USIC_CH_FDR_STEP_Msk>(std::get<0>(baud)-1);
 	channel->BRG=
 	    bitfield<USIC_CH_BRG_PCTQ_Msk>(0)
-	    | bitfield<USIC_CH_BRG_PDIV_Msk>(pdiv_opt-1)
-	    | bitfield<USIC_CH_BRG_DCTQ_Msk>(oversampling-1);
+	    | bitfield<USIC_CH_BRG_PDIV_Msk>(std::get<1>(baud)-1)
+	    | bitfield<USIC_CH_BRG_DCTQ_Msk>(std::get<2>(baud)-1);
     }
 
-    void init(int baud) {
+    void init(std::tuple<int,int,int> baud) {
 	TX_PIN{}.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL |dout0(TX_PIN{}).gpio_mode);
 	TX_PIN{}.set(XMC_GPIO_HWCTRL_DISABLED);
 	RX_PIN{}.set(XMC_GPIO_MODE_INPUT_TRISTATE);
-#if 0
-	/* Unfortunately using XMC_UART_CH_Init would not fit */
-	XMC_UART_CH_CONFIG_t config{
-	  .baudrate=baud,
-	  .data_bits=8,
-	  .stop_bits=1,
-	  .parity_mode=XMC_USIC_CH_PARITY_MODE_NONE
-	};
-	XMC_UART_CH_Init(channel,&config);
-#else
+
 	if constexpr (channel==USIC0_CH0_BASE || channel==USIC0_CH1_BASE)  {
 	    UngateClock(XMC_SCU_PERIPHERAL_CLOCK_USIC0);
 	    #if defined(PERIPHERAL_RESET_SUPPORTED)
@@ -232,7 +288,7 @@ public:
 
 	channel->PCR_ASCMode =
 	    bitfield<USIC_CH_PCR_ASCMode_STPB_Msk>(stop_bits-1)
-	    | bitfield<USIC_CH_PCR_ASCMode_SP_Msk>(oversampling/2+1)
+	    | bitfield<USIC_CH_PCR_ASCMode_SP_Msk>(std::get<2>(baud)/2+1)
 	    | USIC_CH_PCR_ASCMode_SMD_Msk
 	    | USIC_CH_PCR_ASCMode_RSTEN_Msk
 	    | USIC_CH_PCR_ASCMode_TSTEN_Msk;
@@ -244,7 +300,6 @@ public:
 	    | USIC_CH_TCSR_TDSSM_Msk;
 	channel->PSCR=0xFFFFFFFFUL;
 	channel->CCR=parity_mode;
-#endif
 
 	XMC_UART_CH_SetInputSource(channel,
 	    XMC_UART_CH_INPUT_RXD,dx<0>(RX_PIN{}));
@@ -289,6 +344,12 @@ public:
 	if(channel->RBUFSR & (USIC_CH_RBUFSR_RDV0_Msk|USIC_CH_RBUFSR_RDV1_Msk))
 	    return channel->RBUF;
 	return -1;
+    }
+
+    int rx_fifo(void) {
+	if(channel->TRBSR & USIC_CH_TRBSR_REMPTY_Msk)
+	    return -1;
+	return channel->OUTR;
     }
 
     template <int num>
