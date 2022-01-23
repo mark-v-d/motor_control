@@ -26,8 +26,43 @@ struct DWT_type
   DWT_Compare_type c[4];
 };
 
+typedef struct
+{
+  __OM  union
+  {
+    __OM  uint8_t    u8;         /*!< 0x000 ( /W)  Stimulus Port 8-bit */
+    __OM  uint16_t   u16;        /*!< 0x000 ( /W)  Stimulus Port 16-bit */
+    __OM  uint32_t   u32;        /*!< 0x000 ( /W)  Stimulus Port 32-bit */
+    __OM  float   f;        /*!< 0x000 ( /W)  Stimulus Port 32-bit */
+  }  PORT [32U];                 /*!< 0x000 ( /W)  Stimulus Port Registers */
+        uint32_t RESERVED0[864U];
+  __IOM uint32_t TER;            /*!< 0xE00 (R/W)  Trace Enable Register */
+        uint32_t RESERVED1[15U];
+  __IOM uint32_t TPR;            /*!< 0xE40 (R/W)  Trace Privilege Register */
+        uint32_t RESERVED2[15U];
+  __IOM uint32_t TCR;            /*!< 0xE80 (R/W)  Trace Control Register */
+        uint32_t RESERVED3[32U];
+        uint32_t RESERVED4[43U];
+  __OM  uint32_t LAR;            /*!< 0xFB0 ( /W)  Lock Access Register */
+  __IM  uint32_t LSR;            /*!< 0xFB4 (R/ )  Lock Status Register */
+        uint32_t RESERVED5[6U];
+  __IM  uint32_t PID4;           /*!< 0xFD0 (R/ )  Peripheral Identification Register #4 */
+  __IM  uint32_t PID5;           /*!< 0xFD4 (R/ )  Peripheral Identification Register #5 */
+  __IM  uint32_t PID6;           /*!< 0xFD8 (R/ )  Peripheral Identification Register #6 */
+  __IM  uint32_t PID7;           /*!< 0xFDC (R/ )  Peripheral Identification Register #7 */
+  __IM  uint32_t PID0;           /*!< 0xFE0 (R/ )  Peripheral Identification Register #0 */
+  __IM  uint32_t PID1;           /*!< 0xFE4 (R/ )  Peripheral Identification Register #1 */
+  __IM  uint32_t PID2;           /*!< 0xFE8 (R/ )  Peripheral Identification Register #2 */
+  __IM  uint32_t PID3;           /*!< 0xFEC (R/ )  Peripheral Identification Register #3 */
+  __IM  uint32_t CID0;           /*!< 0xFF0 (R/ )  Component  Identification Register #0 */
+  __IM  uint32_t CID1;           /*!< 0xFF4 (R/ )  Component  Identification Register #1 */
+  __IM  uint32_t CID2;           /*!< 0xFF8 (R/ )  Component  Identification Register #2 */
+  __IM  uint32_t CID3;           /*!< 0xFFC (R/ )  Component  Identification Register #3 */
+} ITM_Type2;
+
+
 extern DWT_type dwt;
-extern ITM_Type itm;
+extern ITM_Type2 itm;
 extern TPI_Type tpi;
 //extern DBGMCU_TypeDef dbgmcu;
 #endif
