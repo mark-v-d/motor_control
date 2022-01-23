@@ -108,8 +108,8 @@ extern "C" void CCU80_0_IRQHandler(void)
 	d|=copro->OUTR<<8;
 	rx_data[rxd_counter++/2]=d;
 	if(!(rxd_counter&1)) {
-	    FCE_KE2->IR=d;
-	    itm.PORT[0].u16=d;
+	    FCE_KE2->IR=std::byteswap(d);
+	    itm.PORT[0].u16=std::byteswap(d);
 	    itm.PORT[1].u16=FCE_KE2->CRC;
 	}
     }
@@ -213,7 +213,7 @@ int main()
 
     //init_encoder();
     bsl_init(IO7,COPRO_TXD,COPRO_RXD);
-    copro.SetBaudrate(uart::Baudrate(2e6));
+    copro.SetBaudrate(uart::Baudrate(4e6));
     uart::fifo_configure<0,16>(copro);
 
     HBH0_HR.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);

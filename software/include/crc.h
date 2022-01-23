@@ -1,6 +1,9 @@
 #ifndef CRC_H
 #define CRC_H
 
+#include <type_traits>
+#include <bit>
+
 namespace crc {
 template <typename T, T polynome, T init>
 class byte {
@@ -23,13 +26,31 @@ class byte {
     static constexpr table_t table{};
     T crc=init;
 public:
-    void start(void) { crc=init; }
-    T compute(uint8_t data) {
+    byte(void) {}
+
+    T get(void) {
+	if constexpr(std::endian::native==std::endian::big)
+	    return crc;
+	else
+	    return std::byteswap(crc);
+    }
+
+    T add(uint8_t data) {
 	uint8_t index=data^(crc>>shift);
 	crc=table[index]^(crc<<8);
-	return crc;
+	return get();
     }
-    operator T(void) { return crc; }
+
+    template <typename TT>
+    T add(TT const &d) {
+	uint8_t const *p=reinterpret_cast<uint8_t const*>(&d);
+	for(int i=0;i<sizeof(TT); i++)
+	    add(p[i]);
+	return get();
+    }
+
+    template <typename TT>
+    byte(TT const &d) { add(d); }
 };
 
 template <typename T, T polynome, T init>
@@ -48,6 +69,10 @@ public:
     }
     operator T(void) { return crc; }
 };
+
+
+using ccitt_16=byte<uint16_t,0x1021,0xffff>;
+
 }
 
 #endif // CRC_H

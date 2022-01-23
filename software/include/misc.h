@@ -177,4 +177,52 @@ constexpr uint32_t bitfield(uint32_t value)
     return (value<<shift)&mask;
 }
 
+#ifndef __cpp_lib_byteswap
+namespace std {
+  /// Reverse order of bytes in the object representation of `value`.
+  template<typename _Tp>
+    constexpr enable_if_t<is_integral<_Tp>::value, _Tp>
+    byteswap(_Tp __value) noexcept
+    {
+#if __cpp_if_consteval >= 202106L && __CHAR_BIT__ == 8
+      if !consteval
+	{
+	  if constexpr (sizeof(_Tp) == 1)
+	    return __value;
+	  if constexpr (sizeof(_Tp) == 2)
+	    return __builtin_bswap16(__value);
+	  if constexpr (sizeof(_Tp) == 4)
+	    return __builtin_bswap32(__value);
+	  if constexpr (sizeof(_Tp) == 8)
+	    return __builtin_bswap64(__value);
+	  if constexpr (sizeof(_Tp) == 16)
+#if __has_builtin(__builtin_bswap128)
+	    return __builtin_bswap128(__value);
+#else
+	    return (__builtin_bswap64(__value >> 64)
+		    | (__builtin_bswap64(__value) << 64));
+#endif
+	}
+#endif
+
+      // Fallback implementation that handles even __int24 etc.
+      using _Up = typename __make_unsigned<remove_cv_t<_Tp>>::__type;
+      constexpr _Up __mask = static_cast<unsigned char>(~0);
+      constexpr size_t __bits = __CHAR_BIT__ * sizeof(_Tp);
+      _Up __val = __value;
+      for (size_t __i = 0; __i < sizeof(_Tp) / 2; ++__i)
+	{
+	  size_t __amount1 = __CHAR_BIT__ * __i;
+	  size_t __amount2 = __bits - __amount1 - __CHAR_BIT__;
+	  size_t __diff = __amount2 - __amount1;
+	  _Up __byte1 = __val & (__mask << __amount1);
+	  _Up __byte2 = __val & (__mask << __amount2);
+	  __val = (__val ^ __byte1 ^ __byte2
+		   ^ (__byte1 << __diff) ^ (__byte2 >> __diff));
+	}
+      return __val;
+    }
+}
+#endif
+
 #endif

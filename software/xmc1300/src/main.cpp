@@ -31,19 +31,12 @@ extern "C" void SysTick_Handler(void)
 extern "C" void USIC0_0_IRQHandler(void)
 {
     static_assert(serial.UNIT==0, "Wrong uart");
-    std::array<uint16_t,4> data;
-    data[0]=adc::vadc.G[0].RES[0];
-    data[1]=adc::vadc.G[1].RES[0];
-    data[2]=adc::vadc.G[1].RES[1];
+    std::array<uint16_t,3> data;
+    serial.tx_fifo(data[0]=adc::vadc.G[0].RES[0]);
+    serial.tx_fifo(data[1]=adc::vadc.G[1].RES[0]);
+    serial.tx_fifo(data[2]=adc::vadc.G[1].RES[1]);
 
-    crc::byte<uint16_t,0x1021,0xffff> c;
-    c.compute(data[0]>>8); c.compute(data[0]);
-    c.compute(data[1]>>8); c.compute(data[1]);
-    c.compute(data[2]>>8); c.compute(data[2]);
-    data[3]=c;
-
-    serial.tx_fifo(data);
-
+    serial.tx_fifo(crc::ccitt_16(data).get());
     serial->PSCR=USIC_CH_PSCR_CRIF_Msk;
 }
 
@@ -57,7 +50,7 @@ int main(int argc, char **argv)
     NVIC_DisableIRQ(SysTick_IRQn);
 
 
-    serial.init(uart::Baudrate(2e6));
+    serial.init(uart::Baudrate(4e6));
     fifo=uart::fifo_configure<8,8>(serial);
     serial.enable_rx_interrupt<0>();
     NVIC_EnableIRQ(serial.irq<0>());
