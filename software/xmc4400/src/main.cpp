@@ -13,7 +13,8 @@ constexpr auto PI=acos(-1);
 #include "hardware.h"
 #include "ethernet.h"
 #include "icmp.h"
-//#include "ccu8.h"
+#include "ccu4.h"
+#include "ccu8.h"
 #include "udp_logger.h"
 #include "udp_poker.h"
 #include "udp_sync.h"
@@ -106,10 +107,11 @@ extern "C" void CCU80_0_IRQHandler(void)
     while(copro->TRBSR & USIC_CH_TRBSR_RBFLVL_Msk) {
 	d>>=8;
 	d|=copro->OUTR<<8;
+	itm.PORT[0].u8=d>>8;
 	rx_data[rxd_counter++/2]=d;
 	if(!(rxd_counter&1)) {
 	    FCE_KE2->IR=std::byteswap(d);
-	    itm.PORT[0].u16=std::byteswap(d);
+	    itm.PORT[0].u16=d;
 	    itm.PORT[1].u16=FCE_KE2->CRC;
 	}
     }

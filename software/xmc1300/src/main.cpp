@@ -1,7 +1,8 @@
 #include "gpio.h"
 #include "uart.h"
 #include "vadc.h"
-#include "ccu8.h"
+//#include "ccu8.h"
+#include "ccu4.h"
 #include "crc.h"
 #include <initializer_list>
 
@@ -22,6 +23,8 @@ gpio::pin<0,9> RXD_TIMER;
 uart::full_duplex serial(TXD,RXD);
 uart::fifo_config_t fifo;
 
+ccu4::edge_capture<0,3> serial_capture;
+
 extern "C" void SysTick_Handler(void)
 {
     static uint8_t i;
@@ -31,10 +34,17 @@ extern "C" void SysTick_Handler(void)
 extern "C" void USIC0_0_IRQHandler(void)
 {
     static_assert(serial.UNIT==0, "Wrong uart");
-    std::array<uint16_t,3> data;
+
+    std::array<uint16_t,4> data;
     serial.tx_fifo(data[0]=adc::vadc.G[0].RES[0]);
     serial.tx_fifo(data[1]=adc::vadc.G[1].RES[0]);
-    serial.tx_fifo(data[2]=adc::vadc.G[1].RES[1]);
+    serial.tx_fifo(data[2]=adc::vadc.G[0].RES[1]);
+    serial.tx_fifo(data[3]=adc::vadc.G[1].RES[1]);
+
+    adc::queue<0>(I0_P,	adc::EXTERNAL_TRIGGER);
+    adc::queue<0>(V, adc::ENSI);
+    adc::queue<1>(I1_P,	adc::EXTERNAL_TRIGGER);
+    adc::queue<1>(I2_P, adc::ENSI);
 
     serial.tx_fifo(crc::ccitt_16(data).get());
     serial->PSCR=USIC_CH_PSCR_CRIF_Msk;
@@ -58,28 +68,30 @@ int main(int argc, char **argv)
     adc::init();
     adc::global_class<0>(XMC_VADC_CONVMODE_12BIT, 0);
 
+    adc::queue_config<0>( XMC_VADC_GATEMODE_IGNORE, 0,
+	XMC_VADC_REQ_TR_CCU40_SR2, XMC_VADC_TRIGGER_EDGE_RISING
+    );
+    adc::queue_config<1>( XMC_VADC_GATEMODE_IGNORE, 0,
+	XMC_VADC_REQ_TR_CCU40_SR2, XMC_VADC_TRIGGER_EDGE_RISING
+    );
     adc::channel_control<0>(I0_P, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
     adc::channel_control<0>(V,	  XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 1);
     adc::channel_control<1>(I1_P, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
     adc::channel_control<1>(I2_P, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 1);
-    adc::queue<0>(I0_P,	adc::REFILL);// | adc::EXTERNAL_TRIGGER);
-    adc::queue<0>(V,	adc::REFILL);
-    adc::queue<1>(I1_P,	adc::REFILL);// | adc::EXTERNAL_TRIGGER);
-    adc::queue<1>(I2_P,	adc::REFILL);
 
-    ccu8::init<0>(
-	XMC_CCU8_CLOCK_SCU,
-	XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR
+    ccu4::init<0>(
+	XMC_CCU4_CLOCK_SCU,
+	XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR
     );
 
-    adc::queue_config<0>( 0, // Use channel result register
-	XMC_VADC_GATEMODE_IGNORE,
-	XMC_VADC_REQ_TR_CCU80_SR2, XMC_VADC_TRIGGER_EDGE_RISING
-    );
-    adc::queue_config<1>( 0, // Use channel result register
-	XMC_VADC_GATEMODE_IGNORE,
-	XMC_VADC_REQ_TR_CCU80_SR2, XMC_VADC_TRIGGER_EDGE_RISING
-    );
+    serial_capture.init();
+    //serial_capture.period(1s/20000.0f);
+    serial_capture.set_event<1>(RXD_TIMER,ccu4::EDGE_FALLING);
+    serial_capture.service_request_event<1>(2); // trigger ADC
+    //serial_capture.enable_capture<0>(1);
+
+    ccu4::start(serial_capture);
+    ccu4::shadow_transfer(serial_capture);
 
     for(int i: {0,1}) {
 	adc::vadc.G[i].ARBPR=

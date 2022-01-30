@@ -9,9 +9,9 @@ namespace ccu8 {
 typedef std::chrono::duration<float,std::ratio<1,FREQUENCY>> resolution_t;
 
 struct ccu8_t:public CCU8_GLOBAL_TypeDef {
-    const uint32_t RESERVED[31];
+    const uint32_t RESERVED[(256-sizeof(CCU8_GLOBAL_TypeDef))/4];
     struct cc8_t:public CCU8_CC8_TypeDef {
-	const uint32_t RESERVED[18];
+	const uint32_t RESERVED[(256-sizeof(CCU8_CC8_TypeDef))/4];
     } cc[4];
     const uint32_t RESERVED2[3776];
 };
@@ -239,7 +239,7 @@ public:
 
 	// Use GSC8x from SCU_GENERAL.CCUCON mapped to EVENT0 to start timer
 	cc.INS=
-	    bitfield<CCU8_CC8_INS_EV0IS_Msk>(7) |
+	    bitfield<CCU8_CC8_INS_EV0IS_Msk>(CCU80_IN0_SCU_GSC80) |
 	    bitfield<CCU8_CC8_INS_EV0EM_Msk>(EDGE_RISING);
 	cc.CMC=bitfield<CCU8_CC8_CMC_STRTS_Msk>(1);
 	cc.TCCLR=CCU8_CC8_TCCLR_TRBC_Msk | CCU8_CC8_TCCLR_TCC_Msk;

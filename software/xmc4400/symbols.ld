@@ -4,6 +4,7 @@ _ZN6hrpwm03hrcE = 0x40021300 ;
 _ZN6hrpwm09csg_globalE = 0x40020900 ;
 _ZN6hrpwm09hrc_globalE = 0x40020960 ;
 _ZN4ccu83devE = 0x40020000 ;
+_ZN4ccu43devE = 0x4000C000 ;
 ccu8 = 0x40020000 ;
 eth = 0x5000c000 ;
 ccu8 = 0x40020000 ;
