@@ -1,10 +1,7 @@
-#include "gpio.h"
 #include "uart.h"
 #include "vadc.h"
-//#include "ccu8.h"
 #include "ccu4.h"
 #include "crc.h"
-#include <initializer_list>
 
 using namespace std::chrono_literals;
 
@@ -21,15 +18,7 @@ gpio::pin<2,9> V;
 gpio::pin<0,9> RXD_TIMER;
 
 uart::full_duplex serial(TXD,RXD);
-uart::fifo_config_t fifo;
-
 ccu4::edge_capture<0,3> serial_capture;
-
-extern "C" void SysTick_Handler(void)
-{
-    static uint8_t i;
-    DAC.toggle();
-}
 
 extern "C" void USIC0_0_IRQHandler(void)
 {
@@ -54,31 +43,17 @@ int main(int argc, char **argv)
 {
     DAC.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
 
-    SysTick_Config(1000000);
-    //NVIC_SetPriorityGrouping(0);
-    //NVIC_SetPriority(SysTick_IRQn,0);
-    NVIC_DisableIRQ(SysTick_IRQn);
-
-
+    ////////////////////////////////////////////////////////////////////////////
+    // UART
+    ////////////////////////////////////////////////////////////////////////////
     serial.init(uart::Baudrate(4e6));
-    fifo=uart::fifo_configure<8,8>(serial);
+    uart::fifo_configure<8,8>(serial);
     serial.enable_rx_interrupt<0>();
     NVIC_EnableIRQ(serial.irq<0>());
 
-    adc::init();
-    adc::global_class<0>(XMC_VADC_CONVMODE_12BIT, 0);
-
-    adc::queue_config<0>( XMC_VADC_GATEMODE_IGNORE, 0,
-	XMC_VADC_REQ_TR_CCU40_SR2, XMC_VADC_TRIGGER_EDGE_RISING
-    );
-    adc::queue_config<1>( XMC_VADC_GATEMODE_IGNORE, 0,
-	XMC_VADC_REQ_TR_CCU40_SR2, XMC_VADC_TRIGGER_EDGE_RISING
-    );
-    adc::channel_control<0>(I0_P, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
-    adc::channel_control<0>(V,	  XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 1);
-    adc::channel_control<1>(I1_P, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
-    adc::channel_control<1>(I2_P, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 1);
-
+    ////////////////////////////////////////////////////////////////////////////
+    // Timer used to trigger the ADC
+    ////////////////////////////////////////////////////////////////////////////
     ccu4::init<0>(
 	XMC_CCU4_CLOCK_SCU,
 	XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR
@@ -92,6 +67,22 @@ int main(int argc, char **argv)
 
     ccu4::start(serial_capture);
     ccu4::shadow_transfer(serial_capture);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // ADC
+    ////////////////////////////////////////////////////////////////////////////
+    adc::init();
+    adc::global_class<0>(XMC_VADC_CONVMODE_12BIT, 0);
+    adc::channel_control<0>(I0_P, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
+    adc::channel_control<0>(V,	  XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 1);
+    adc::channel_control<1>(I1_P, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
+    adc::channel_control<1>(I2_P, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 1);
+    adc::queue_config<0>( XMC_VADC_GATEMODE_IGNORE, 0,
+	XMC_VADC_REQ_TR_CCU40_SR2, XMC_VADC_TRIGGER_EDGE_RISING
+    );
+    adc::queue_config<1>( XMC_VADC_GATEMODE_IGNORE, 0,
+	XMC_VADC_REQ_TR_CCU40_SR2, XMC_VADC_TRIGGER_EDGE_RISING
+    );
 
     for(int i: {0,1}) {
 	adc::vadc.G[i].ARBPR=
