@@ -102,7 +102,7 @@ extern "C" void CCU80_0_IRQHandler(void)
 
     FCE_KE2->CFG=0;
     FCE_KE2->CRC=0xffff;
-    itm.PORT[1].u16=FCE_KE2->CRC;
+    itm.PORT[0].u16=FCE_KE2->CRC;
     uint16_t d;
     while(copro->TRBSR & USIC_CH_TRBSR_RBFLVL_Msk) {
 	d>>=8;
@@ -111,8 +111,8 @@ extern "C" void CCU80_0_IRQHandler(void)
 	rx_data[rxd_counter++/2]=d;
 	if(!(rxd_counter&1)) {
 	    FCE_KE2->IR=std::byteswap(d);
-	    itm.PORT[0].u16=d;
-	    itm.PORT[1].u16=FCE_KE2->CRC;
+	    itm.PORT[rxd_counter/2].u16=d;
+	    itm.PORT[0].u16=FCE_KE2->CRC;
 	}
     }
     itm.PORT[11].f=out.output[0];

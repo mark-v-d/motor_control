@@ -196,7 +196,7 @@ void global_class(
 	| bitfield<VADC_GLOBICLASS_STCS_Msk>(emux_time);
 }
 
-void init(void)
+inline void init(void)
 {
     SCU_CLK->CGATCLR0=SCU_CLK_CGATCLR0_VADC_Msk;
     #if defined(PERIPHERAL_RESET_SUPPORTED)

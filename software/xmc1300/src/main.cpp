@@ -24,19 +24,25 @@ extern "C" void USIC0_0_IRQHandler(void)
 {
     static_assert(serial.UNIT==0, "Wrong uart");
 
-    std::array<uint16_t,4> data;
+    adc::queue<0>(I0_P,	adc::EXTERNAL_TRIGGER);
+    adc::queue<0>(V, adc::ENSI);
+    adc::queue<1>(I1_P,	adc::EXTERNAL_TRIGGER);
+    adc::queue<1>(I2_P, 0);
+
+    serial->PSCR=USIC_CH_PSCR_CRIF_Msk;
+}
+
+extern "C" void VADC0_G0_0_IRQHandler(void)
+{
+    std::array<uint16_t,5> data;
     serial.tx_fifo(data[0]=adc::vadc.G[0].RES[0]);
     serial.tx_fifo(data[1]=adc::vadc.G[1].RES[0]);
     serial.tx_fifo(data[2]=adc::vadc.G[0].RES[1]);
     serial.tx_fifo(data[3]=adc::vadc.G[1].RES[1]);
-
-    adc::queue<0>(I0_P,	adc::EXTERNAL_TRIGGER);
-    adc::queue<0>(V, adc::ENSI);
-    adc::queue<1>(I1_P,	adc::EXTERNAL_TRIGGER);
-    adc::queue<1>(I2_P, adc::ENSI);
-
+    serial.tx_fifo(data[4]=adc::vadc.G[0].SEFLAG | (adc::vadc.G[1].SEFLAG<<8));
     serial.tx_fifo(crc::ccitt_16(data).get());
-    serial->PSCR=USIC_CH_PSCR_CRIF_Msk;
+    adc::vadc.G[0].SEFCLR=VADC_G_SEFCLR_SEV0_Msk;
+    adc::vadc.G[1].SEFCLR=VADC_G_SEFCLR_SEV0_Msk;
 }
 
 int main(int argc, char **argv)
@@ -47,7 +53,7 @@ int main(int argc, char **argv)
     // UART
     ////////////////////////////////////////////////////////////////////////////
     serial.init(uart::Baudrate(4e6));
-    uart::fifo_configure<8,8>(serial);
+    uart::fifo_configure<16,8>(serial);
     serial.enable_rx_interrupt<0>();
     NVIC_EnableIRQ(serial.irq<0>());
 
@@ -72,7 +78,7 @@ int main(int argc, char **argv)
     // ADC
     ////////////////////////////////////////////////////////////////////////////
     adc::init();
-    adc::global_class<0>(XMC_VADC_CONVMODE_12BIT, 0);
+    adc::global_class<0>(XMC_VADC_CONVMODE_12BIT,15);
     adc::channel_control<0>(I0_P, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
     adc::channel_control<0>(V,	  XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 1);
     adc::channel_control<1>(I1_P, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
@@ -93,6 +99,8 @@ int main(int argc, char **argv)
 	    bitfield<VADC_G_ARBCFG_ANONC_Msk>(3) |
 	    bitfield<VADC_G_ARBCFG_ANONS_Msk>(3);
     }
+
+    NVIC_EnableIRQ(VADC0_G0_0_IRQn);
 
     for(;;) {
     }
