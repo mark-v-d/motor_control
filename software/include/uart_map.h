@@ -32,13 +32,14 @@ template <int PORT, int PIN> constexpr info_t dx5(void) { static_assert(PORT==-1
 #define DX5 template<> constexpr info_t dx5
 
 template <int PORT, int PIN> constexpr info_t dout0(void) { static_assert(PORT==-1, "Not an dout0 pin"); return info_t{-1,-1}; }
-template <int PORT, int PIN> constexpr info_t mclkout(void) { static_assert(PORT==-1, "Not an dout0 pin"); return info_t{-1,-1}; }
-template <int PORT, int PIN> constexpr info_t sclkout(void) { static_assert(PORT==-1, "Not an dout0 pin"); return info_t{-1,-1}; }
-template <int PORT, int PIN> constexpr info_t selo0(void) { static_assert(PORT==-1, "Not an dout0 pin"); return info_t{-1,-1}; }
-template <int PORT, int PIN> constexpr info_t selo1(void) { static_assert(PORT==-1, "Not an dout0 pin"); return info_t{-1,-1}; }
-template <int PORT, int PIN> constexpr info_t selo2(void) { static_assert(PORT==-1, "Not an dout0 pin"); return info_t{-1,-1}; }
-template <int PORT, int PIN> constexpr info_t selo3(void) { static_assert(PORT==-1, "Not an dout0 pin"); return info_t{-1,-1}; }
-template <int PORT, int PIN> constexpr info_t selo4(void) { static_assert(PORT==-1, "Not an dout0 pin"); return info_t{-1,-1}; }
+template <int PORT, int PIN> constexpr info_t mclkout(void) { static_assert(PORT==-1, "Not an mclkout pin"); return info_t{-1,-1}; }
+template <int PORT, int PIN> constexpr info_t sclkout(void) { static_assert(PORT==-1, "Not an sclkout pin"); return info_t{-1,-1}; }
+template <int PORT, int PIN> constexpr info_t selo0(void) { static_assert(PORT==-1, "Not an selo0 pin"); return info_t{-1,-1}; }
+template <int PORT, int PIN> constexpr info_t selo1(void) { static_assert(PORT==-1, "Not an selo1 pin"); return info_t{-1,-1}; }
+template <int PORT, int PIN> constexpr info_t selo2(void) { static_assert(PORT==-1, "Not an selo2 pin"); return info_t{-1,-1}; }
+template <int PORT, int PIN> constexpr info_t selo3(void) { static_assert(PORT==-1, "Not an selo3 pin"); return info_t{-1,-1}; }
+template <int PORT, int PIN> constexpr info_t selo4(void) { static_assert(PORT==-1, "Not an selo4 pin"); return info_t{-1,-1}; }
+template <int PORT, int PIN> constexpr info_t hwin0(void) { static_assert(PORT==-1, "Not an hwin0 pin"); return info_t{-1,-1}; }
 
 #define DOUT0 	template<> constexpr info_t dout0
 #define MCLKOUT	template<> constexpr info_t mclkout
@@ -48,6 +49,7 @@ template <int PORT, int PIN> constexpr info_t selo4(void) { static_assert(PORT==
 #define SELO2	template<> constexpr info_t selo2
 #define SELO3	template<> constexpr info_t selo3
 #define SELO4	template<> constexpr info_t selo4
+#define HWIN0	template<> constexpr info_t hwin0
 
 #if (UC_DEVICE == XMC4400) && (UC_PACKAGE == LQFP100)
 DX0<0,0>()  { return info_t{1,1,DX0D,	XMC_GPIO_MODE_INPUT_TRISTATE	};}
@@ -117,6 +119,9 @@ SCLKOUT<3,6>()	{ return info_t{0,1,OUTPUT,	XMC_GPIO_MODE_OUTPUT_ALT4};}
 MCLKOUT<4,1>()	{ return info_t{1,1,OUTPUT,	XMC_GPIO_MODE_OUTPUT_ALT2};}
 SELO0<4,1>()	{ return info_t{0,1,OUTPUT,	XMC_GPIO_MODE_OUTPUT_ALT4};}
 DOUT0<5,1>()	{ return info_t{0,0,OUTPUT,	XMC_GPIO_MODE_OUTPUT_ALT1};}
+
+HWIN0<0,5>()	{ return info_t{1,0,HWSEL,	XMC_GPIO_MODE_INPUT_PULL_UP};}
+HWIN0<1,5>()	{ return info_t{0,0,HWSEL,	XMC_GPIO_MODE_INPUT_PULL_UP};}
 #endif
 
 #if (UC_DEVICE == XMC1301) && (UC_PACKAGE == TSSOP16)

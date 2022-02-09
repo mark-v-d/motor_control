@@ -55,7 +55,7 @@ static hrpwm0::out<0,4> HBH2_HR;
 static gpio::output<1,2> ENC_5V;
 static gpio::output<1,3> ENC_12V;
 static gpio::output<1,10> ENC_DIR;
-static gpio::U0C0_DOUT0<1,5> ENC_TXD; // FIXME, HWCTRL should only be used fo SSI
+static gpio::pin<1,5> ENC_TXD; // FIXME, HWCTRL should only be used fo SSI
 static gpio::pin<1,4> ENC_RXD;
 //static gpio::pin<0,0> ENC_RXD2;
 

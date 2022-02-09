@@ -1,7 +1,7 @@
 #ifndef ENCODER_H
 #define ENCODER_H
 #include <stdint.h>
-#include <memory>
+#include "polymorphic.h"
 #include "xmc_uart.h"
 
 class encoder_t {
@@ -12,22 +12,16 @@ public:
     virtual bool valid(void)=0;
 
     virtual void trigger(void)=0;
-    virtual void half_duplex(void)=0;
-    virtual void full_duplex(void)=0;
+    virtual void rx_handler(void)=0;
+    virtual void tb_handler(void)=0;
+    virtual void protocol_handler(void)=0;
 
-    // FIXME, we need two seperate (and identical) encoders
-    virtual int32_t position2(void) { return 0; } 
-    virtual int32_t index2(void) { return 0; }
-
-    static constexpr int hd_irq=1; // half duplex irq/SR output
-    static constexpr int fd_irq=0; // full duplex irq/SR output
-
-protected:
-    static void init_full_duplex(const XMC_UART_CH_CONFIG_t &uart_config);
-    static void init_half_duplex(const XMC_UART_CH_CONFIG_t &uart_config);
+    static constexpr int p_irq=2;
+    static constexpr int rx_irq=1;
+    static constexpr int tb_irq=0;
 };
 
-extern std::unique_ptr<encoder_t> encoder;
+extern polymorphic_t<encoder_t,1024> encoder;
 
 void init_encoder(void);
 

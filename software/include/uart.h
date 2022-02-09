@@ -11,7 +11,7 @@ enum pin_function_t {
     DX0D, DX1D, DX2D, DX3D, DX4D, DX5D,
     DX0E, DX1E, DX2E, DX3E, DX4E, DX5E,
     DX0F, DX1F, DX2F, DX3F, DX4F, DX5F,
-    OUTPUT
+    OUTPUT, HWSEL
 };
 
 struct info_t {
@@ -37,7 +37,6 @@ constexpr location_t<XMC_USIC_CH_t> location(info_t const &i)
 	    return USIC1_CH0_BASE;
 	else
 	    return USIC1_CH1_BASE;
-#else
 #endif
     }
 }
@@ -200,25 +199,19 @@ constexpr auto Baudrate(unsigned rate)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Full duplex serial, no interrupts
+// Base class for all uart types
 ////////////////////////////////////////////////////////////////////////////////
-template <class TX_PIN, class RX_PIN>
-class full_duplex {
-    constexpr static auto channel=location(dout0(TX_PIN{}));
+template <info_t INFO>
+class base_t {
+protected:
+    constexpr static auto channel=location(INFO);
     constexpr static int stop_bits=1;
     constexpr static int data_bits=8;
     constexpr static XMC_USIC_CH_PARITY_MODE parity_mode=
 	XMC_USIC_CH_PARITY_MODE_NONE;
 public:
-    static constexpr int UNIT=dout0(TX_PIN{}).unit;
-    static constexpr int CHANNEL=dout0(TX_PIN{}).channel;
-
-    full_duplex(TX_PIN t, RX_PIN r) {
-	static_assert(
-	    uint32_t(location(dout0(TX_PIN{})))
-	    ==uint32_t(location(dx0(RX_PIN{}))),
-	    "TXD and RXD not on the same channel");
-    }
+    static constexpr int UNIT=INFO.unit;
+    static constexpr int CHANNEL=INFO.channel;
 
     XMC_USIC_CH_t* operator->() const { return channel; }
 
@@ -233,9 +226,11 @@ public:
     }
 
     void init(std::tuple<int,int,int> baud) {
+	/*
 	TX_PIN{}.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL |dout0(TX_PIN{}).gpio_mode);
 	TX_PIN{}.set(XMC_GPIO_HWCTRL_DISABLED);
 	RX_PIN{}.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+	*/
 
 	if constexpr (channel==USIC0_CH0_BASE || channel==USIC0_CH1_BASE)  {
 	    UngateClock(XMC_SCU_PERIPHERAL_CLOCK_USIC0);
@@ -251,7 +246,7 @@ public:
 
 	#if defined(USIC1)
 	if constexpr (channel==USIC1_CH0_BASE || channel==USIC1_CH1_BASE)  {
-	    UngateClock(XMC_SCU_PERIPHERAL_CLOCK_USIC0);
+	    UngateClock(XMC_SCU_PERIPHERAL_CLOCK_USIC1);
 	    #if defined(PERIPHERAL_RESET_SUPPORTED)
 		XMC_SCU_RESET_DeassertPeripheralReset(
 		    XMC_SCU_PERIPHERAL_RESET_USIC1);
@@ -301,13 +296,6 @@ public:
 	channel->PSCR=0xFFFFFFFFUL;
 	channel->CCR=parity_mode;
 
-	XMC_UART_CH_SetInputSource(channel,
-	    XMC_UART_CH_INPUT_RXD,dx<0>(RX_PIN{}));
-	//XMC_UART_CH_EnableEvent(channel, XMC_UART_CH_EVENT_STANDARD_RECEIVE);
-	XMC_UART_CH_Start(channel);
-    }
-    void disable(void) {
-	channel->CCR=0;
     }
 
     void tx(uint8_t d) {
@@ -352,8 +340,19 @@ public:
 	return channel->OUTR;
     }
 
+    template <typename T>
+    int rx_fifo(T &o) {
+	uint8_t *p=&o;
+	for(int i=0; i<sizeof(T); i++) {
+	    if(!(channel->TRBSR & USIC_CH_TRBSR_RBFLVL_Msk))
+		return i;
+	    *p++=channel->OUTR;
+	}
+	return sizeof(T);
+    }
+
     template <int num>
-    void enable_rx_interrupt(void) {
+    void enable_rx_interrupt(void) { // Receive buffer
 	auto x=channel->INPR;
 	x&=~USIC_CH_INPR_RINP_Msk;
 	x|=bitfield<USIC_CH_INPR_RINP_Msk>(num);
@@ -366,9 +365,32 @@ public:
 	channel->CCR&=~USIC_CH_CCR_RIEN_Msk;
     }
 
+    template <int num>
+    void enable_tb_interrupt(void) { // Transmit buffer
+	auto x=channel->INPR;
+	x&=~USIC_CH_INPR_TBINP_Msk;
+	x|=bitfield<USIC_CH_INPR_TBINP_Msk>(num);
+	channel->INPR=x;
+	channel->CCR|=USIC_CH_CCR_TBIEN_Msk;
+	/* PCR ASC, xmc4400 15-66. not used */
+    }
+
+    void disable_tb_interrupt(int num) {
+	channel->CCR&=~USIC_CH_CCR_TBIEN_Msk;
+    }
+
+    template <int num>
+    void enable_protocol_interrupt(void) { // Transmit buffer
+	auto x=channel->INPR;
+	x&=~USIC_CH_INPR_PINP_Msk;
+	x|=bitfield<USIC_CH_INPR_PINP_Msk>(num);
+	channel->INPR=x;
+	/* PCR ASC, xmc4400 15-66. not used */
+    }
+
     template <int i>
     constexpr IRQn_Type irq(void) {
-	constexpr auto unit=dout0(TX_PIN{}).unit;
+	constexpr auto unit=INFO.unit;
 	if constexpr (unit==0) {
 	    return IRQn_Type(USIC0_0_IRQn+i);
 	} else if constexpr (unit==1) {
@@ -376,6 +398,68 @@ public:
 	}
     }
 
+    void disable(void) {
+	channel->CCR=0;
+	//XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC1);
+	//XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC1);
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Full duplex serial, no interrupts
+////////////////////////////////////////////////////////////////////////////////
+template <class TX_PIN, class RX_PIN>
+class full_duplex:public base_t<dout0(TX_PIN{})> {
+    using base=base_t<dout0(TX_PIN{})>;
+    constexpr static auto channel=location(dout0(TX_PIN{}));
+    constexpr static int stop_bits=1;
+    constexpr static int data_bits=8;
+    constexpr static XMC_USIC_CH_PARITY_MODE parity_mode=
+	XMC_USIC_CH_PARITY_MODE_NONE;
+public:
+    static constexpr int UNIT=dout0(TX_PIN{}).unit;
+    static constexpr int CHANNEL=dout0(TX_PIN{}).channel;
+
+    full_duplex(TX_PIN t, RX_PIN r) {
+	static_assert(
+	    uint32_t(location(dout0(TX_PIN{})))
+	    ==uint32_t(location(dx0(RX_PIN{}))),
+	    "TXD and RXD not on the same channel");
+    }
+
+    void init(std::tuple<int,int,int> baud) {
+	TX_PIN{}.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL |dout0(TX_PIN{}).gpio_mode);
+	TX_PIN{}.set(XMC_GPIO_HWCTRL_DISABLED);
+	RX_PIN{}.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+
+	base::init(baud);
+
+	XMC_UART_CH_SetInputSource(channel,
+	    XMC_UART_CH_INPUT_RXD,dx<0>(RX_PIN{}));
+	//XMC_UART_CH_EnableEvent(channel, XMC_UART_CH_EVENT_STANDARD_RECEIVE);
+	XMC_UART_CH_Start(channel);
+    }
+};
+
+template <class TX_PIN>
+class half_duplex:public base_t<dout0(TX_PIN{})> {
+    using base=base_t<dout0(TX_PIN{})>;
+    using base::channel;
+public:
+    static constexpr int UNIT=dout0(TX_PIN{}).unit;
+    static constexpr int CHANNEL=dout0(TX_PIN{}).channel;
+    half_duplex(TX_PIN t) {}
+    XMC_USIC_CH_t* operator->() const { return base::channel; }
+
+    void init(std::tuple<int,int,int> baud) {
+	TX_PIN{}.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+
+	base::init(baud);
+
+	XMC_UART_CH_SetInputSource(channel,
+	    XMC_UART_CH_INPUT_RXD,dx<0>(TX_PIN{}));
+	XMC_UART_CH_Start(channel);
+    }
 };
 
 }

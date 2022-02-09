@@ -8549,7 +8549,7 @@
     (effects (font (size 1.27 1.27)) (justify right bottom))
     (uuid 9f362e4e-8080-4545-9612-e95291214ec5)
   )
-  (text "FIXME,\n\nC-E optocoupler\nxmc1300 reset\nSingle ended current measurement.\nSupply xmc1300 with 5V\nAdd connector for GNDPWR busbar\nConnect U10 pin12 to U10 pin13"
+  (text "FIXME,\n\nC-E optocoupler\nxmc1300 reset\nSingle ended current measurement.\nSupply xmc1300 with 5V\nAdd connector for GNDPWR busbar"
     (at 400.05 29.21 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid efe4b7da-fac6-4858-adb4-3f6d5b2be267)
@@ -14637,7 +14637,7 @@
       (reference "R96") (unit 1) (value "20k") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
     (path "/00000000-0000-0000-0000-00005e1f39b2/00000000-0000-0000-0000-00005daeb8e6"
-      (reference "R97") (unit 1) (value "150") (footprint "Resistor_SMD:R_0603_1608Metric")
+      (reference "R97") (unit 1) (value "51") (footprint "Resistor_SMD:R_0603_1608Metric")
     )
     (path "/00000000-0000-0000-0000-00005e1f39b2/00000000-0000-0000-0000-00005daeb9e9"
       (reference "R98") (unit 1) (value "150") (footprint "Resistor_SMD:R_0603_1608Metric")

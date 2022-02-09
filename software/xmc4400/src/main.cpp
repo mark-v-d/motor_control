@@ -98,6 +98,13 @@ extern "C" void CCU80_0_IRQHandler(void)
     constexpr char data=0x05a;
     copro.tx(data);
 
+    static int subsample;
+    if(++subsample>4) {
+	encoder->trigger();
+	subsample=0;
+    } else
+	ENC_DIR=0;
+
     int rxd_counter=0;
 
     FCE_KE2->CFG=0;
@@ -149,9 +156,9 @@ extern "C" void CCU80_3_IRQHandler(void)
 extern "C" void USIC0_0_IRQHandler(void)
 {
     LED3=0;
-    static_assert(encoder_t::fd_irq==0, "Full duplex should be mapped to IRQ0");
+    static_assert(encoder_t::tb_irq==0, "Full duplex should be mapped to IRQ0");
     static_assert(usic_ch_ns::unit(ENC_RXD)==0, "Invalid unit mapping");
-    encoder->full_duplex();
+    encoder->tb_handler();
     LED3=1;
 }
 
@@ -161,9 +168,20 @@ __attribute__((section(".ram_code")))
 void USIC0_1_IRQHandler(void)
 {
     LED3=0;
-    static_assert(encoder_t::hd_irq==1, "Half duplex should be mapped to IRQ1");
+    static_assert(encoder_t::rx_irq==1, "Half duplex should be mapped to IRQ1");
     static_assert(usic_ch_ns::unit(ENC_TXD)==0, "Invalid unit mapping");
-    encoder->half_duplex();
+    encoder->rx_handler();
+    LED3=1;
+}
+
+extern "C"
+__attribute__((section(".ram_code")))
+void USIC0_2_IRQHandler(void)
+{
+    LED3=0;
+    static_assert(encoder_t::p_irq==2, "Protocol interrupt be mapped to IRQ2");
+    static_assert(usic_ch_ns::unit(ENC_TXD)==0, "Invalid unit mapping");
+    encoder->protocol_handler();
     LED3=1;
 }
 
@@ -202,18 +220,15 @@ int main()
     LED4.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
     LED4.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
 
-    FCE->CLC=0;
+    FCE->CLC=0; // Enable CRC engine
 
     SysTick_Config(1000000);
     SysTick->CTRL&=~SysTick_CTRL_TICKINT_Msk;
     NVIC_DisableIRQ(SysTick_IRQn);
-    tpi;
 
-    //init_adc();
+    //PPB->SCR=1;
 
-    PPB->SCR=1;
-
-    //init_encoder();
+    // Start XMC1300
     bsl_init(IO7,COPRO_TXD,COPRO_RXD);
     copro.SetBaudrate(uart::Baudrate(4e6));
     uart::fifo_configure<0,16>(copro);
@@ -229,7 +244,7 @@ int main()
 
     std::apply([](auto& ... hr) {
 	(hr.init(1,1), ...);
-	(hr.period(1s/20000.0f), ...);
+	(hr.period(1s/18000.0f), ...);
 	(hr.deadtime(100ns, 100ns), ...);
 	((hr=0.25f), ...);
     }, hr_out);
@@ -237,7 +252,7 @@ int main()
     out.output[0]=0.2f;
     std::get<0>(hr_out)->ccu8->INTE=CCU8_CC8_INTE_PME_Msk;
     std::get<0>(hr_out)->ccu8->SRS=bitfield<CCU8_CC8_SRS_POSR_Msk>(0);
-    NVIC_SetPriority(std::get<0>(hr_out).irq<0>(), 0);
+    NVIC_SetPriority(std::get<0>(hr_out).irq<0>(), 1);
     NVIC_EnableIRQ(std::get<0>(hr_out).irq<0>());
 
     std::apply(ccu8::shadow_transfer,hr_out);
@@ -246,6 +261,9 @@ int main()
     out.output[0]=0.1f;
 
     auto old_led=led;
+
+    init_encoder();
+
     std::atomic_thread_fence(std::memory_order_release);
 
     for(;;) {
@@ -255,8 +273,8 @@ int main()
 	    LED1=(old_led>>1)&1;
 	    LED2=(old_led>>2)&1;
 	    LED3=(old_led>>3)&1;
-	    counter++;
 	}
+	counter++;
     }
     return 0;
 }
