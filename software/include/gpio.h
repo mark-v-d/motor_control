@@ -46,14 +46,18 @@ public:
     void set(XMC_GPIO_MODE_t m) {
 	// Isn't this byte adressable?
 	// XMC_GPIO_SetMode is not inline
-	port[PORT].IOCR[PIN/4]&=~(255<<8*(PIN%4));
-	port[PORT].IOCR[PIN/4]|=m<<8*(PIN%4);
+	auto x=port[PORT].IOCR[PIN/4];
+	x&=~(255<<8*(PIN%4));
+	x|=m<<8*(PIN%4);
+	port[PORT].IOCR[PIN/4]=x;
     }
 
     void set(XMC_GPIO_HWCTRL_t  m) {
 	// XMC_GPIO_SetHardwareControl is not inline
-	port[PORT].HWSEL&=~(3<<2*PIN);
-	port[PORT].HWSEL|=(m&3)<<2*PIN;
+	auto x=port[PORT].HWSEL;
+	x&=~(3<<2*PIN);
+	x|=(m&3)<<2*PIN;
+	port[PORT].HWSEL=x;
     }
 
     void input_enable(void) {
@@ -73,8 +77,10 @@ public:
 
 #if UC_FAMILY == XMC4
     void set(XMC_GPIO_OUTPUT_STRENGTH_t m) {
-	port[PORT].PDR[PIN/8]&=~(15<<4*(PIN%8));
-	port[PORT].PDR[PIN/8]|=m<<4*(PIN%8);
+	auto x=port[PORT].PDR[PIN/8];
+	x&=~(15<<4*(PIN%8));
+	x|=m<<4*(PIN%8);
+	port[PORT].PDR[PIN/8]=x;
     }
 
     /* REMOVE THIS !!!! */
@@ -110,22 +116,11 @@ template <int PORT, int PIN>
 class output:public pin<PORT,PIN>
 {
 public:
-#if UC_FAMILY == XMC4
-    output(void) {
-	static_assert(PORT<14,
-	    "Ports 14 and 15 are input only"
-	);
-	// REMOVE THIS init code
-	//gpio::pin<PORT,PIN>::set(XMC_GPIO_HWCTRL_DISABLED);
-	//gpio::pin<PORT,PIN>::set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
-    }
-#else
-    constexpr output(void) {}
-#endif
     int operator=(int i) { port[PORT].OMR=(i? 1:0x10000)<<PIN; return i; }
     void operator^=(int i) { if(i) port[PORT].OMR=0x10001<<PIN; }
     void toggle(void) { port[PORT].OMR=0x10001<<PIN; }
 };
+
 }
 
 

@@ -130,8 +130,8 @@ bool mitsubishi_MFS13_t::valid(void)
 
 void mitsubishi_MFS13_t::trigger(void)
 {
-    ENC_DIR=1;
     ENC_TXD.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL |uart::dout0(ENC_TXD).gpio_mode);
+    ENC_DIR=1;
     hd->TBUF[0]=0x1a;
     hd->PSCR=USIC_CH_PSR_ASCMode_TFF_Msk | USIC_CH_PSR_ASCMode_RFF_Msk;
     hd->PCR_ASCMode|=USIC_CH_PCR_ASCMode_FFIEN_Msk;
@@ -144,8 +144,8 @@ void mitsubishi_MFS13_t::protocol_handler(void)
     if(hd->PSR_ASCMode & USIC_CH_PSR_ASCMode_TFF_Msk) {
 	hd->PSCR=USIC_CH_PSR_ASCMode_TFF_Msk | USIC_CH_PSR_ASCMode_RFF_Msk;
 	hd->PCR_ASCMode&=~USIC_CH_PCR_ASCMode_FFIEN_Msk;
-	ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
 	ENC_DIR=0;
+	ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
     }
     NVIC_ClearPendingIRQ(fd.irq<p_irq>());
 }
