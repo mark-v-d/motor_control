@@ -138,18 +138,111 @@ void mitsubishi_MFS13_t::trigger(void)
     putp=0;
 }
 
+__attribute__((section(".ram_code")))
 void mitsubishi_MFS13_t::protocol_handler(void)
 {
-    itm.PORT[0].u32=hd->PSR_ASCMode;
-    if(hd->PSR_ASCMode & USIC_CH_PSR_ASCMode_TFF_Msk) {
-	hd->PSCR=USIC_CH_PSR_ASCMode_TFF_Msk | USIC_CH_PSR_ASCMode_RFF_Msk;
-	hd->PCR_ASCMode&=~USIC_CH_PCR_ASCMode_FFIEN_Msk;
+    auto x=hd->PSR_ASCMode;
+    if(x & USIC_CH_PSR_ASCMode_TFF_Msk) {
+	hd->PSCR=USIC_CH_PSR_ASCMode_TFF_Msk;
 	ENC_DIR=0;
 	ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
+    }
+    if(x & USIC_CH_PSR_ASCMode_RFF_Msk) {
+	rx_buffer[putp++]=hd.rx_fifo();
+	itm.PORT[7].u16=rx_buffer[putp-1] | (putp<<8);
+	hd->PSCR=USIC_CH_PSR_ASCMode_RFF_Msk;
     }
     NVIC_ClearPendingIRQ(fd.irq<p_irq>());
 }
 
+/* HC-PQ[24]3 motor ***********************************************************/
+class mitsubishi_PQ_t:public encoder_t
+{
+    constexpr static int poles=4;
+    constexpr static int increments_per_revolution=(1<<12);
+    constexpr static float conv=2.0*PI*poles/increments_per_revolution;
+
+    constexpr static auto baudrate=uart::Baudrate(2.5e6);
+    int putp;
+    uint8_t rx_buffer[16];
+public:
+    mitsubishi_PQ_t(void);
+    virtual ~mitsubishi_PQ_t(void);
+
+    virtual int32_t position(void) override;
+    virtual float angle(void) override;
+    virtual bool valid(void) override;
+
+    virtual void trigger(void) override;
+    virtual void rx_handler(void)  override{}
+    virtual void tb_handler(void)  override{}
+    virtual void protocol_handler(void) override;
+};
+
+mitsubishi_PQ_t::mitsubishi_PQ_t(void)
+{
+    ENC_DIR=1;
+    ENC_5V=1;
+    fd.init(baudrate);
+    uart::fifo_configure<0,16>(hd);
+
+    fd.enable_protocol_interrupt<p_irq>();
+    NVIC_SetPriority(fd.irq<p_irq>(), 0);
+    NVIC_EnableIRQ(fd.irq<p_irq>());
+}
+
+mitsubishi_PQ_t::~mitsubishi_PQ_t(void)
+{
+    ENC_DIR=0;
+    ENC_5V=0;
+    NVIC_DisableIRQ(fd.irq<p_irq>());
+    fd.disable();
+}
+
+float mitsubishi_PQ_t::angle(void)
+{
+    uint32_t encoder=rx_buffer[2]+(1<<8)*rx_buffer[3];
+    return conv*float(encoder);
+}
+
+int32_t mitsubishi_PQ_t::position(void)
+{
+    return ((rx_buffer[2]+(1<<8)*rx_buffer[3]
+	+(1<<12)*rx_buffer[5]+(1<<20)*rx_buffer[6]+(1<<28)*rx_buffer[7])<<4)>>4;
+}
+
+bool mitsubishi_PQ_t::valid(void)
+{
+    if(putp!=9)
+	return false;
+    uint8_t crc=0;
+    for(int i=0;i<putp;i++)
+	crc^=rx_buffer[i];
+    return crc==0;
+}
+
+void mitsubishi_PQ_t::trigger(void)
+{
+    fd->TBUF[0]=0x1a;
+    fd->PSCR=USIC_CH_PSR_ASCMode_TFF_Msk | USIC_CH_PSR_ASCMode_RFF_Msk;
+    fd->PCR_ASCMode|=USIC_CH_PCR_ASCMode_FFIEN_Msk;
+    putp=0;
+}
+
+void mitsubishi_PQ_t::protocol_handler(void)
+{
+    auto x=fd->PSR_ASCMode;
+    if(x & USIC_CH_PSR_ASCMode_TFF_Msk)
+	fd->PSCR=USIC_CH_PSR_ASCMode_TFF_Msk;
+    if(x & USIC_CH_PSR_ASCMode_RFF_Msk) {
+	rx_buffer[putp++]=fd.rx_fifo();
+	itm.PORT[7].u16=rx_buffer[putp-1] | (putp<<8);
+	fd->PSCR=USIC_CH_PSR_ASCMode_RFF_Msk;
+    }
+    NVIC_ClearPendingIRQ(fd.irq<p_irq>());
+}
+
+////////////////////////////////////////////////////////////////////////////////
 void init_encoder(void)
 {
     encoder.set<mitsubishi_MFS13_t>();

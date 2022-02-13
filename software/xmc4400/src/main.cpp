@@ -5,9 +5,8 @@
 */
 
 #include <atomic>
-#include <cmath>
+#include <complex>
 
-#include <math.h>
 constexpr auto PI=acos(-1);
 
 #include "hardware.h"
@@ -23,8 +22,12 @@ constexpr auto PI=acos(-1);
 #include <arpa/inet.h>
 
 #include "bsl.h"
-// using namespace std::complex_literals;
+using namespace std::complex_literals;
 using namespace std::chrono_literals;
+using std::sqrt;
+using std::cos;
+using std::sin;
+using std::complex;
 
 std::tuple hr_out{
     hrpwm0::half_bridge(HBH0_HR,HBL0_HR),
@@ -43,7 +46,6 @@ Ethernet eth0(
     RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO,
     &icmp
 );
-*/
 
 udp_logger::input_t in;
 udp_logger::output_t out;
@@ -51,67 +53,84 @@ udp_logger::output_t out;
 udp_logger logger __attribute__((section ("ETH_RAM"))) (&in);
 udp_poker poker __attribute__((section ("ETH_RAM")));
 udp_sync syncer __attribute__((section ("ETH_RAM")));
+*/
 
-extern "C" void SysTick_Handler(void)
-{
-    static uint8_t counter;
-    ITM->PORT[1].u8=counter++;
-}
+std::array<int16_t,16> rx_data;
+uint32_t pos;
+float angle;
+std::complex<float> Istator;
+std::complex<float> Irotor;
+std::complex<float> Iset;
+std::complex<float> Vrotor;
+std::complex<float> Vstator;
+std::array<float,3> out;
 
-uint32_t hb[3];
-float adc[4];
-float adc_scale[4]={0.0012099,1.0,1.0,0.0012436};
-int32_t adc_offset[4]={0,2047,2047,0};
-
-constexpr float servo_factor=0.00185805929607582;
-
-enum {
-    STARTUP,
-    OFFSET_DELAY,
-    OFFSET_CALIBRATE,
-    ACTIVE,
-    MANUAL_ANGLE,
-    MANUAL_VOLTAGE,
-    CURRENT,
-    VOLTAGE,
-    OVERRIDE
-} state;
-
-float manual_angle;
-float angle_offset=0;
-
-struct debug_t {
-    uint32_t CCU8_CR1, HRC_CR1, HRC_CR2;
-    float out, flr, rem;
-    int factor=ccu8::resolution_t(1)/0.150ns;
-    int tot;
-    int cr1, cr1h, cr2h;
+constexpr float current_scale=1.0/400;
+constexpr std::complex<float> clarke[3]={
+    {1,    0},
+    {-0.5, sqrt(3)/2},
+    {-0.5, -sqrt(3)/2}
 };
 
-debug_t deb;
+inline auto space_vector_mapping(std::complex<float> Vstator)
+{
+    using C=std::complex<float>;
+    std::tuple<float,float,float> output;
 
-std::array<uint16_t,16> rx_data;
+    if( (std::get<0>(output)=real(C{sqrt(3)/2,-0.5}*Vstator))>=0 &&
+	(std::get<1>(output)=real(C{0,-1}*Vstator))>=0
+    ) {
+	std::get<2>(output)=0;
+    } else if(
+	(std::get<1>(output)=real(C{-sqrt(3)/2,-0.5}*Vstator))>=0 &&
+	(std::get<2>(output)=real(C{-sqrt(3)/2, 0.5}*Vstator))>=0
+    ) {
+	std::get<0>(output)=0;
+    } else {
+	std::get<0>(output)=real(C{sqrt(3)/2,0.5}*Vstator);
+	std::get<1>(output)=0;
+	std::get<2>(output)=real(C{0,1}*Vstator);
+    }
+    return output;
+}
+
+class complex_PI {
+public:
+    complex<float> integrator;
+    float limit=0;
+    float P=10;
+    float I=0.1;
+
+    complex<float> compute(complex<float> error) {
+	auto result=P*error+integrator;
+	integrator+=I*error;
+	auto output=result;
+	if(abs(output)>limit) {
+	    output*=limit/abs(output);
+	    auto correction=output-result;
+	    integrator+=correction*I/P;
+	}
+	return output;
+    }
+} Kcurrent;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
-    int x=0;
     constexpr char data=0x05a;
     copro.tx(data);
 
     static int subsample;
     if(++subsample>4) {
+	IO0=1;
 	encoder->trigger();
 	subsample=0;
-    } else
-	ENC_DIR=0;
-
-    int rxd_counter=0;
+    }
 
     FCE_KE2->CFG=0;
     FCE_KE2->CRC=0xffff;
     itm.PORT[0].u16=FCE_KE2->CRC;
     uint16_t d;
-    while(copro->TRBSR & USIC_CH_TRBSR_RBFLVL_Msk) {
+    for(int rxd_counter=0; copro->TRBSR & USIC_CH_TRBSR_RBFLVL_Msk;) {
 	d>>=8;
 	d|=copro->OUTR<<8;
 	itm.PORT[0].u8=d>>8;
@@ -122,13 +141,22 @@ extern "C" void CCU80_0_IRQHandler(void)
 	    itm.PORT[0].u16=FCE_KE2->CRC;
 	}
     }
-    itm.PORT[11].f=out.output[0];
 
-    std::apply([&x](auto& ...hr) {
-	((hr=out.output[x++]), ...);
-    }, hr_out);
+    rx_data[0]-=2047;
+    rx_data[1]-=2047;
+
+    Istator=current_scale*(
+	clarke[0]*float(rx_data[0])
+	+clarke[1]*float(rx_data[1])
+	+clarke[2]*float(-rx_data[0]-rx_data[1]));
+    auto rotate=std::polar(1.0f, angle);
+    Irotor=rotate*Istator;
+    Vrotor=Kcurrent.compute(Irotor-Iset);
+    //Vstator=conj(rotate)*Vrotor;
+    hr_out=space_vector_mapping(Vstator);
 
     std::apply(ccu8::shadow_transfer,hr_out);
+    IO0=0;
 }
 
 /* This interrupt is used to trigger the encoder */
@@ -207,6 +235,7 @@ int main()
     ENC_12V=0; ENC_12V.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     ENC_DIR=0; ENC_DIR.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     IO7=0; IO7.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);	// power enable copro
+    IO0=0; IO0.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
 
     // Turn traceport on.
     LED0.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
@@ -249,7 +278,6 @@ int main()
 	((hr=0.25f), ...);
     }, hr_out);
 
-    out.output[0]=0.2f;
     std::get<0>(hr_out)->ccu8->INTE=CCU8_CC8_INTE_PME_Msk;
     std::get<0>(hr_out)->ccu8->SRS=bitfield<CCU8_CC8_SRS_POSR_Msk>(0);
     NVIC_SetPriority(std::get<0>(hr_out).irq<0>(), 1);
@@ -257,8 +285,6 @@ int main()
 
     std::apply(ccu8::shadow_transfer,hr_out);
     std::apply(ccu8::start,hr_out);
-
-    out.output[0]=0.1f;
 
     auto old_led=led;
 

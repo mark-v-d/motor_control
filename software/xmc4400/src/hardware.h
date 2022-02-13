@@ -41,7 +41,6 @@ static gpio::ETH0_TXD1<2,9> TXD1;
 static gpio::ETH0_TX_EN<1,12> TX_EN;
 static gpio::output<2,10> ETH_RESET;
 
-static gpio::output<3,3> IO7;
 
 static hrpwm0::out<0,5> HBL0_HR;
 static hrpwm0::out<0,2> HBH0_HR;
@@ -68,6 +67,9 @@ static gpio::pin<2,3> ENC_Z;
 
 static gpio::pin<0,0> COPRO_RXD;
 static gpio::pin<0,1> COPRO_TXD;
+
+static gpio::output<1,1> IO0;
+static gpio::output<3,3> IO7;
 
 /*
     Allocated units:
