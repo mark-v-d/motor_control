@@ -28,6 +28,7 @@ using std::sqrt;
 using std::cos;
 using std::sin;
 using std::complex;
+using std::abs;
 
 std::tuple hr_out{
     hrpwm0::half_bridge(HBH0_HR,HBL0_HR),
@@ -58,6 +59,7 @@ udp_sync syncer __attribute__((section ("ETH_RAM")));
 std::array<int16_t,16> rx_data;
 uint32_t pos;
 float angle;
+int32_t position;
 std::complex<float> Istator;
 std::complex<float> Irotor;
 std::complex<float> Iset;
@@ -97,14 +99,17 @@ inline auto space_vector_mapping(std::complex<float> Vstator)
 class complex_PI {
 public:
     complex<float> integrator;
-    float limit=0;
-    float P=10;
-    float I=0.1;
+    complex<float> result;
+    complex<float> output;
+    float limit=0.1;
+    float P=-10;
+    float I=0;
 
     complex<float> compute(complex<float> error) {
-	auto result=P*error+integrator;
+	result=P*error+integrator;
 	integrator+=I*error;
-	auto output=result;
+	output=result;
+
 	if(abs(output)>limit) {
 	    output*=limit/abs(output);
 	    auto correction=output-result;
@@ -113,6 +118,31 @@ public:
 	return output;
     }
 } Kcurrent;
+
+class PI_controller {
+public:
+    float integrator;
+    float result;
+    float output;
+    float limit=0.1;
+    float P=-10;
+    float I=0;
+
+    float compute(float error) {
+	result=P*error+integrator;
+	integrator+=I*error;
+	output=result;
+
+	if(abs(output)>limit) {
+	    output*=limit/abs(output);
+	    auto correction=output-result;
+	    integrator+=correction*I/P;
+	}
+	return output;
+    }
+};
+PI_controller Kr;
+PI_controller ki;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
@@ -145,15 +175,33 @@ extern "C" void CCU80_0_IRQHandler(void)
     rx_data[0]-=2047;
     rx_data[1]-=2047;
 
+    if(1 || encoder->valid()) {
+	angle=encoder->angle();
+	position=encoder->position();
+    }
     Istator=current_scale*(
 	clarke[0]*float(rx_data[0])
 	+clarke[1]*float(rx_data[1])
 	+clarke[2]*float(-rx_data[0]-rx_data[1]));
-    auto rotate=std::polar(1.0f, angle);
+    auto rotate=std::polar(1.0f, -angle);
     Irotor=rotate*Istator;
-    Vrotor=Kcurrent.compute(Irotor-Iset);
-    //Vstator=conj(rotate)*Vrotor;
+    //Vrotor=Kcurrent.compute(Irotor-Iset);
+    Vrotor=std::complex<float>{
+	Kr.compute(real(Irotor-Iset)),
+	ki.compute(imag(Irotor-Iset))
+    };
+
+    Vstator=conj(rotate)*Vrotor;
     hr_out=space_vector_mapping(Vstator);
+    auto x=space_vector_mapping(Vstator);
+    itm.PORT[0].f=std::get<0>(x);
+    itm.PORT[1].f=std::get<1>(x);
+    itm.PORT[2].f=std::get<2>(x);
+    itm.PORT[3].f=current_scale*rx_data[0];
+    itm.PORT[4].f=current_scale*rx_data[1];
+    itm.PORT[5].f=angle;
+    itm.PORT[5].u8=encoder->valid();
+    itm.PORT[7].u32=encoder->position();
 
     std::apply(ccu8::shadow_transfer,hr_out);
     IO0=0;

@@ -201,14 +201,14 @@ mitsubishi_PQ_t::~mitsubishi_PQ_t(void)
 
 float mitsubishi_PQ_t::angle(void)
 {
-    uint32_t encoder=rx_buffer[2]+(1<<8)*rx_buffer[3];
+    uint32_t encoder=rx_buffer[3]+(1<<8)*rx_buffer[4];
     return conv*float(encoder);
 }
 
 int32_t mitsubishi_PQ_t::position(void)
 {
-    return ((rx_buffer[2]+(1<<8)*rx_buffer[3]
-	+(1<<12)*rx_buffer[5]+(1<<20)*rx_buffer[6]+(1<<28)*rx_buffer[7])<<4)>>4;
+    return ((rx_buffer[3]+(1<<8)*rx_buffer[4] +(1<<12)*rx_buffer[6]
+	+(1<<20)*rx_buffer[7]+(1<<28)*rx_buffer[8])<<4)>>4;
 }
 
 bool mitsubishi_PQ_t::valid(void)
@@ -245,5 +245,5 @@ void mitsubishi_PQ_t::protocol_handler(void)
 ////////////////////////////////////////////////////////////////////////////////
 void init_encoder(void)
 {
-    encoder.set<mitsubishi_MFS13_t>();
+    encoder.set<mitsubishi_PQ_t>();
 }
