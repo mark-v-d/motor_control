@@ -99,16 +99,14 @@ inline auto space_vector_mapping(std::complex<float> Vstator)
 class complex_PI {
 public:
     complex<float> integrator;
-    complex<float> result;
-    complex<float> output;
-    float limit=0.1;
-    float P=-10;
-    float I=0;
+    float limit=0;
+    float P=-1;
+    float I=-1e-2;
 
     complex<float> compute(complex<float> error) {
-	result=P*error+integrator;
+	auto result=P*error+integrator;
 	integrator+=I*error;
-	output=result;
+	auto output=result;
 
 	if(abs(output)>limit) {
 	    output*=limit/abs(output);
@@ -118,31 +116,6 @@ public:
 	return output;
     }
 } Kcurrent;
-
-class PI_controller {
-public:
-    float integrator;
-    float result;
-    float output;
-    float limit=0.1;
-    float P=-10;
-    float I=0;
-
-    float compute(float error) {
-	result=P*error+integrator;
-	integrator+=I*error;
-	output=result;
-
-	if(abs(output)>limit) {
-	    output*=limit/abs(output);
-	    auto correction=output-result;
-	    integrator+=correction*I/P;
-	}
-	return output;
-    }
-};
-PI_controller Kr;
-PI_controller ki;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
@@ -185,24 +158,12 @@ extern "C" void CCU80_0_IRQHandler(void)
 	+clarke[2]*float(-rx_data[0]-rx_data[1]));
     auto rotate=std::polar(1.0f, -angle);
     Irotor=rotate*Istator;
-    //Vrotor=Kcurrent.compute(Irotor-Iset);
-    Vrotor=std::complex<float>{ Kr.compute(real(Irotor-Iset)), ki.compute(imag(Irotor-Iset)) };
-
+    Vrotor=Kcurrent.compute(Irotor-Iset);
     Vstator=conj(rotate)*Vrotor;
     hr_out=space_vector_mapping(Vstator);
-    auto x=space_vector_mapping(Vstator);
-    itm.PORT[0].f=std::get<0>(x);
-    itm.PORT[1].f=std::get<1>(x);
-    itm.PORT[2].f=std::get<2>(x);
-    itm.PORT[3].f=current_scale*rx_data[0];
-    itm.PORT[4].f=current_scale*rx_data[1];
-    itm.PORT[5].f=angle;
-    itm.PORT[5].u8=encoder->valid();
-    itm.PORT[7].u32=encoder->position();
 
     std::apply(ccu8::shadow_transfer,hr_out);
     IO0=0;
-    NVIC_ClearPendingIRQ(CCU80_0_IRQn);
 }
 
 /* This interrupt is used to trigger the encoder */
@@ -321,6 +282,7 @@ int main()
 	(hr.init(1,1), ...);
 	(hr.period(1s/18000.0f), ...);
 	(hr.deadtime(100ns, 100ns), ...);
+	(hr.shadow_transfer_mode(ccu8::TRANSFER_PERIOD), ...);
 	((hr=0.25f), ...);
     }, hr_out);
 

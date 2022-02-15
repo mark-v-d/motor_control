@@ -190,6 +190,12 @@ auto start=[](auto& ... x)
     SCU_GENERAL->CCUCON&=~mask;
 };
 
+enum shadow_transfer_mode_t {
+    TRANSFER_ONE_AND_PERIOD=0,
+    TRANSFER_PERIOD=1,
+    TRANSFER_ONE=2
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Slice types
@@ -225,6 +231,13 @@ public:
 	return CCU80_1_IRQn;
     }
 #endif
+
+    void shadow_transfer_mode(shadow_transfer_mode_t t) {
+	auto x=dev[UNIT].cc[SLICE].STC;
+	x&=~CCU8_CC8_STC_STM_Msk;
+	x|=bitfield<CCU8_CC8_STC_STM_Msk>(t);
+	dev[UNIT].cc[SLICE].STC=x;
+    }
 };
 
 template <int UNIT_PAR, int SLICE_PAR, int OUTPUT_PAR>
