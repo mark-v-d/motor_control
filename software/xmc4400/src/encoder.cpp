@@ -23,14 +23,10 @@ class dummy_encoder_t:public encoder_t {
 public:
     dummy_encoder_t(void);
 
-    virtual int32_t position(void) { return 0;}
-    virtual float angle(void) { return 0.0;}
-    virtual bool valid(void) { return false;}
-
-    virtual void trigger(void) {}
-    virtual void rx_handler(void) {}
-    virtual void tb_handler(void) {}
-    virtual void protocol_handler(void) {}
+    virtual void trigger(void) override {}
+    virtual void rx_handler(void) override {}
+    virtual void tb_handler(void) override {}
+    virtual void protocol_handler(void) override {}
 };
 
 dummy_encoder_t::dummy_encoder_t(void)
@@ -43,6 +39,7 @@ dummy_encoder_t::dummy_encoder_t(void)
 
 decltype(encoder) encoder=decltype(encoder)::make<dummy_encoder_t>();
 
+#if 0
 /* HC-MFS13-S13 motor *********************************************************/
 class mitsubishi_MFS13_t:public encoder_t {
     constexpr static int poles=4;
@@ -54,15 +51,12 @@ class mitsubishi_MFS13_t:public encoder_t {
     uint8_t rx_buffer[16];
 public:
     mitsubishi_MFS13_t(void);
-    virtual ~mitsubishi_MFS13_t(void);
-    virtual int32_t position(void);
-    virtual float angle(void);
-    virtual bool valid(void);
+    virtual ~mitsubishi_MFS13_t(void) override;
 
-    virtual void trigger(void);
-    virtual void rx_handler(void) {}
-    virtual void tb_handler(void) {}
-    virtual void protocol_handler(void);
+    virtual void trigger(void) override;
+    virtual void rx_handler(void) override{}
+    virtual void tb_handler(void) override{}
+    virtual void protocol_handler(void) override;
 };
 
 mitsubishi_MFS13_t::mitsubishi_MFS13_t(void)
@@ -154,6 +148,7 @@ void mitsubishi_MFS13_t::protocol_handler(void)
     }
     NVIC_ClearPendingIRQ(fd.irq<p_irq>());
 }
+#endif
 
 /* HC-PQ[24]3 motor ***********************************************************/
 class mitsubishi_PQ_t:public encoder_t
@@ -165,13 +160,10 @@ class mitsubishi_PQ_t:public encoder_t
     constexpr static auto baudrate=uart::Baudrate(2.5e6);
     int putp;
     uint8_t rx_buffer[16];
+    uint8_t crc;
 public:
     mitsubishi_PQ_t(void);
     virtual ~mitsubishi_PQ_t(void);
-
-    virtual int32_t position(void) override;
-    virtual float angle(void) override;
-    virtual bool valid(void) override;
 
     virtual void trigger(void) override;
     virtual void rx_handler(void)  override{}
@@ -187,7 +179,7 @@ mitsubishi_PQ_t::mitsubishi_PQ_t(void)
     uart::fifo_configure<0,16>(hd);
 
     fd.enable_protocol_interrupt<p_irq>();
-    NVIC_SetPriority(fd.irq<p_irq>(), 0);
+    NVIC_SetPriority(fd.irq<p_irq>(), 10);
     NVIC_EnableIRQ(fd.irq<p_irq>());
 }
 
@@ -199,34 +191,13 @@ mitsubishi_PQ_t::~mitsubishi_PQ_t(void)
     fd.disable();
 }
 
-float mitsubishi_PQ_t::angle(void)
-{
-    uint32_t encoder=rx_buffer[2]+(1<<8)*rx_buffer[3];
-    return conv*float(encoder);
-}
-
-int32_t mitsubishi_PQ_t::position(void)
-{
-    return ((rx_buffer[2]+(1<<8)*rx_buffer[3] +(1<<12)*rx_buffer[5]
-	+(1<<20)*rx_buffer[6]+(1<<28)*rx_buffer[7])<<4)>>4;
-}
-
-bool mitsubishi_PQ_t::valid(void)
-{
-    if(putp!=9)
-	return false;
-    uint8_t crc=0;
-    for(int i=0;i<putp;i++)
-	crc^=rx_buffer[i];
-    return crc==0;
-}
-
 void mitsubishi_PQ_t::trigger(void)
 {
     fd->TBUF[0]=0x1a;
     fd->PSCR=USIC_CH_PSR_ASCMode_TFF_Msk | USIC_CH_PSR_ASCMode_RFF_Msk;
     fd->PCR_ASCMode|=USIC_CH_PCR_ASCMode_FFIEN_Msk;
     putp=0;
+    crc=0;
 }
 
 void mitsubishi_PQ_t::protocol_handler(void)
@@ -238,8 +209,16 @@ void mitsubishi_PQ_t::protocol_handler(void)
 	int d;
 	while((d=fd.rx_fifo())>=0) {
 	    rx_buffer[putp++]=d;
+	    crc^=d;
 	    itm.PORT[7].u16=rx_buffer[putp-1] | (putp<<8);
 	}
+	if(putp==9 && crc==0) {
+	    position=((rx_buffer[2]+(1<<8)*rx_buffer[3] +(1<<12)*rx_buffer[5]
+		+(1<<20)*rx_buffer[6]+(1<<28)*rx_buffer[7])<<4)>>4;
+	    angle=conv*float(rx_buffer[2]+(1<<8)*rx_buffer[3]);
+	    valid=1;
+	} else if(putp>=9)
+	    valid=0;
 	fd->PSCR=USIC_CH_PSR_ASCMode_RFF_Msk;
     }
     NVIC_ClearPendingIRQ(fd.irq<p_irq>());

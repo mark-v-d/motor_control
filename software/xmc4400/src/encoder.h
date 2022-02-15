@@ -1,15 +1,18 @@
 #ifndef ENCODER_H
 #define ENCODER_H
-#include <stdint.h>
+#include <cstdint>
+#include <tuple>
 #include "polymorphic.h"
 #include "xmc_uart.h"
 
 class encoder_t {
+protected:
+    uint32_t position;
+    float angle;
+    int valid=0;
 public:
     virtual ~encoder_t(void) {}
-    virtual int32_t position(void)=0;
-    virtual float angle(void)=0;
-    virtual bool valid(void)=0;
+    auto get_pav(void) { return std::tuple{position,angle,valid}; }
 
     virtual void trigger(void)=0;
     virtual void rx_handler(void)=0;

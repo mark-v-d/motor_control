@@ -281,6 +281,13 @@ public:
 
 	SetBaudrate(baud);
 
+	if(channel->RBCTR & USIC_CH_RBCTR_SIZE_Msk) {
+	    auto x=channel->RBCTR;
+	    x&=~USIC_CH_RBCTR_RCIM_Msk;
+	    x|=bitfield<USIC_CH_RBCTR_RCIM_Msk>(3);
+	    channel->RBCTR=x;
+	}
+
 	channel->PCR_ASCMode =
 	    bitfield<USIC_CH_PCR_ASCMode_STPB_Msk>(stop_bits-1)
 	    | bitfield<USIC_CH_PCR_ASCMode_SP_Msk>(std::get<2>(baud)/2+1)

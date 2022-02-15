@@ -123,7 +123,7 @@ extern "C" void CCU80_0_IRQHandler(void)
     copro.tx(data);
 
     static int subsample;
-    if(++subsample>4) {
+    if(++subsample>3) {
 	IO0=1;
 	encoder->trigger();
 	subsample=0;
@@ -148,14 +148,11 @@ extern "C" void CCU80_0_IRQHandler(void)
     rx_data[0]-=2047;
     rx_data[1]-=2047;
 
-    if(1 || encoder->valid()) {
-	angle=encoder->angle();
-	position=encoder->position();
-    }
-    Istator=current_scale*(
-	clarke[0]*float(rx_data[0])
-	+clarke[1]*float(rx_data[1])
-	+clarke[2]*float(-rx_data[0]-rx_data[1]));
+    auto [position, angle, valid]=encoder->get_pav();
+    constexpr auto C0=current_scale*(clarke[0]-clarke[2]);
+    constexpr auto C1=current_scale*(clarke[1]-clarke[2]);
+
+    Istator=C0*float(rx_data[0])+C1*float(rx_data[1]);
     auto rotate=std::polar(1.0f, -angle);
     Irotor=rotate*Istator;
     Vrotor=Kcurrent.compute(Irotor-Iset);

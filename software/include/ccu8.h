@@ -152,8 +152,9 @@ void init(XMC_CCU8_CLOCK_t clock_source,XMC_CCU8_SLICE_MCMS_ACTION_t shadow_tran
 
     module->GIDLC = (uint32_t) CCU8_GIDLC_SPRB_Msk;
 
-    gctrl &= ~( CCU8_GCTRL_MSDE_Msk);
-    gctrl |= bitfield<CCU8_GCTRL_MSDE_Msk>(shadow_transfer);
+    gctrl&=~(CCU8_GCTRL_MSDE_Msk | CCU8_GCTRL_SUSCFG_Msk);
+    gctrl|=bitfield<CCU8_GCTRL_MSDE_Msk>(shadow_transfer)
+	| bitfield<CCU8_GCTRL_SUSCFG_Msk>(3);
     module->GCTRL = gctrl;
 }
 
