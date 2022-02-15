@@ -201,14 +201,14 @@ mitsubishi_PQ_t::~mitsubishi_PQ_t(void)
 
 float mitsubishi_PQ_t::angle(void)
 {
-    uint32_t encoder=rx_buffer[3]+(1<<8)*rx_buffer[4];
+    uint32_t encoder=rx_buffer[2]+(1<<8)*rx_buffer[3];
     return conv*float(encoder);
 }
 
 int32_t mitsubishi_PQ_t::position(void)
 {
-    return ((rx_buffer[3]+(1<<8)*rx_buffer[4] +(1<<12)*rx_buffer[6]
-	+(1<<20)*rx_buffer[7]+(1<<28)*rx_buffer[8])<<4)>>4;
+    return ((rx_buffer[2]+(1<<8)*rx_buffer[3] +(1<<12)*rx_buffer[5]
+	+(1<<20)*rx_buffer[6]+(1<<28)*rx_buffer[7])<<4)>>4;
 }
 
 bool mitsubishi_PQ_t::valid(void)
@@ -235,8 +235,11 @@ void mitsubishi_PQ_t::protocol_handler(void)
     if(x & USIC_CH_PSR_ASCMode_TFF_Msk)
 	fd->PSCR=USIC_CH_PSR_ASCMode_TFF_Msk;
     if(x & USIC_CH_PSR_ASCMode_RFF_Msk) {
-	rx_buffer[putp++]=fd.rx_fifo();
-	itm.PORT[7].u16=rx_buffer[putp-1] | (putp<<8);
+	int d;
+	while((d=fd.rx_fifo())>=0) {
+	    rx_buffer[putp++]=d;
+	    itm.PORT[7].u16=rx_buffer[putp-1] | (putp<<8);
+	}
 	fd->PSCR=USIC_CH_PSR_ASCMode_RFF_Msk;
     }
     NVIC_ClearPendingIRQ(fd.irq<p_irq>());

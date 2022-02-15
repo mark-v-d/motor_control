@@ -186,10 +186,7 @@ extern "C" void CCU80_0_IRQHandler(void)
     auto rotate=std::polar(1.0f, -angle);
     Irotor=rotate*Istator;
     //Vrotor=Kcurrent.compute(Irotor-Iset);
-    Vrotor=std::complex<float>{
-	Kr.compute(real(Irotor-Iset)),
-	ki.compute(imag(Irotor-Iset))
-    };
+    Vrotor=std::complex<float>{ Kr.compute(real(Irotor-Iset)), ki.compute(imag(Irotor-Iset)) };
 
     Vstator=conj(rotate)*Vrotor;
     hr_out=space_vector_mapping(Vstator);
@@ -205,6 +202,7 @@ extern "C" void CCU80_0_IRQHandler(void)
 
     std::apply(ccu8::shadow_transfer,hr_out);
     IO0=0;
+    NVIC_ClearPendingIRQ(CCU80_0_IRQn);
 }
 
 /* This interrupt is used to trigger the encoder */
