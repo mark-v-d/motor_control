@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+# /etc/rc.d/rc.local:  Local system initialization script.
+#
+# Put any local startup commands in here.  Also, if you have
+# anything that needs to be run at shutdown time you can
+# make an /etc/rc.d/rc.local_shutdown script and put those
+# commands in there.
+
+setkeycodes e00f 120
+setkeycodes e03d 113
+setkeycodes e03e 114
+setkeycodes e03f 115
+setkeycodes e040 117
+setkeycodes e041 121
+loadkeys lk461-2.6
+
+setserial /dev/ttyS0 uart none
+echo 102 >/sys/module/xenomai/parameters/allowed_group 
+echo 102 >/sys/module/xeno_nucleus/parameters/xenomai_gid 
+
+rmmod e1000e
+modprobe rtudp
+modprobe rt_e1000e
+/usr/xenomai/sbin/rtifconfig rteth0 up 192.168.0.2
+/usr/xenomai/sbin/rtroute add 192.168.0.4 82:80:05:0c:13:60 dev rteth0
+/usr/xenomai/sbin/rtroute add 192.168.0.5 82:00:10:0b:13:60 dev rteth0
+
+rmmod parport_serial
+rmmod parport_pc
+/sbin/modprobe analogy_parport
+/usr/xenomai/sbin/analogy_config analogy0 analogy_parport \
+	$(lspci -d 1c00:3250 -v|awk '/size=4/ { print "0x" $4}')
