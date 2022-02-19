@@ -41,12 +41,8 @@ uart::full_duplex copro(COPRO_TXD,COPRO_RXD);
 std::atomic<uint32_t> sleep_counter(0);
 
 icmpProcessing icmp;
-/*
-Ethernet eth0(
-    0,
-    RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO,
-    &icmp
-);
+
+Ethernet eth0;
 
 udp_logger::input_t in;
 udp_logger::output_t out;
@@ -54,7 +50,6 @@ udp_logger::output_t out;
 udp_logger logger __attribute__((section ("ETH_RAM"))) (&in);
 udp_poker poker __attribute__((section ("ETH_RAM")));
 udp_sync syncer __attribute__((section ("ETH_RAM")));
-*/
 
 std::array<int16_t,16> rx_data;
 uint32_t pos;
@@ -65,7 +60,6 @@ std::complex<float> Irotor;
 std::complex<float> Iset;
 std::complex<float> Vrotor;
 std::complex<float> Vstator;
-std::array<float,3> out;
 
 constexpr float current_scale=1.0/400;
 constexpr std::complex<float> clarke[3]={
@@ -189,7 +183,8 @@ extern "C" void USIC0_0_IRQHandler(void)
 {
     LED3=0;
     static_assert(encoder_t::tb_irq==0, "Full duplex should be mapped to IRQ0");
-    static_assert(usic_ch_ns::unit(ENC_RXD)==0, "Invalid unit mapping");
+    //static_assert(usic_ch_ns::unit(ENC_RXD)==0, "Invalid unit mapping");
+    static_assert(uart::half_duplex(ENC_TXD).UNIT==0, "Invalid unit mapping");
     encoder->tb_handler();
     LED3=1;
 }
@@ -201,7 +196,7 @@ void USIC0_1_IRQHandler(void)
 {
     LED3=0;
     static_assert(encoder_t::rx_irq==1, "Half duplex should be mapped to IRQ1");
-    static_assert(usic_ch_ns::unit(ENC_TXD)==0, "Invalid unit mapping");
+    //static_assert(usic_ch_ns::unit(ENC_TXD)==0, "Invalid unit mapping");
     encoder->rx_handler();
     LED3=1;
 }
@@ -212,7 +207,7 @@ void USIC0_2_IRQHandler(void)
 {
     LED3=0;
     static_assert(encoder_t::p_irq==2, "Protocol interrupt be mapped to IRQ2");
-    static_assert(usic_ch_ns::unit(ENC_TXD)==0, "Invalid unit mapping");
+    //static_assert(usic_ch_ns::unit(ENC_TXD)==0, "Invalid unit mapping");
     encoder->protocol_handler();
     LED3=1;
 }
@@ -225,6 +220,7 @@ extern "C" void VADC0_G0_0_IRQHandler(void)
 }
 
 volatile uint32_t counter, led, txd=-1, hrpwm_status;
+volatile int init_enable=0;
 
 void init_adc(void);
 int main()
@@ -234,6 +230,7 @@ int main()
     eth0.add_udp_receiver(&poker,ntohs(2));
     eth0.add_udp_receiver(&syncer,ntohs(3));
     */
+    SystemCoreClockUpdate();
     ETH_RESET=1; ETH_RESET.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     ENC_5V=0; ENC_5V.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     ENC_12V=0; ENC_12V.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
@@ -252,6 +249,12 @@ int main()
     LED3.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
     LED4.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
     LED4.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+
+    eth0.init(
+	0,
+	RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO,
+	&icmp
+    );
 
     FCE->CLC=0; // Enable CRC engine
 

@@ -8,6 +8,10 @@
 #include "packet.h"
 #include "atomic_wrapping_counter.h"
 
+namespace ethernet {
+#include "ethernet_map.h"
+}
+
 class Ethernet {
 public:
     class Transmitter;
@@ -142,21 +146,18 @@ private:
 
     Receiver *icmpHandler;
 public:
-    template <int a,int b,int c,int d,int e,int f,int g,int h,int i, int j>
-    Ethernet(
-	uint8_t pa,
-	XMC_ETH_MAC_PORT_CTRL_RXD0 RXD0,
-	XMC_ETH_MAC_PORT_CTRL_RXD1 RXD1,
-	XMC_ETH_MAC_PORT_CTRL_CLK_RMII CLK_RMII,
-	XMC_ETH_MAC_PORT_CTRL_CRS_DV CRS_DV,
-	XMC_ETH_MAC_PORT_CTRL_RXER RXER,
+    Ethernet(void):tx_put(0), rx_get(0) {}
+    template <typename rxd0_t, typename rxd1_t, typename clk_rmii_t,
+	typename crs_dv_t, typename rxer_t, typename txd0_t, typename txd1_t,
+	typename txen_t,typename mdc_t, typename mdo_t
+    >
+    void init(uint8_t pa, rxd0_t rxd0, rxd1_t rxd1,
+	clk_rmii_t clk_rmii, crs_dv_t crs_dv, rxer_t rxer,
+	txd0_t txd0,
+	txd1_t txd1, txen_t txen,
+	mdc_t mdc, mdo_t mdo,
 
-	gpio::ETH0_TXD0<a,b> TXD0,
-	gpio::ETH0_TXD1<c,d> TXD1,
-	gpio::ETH0_TX_EN<e,f> TX_EN,
-	gpio::ETH0_MDC<g,h> MDC,
-	gpio::ETH0_MDO<i,j> MDO,
-	Receiver *icmp=NULL
+	Receiver *icmp
     );
 
     int transmit(Transmitter *tx,void *data,size_t size);
@@ -177,7 +178,7 @@ public:
     }
 
 private:
-    void FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control);
+    void FinishInit();
     void SetManagmentClockDivider(void);
     void SetAddress();
 
@@ -187,43 +188,66 @@ private:
 
     void receiveIRQ(void);
     void transmitIRQ(void);
+    XMC_ETH_MAC_PORT_CTRL_t port_control;
 };
 
-template <int a,int b,int c,int d,int e,int f,int g,int h,int i, int j>
-Ethernet::Ethernet(
+template <typename rxd0_t, typename rxd1_t, typename clk_rmii_t,
+    typename crs_dv_t, typename rxer_t, typename txd0_t, typename txd1_t,
+    typename txen_t,typename mdc_t, typename mdo_t
+>
+void Ethernet::init(
     uint8_t pa,
-    XMC_ETH_MAC_PORT_CTRL_RXD0 RXD0,
-    XMC_ETH_MAC_PORT_CTRL_RXD1 RXD1,
-    XMC_ETH_MAC_PORT_CTRL_CLK_RMII CLK_RMII,
-    XMC_ETH_MAC_PORT_CTRL_CRS_DV CRS_DV,
-    XMC_ETH_MAC_PORT_CTRL_RXER RXER,
+    rxd0_t rxd0,
+    rxd1_t rxd1,
+    clk_rmii_t clk_rmii,
+    crs_dv_t crs_dv,
+    rxer_t rxer,
 
-    gpio::ETH0_TXD0<a,b> TXD0,
-    gpio::ETH0_TXD1<c,d> TXD1,
-    gpio::ETH0_TX_EN<e,f> TX_EN,
-    gpio::ETH0_MDC<g,h> MDC,
-    gpio::ETH0_MDO<i,j> MDO,
+    txd0_t txd0,
+    txd1_t txd1,
+    txen_t txen,
+    mdc_t mdc,
+    mdo_t mdo,
 
     Receiver *icmp
-):phy_addr(pa), rx_get(0), icmpHandler(icmp), tx_put(0)
+)
 {
-    TXD0.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
-    TXD1.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
-    TX_EN.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
-    MDC.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
-    MDO.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    phy_addr=pa;
+    icmpHandler=icmp;
 
-    XMC_ETH_MAC_PORT_CTRL_t port_control;
-    port_control.raw=0;
-    port_control.mode = XMC_ETH_MAC_PORT_CTRL_MODE_RMII;
-    port_control.rxd0 = RXD0;
-    port_control.rxd1 = RXD1;
-    port_control.clk_rmii = CLK_RMII;
-    port_control.crs_dv = CRS_DV;
-    port_control.rxer = RXER;
-    port_control.mdio = XMC_ETH_MAC_PORT_CTRL_MDIO(MDO);
+    txd0.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    txd0.set(ethernet::TXD0(txd0));
+    txd1.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    txd1.set(ethernet::TXD1(txd1));
+    txen.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    txen.set(ethernet::TXEN(txen));
+    mdc.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    mdc.set(ethernet::MDC(mdc));
+    mdo.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    mdo.set(ethernet::MDIO_out(mdo));
 
-    FinishInit(port_control);
+
+    rxd0.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+    rxd1.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+    clk_rmii.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+    crs_dv.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+    rxer.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+
+    rxd0.input_enable();
+    rxd1.input_enable();
+    clk_rmii.input_enable();
+    crs_dv.input_enable();
+    rxer.input_enable();
+
+    ETH0_CON->CON=
+	bitfield<ETH_CON_RXD0_Msk>(ethernet::RXD0(rxd0)) |
+	bitfield<ETH_CON_RXD1_Msk>(ethernet::RXD1(rxd1)) |
+	bitfield<ETH_CON_CLK_RMII_Msk>(ethernet::CLK_RMII(clk_rmii)) |
+	bitfield<ETH_CON_CRS_DV_Msk>(ethernet::CRS_DV(crs_dv)) |
+	bitfield<ETH_CON_RXER_Msk>(ethernet::RXER(rxer)) |
+	bitfield<ETH_CON_MDIO_Msk>(ethernet::MDIO_in(mdo)) |
+	ETH_CON_INFSEL_Msk;
+    FinishInit();
 }
 
 

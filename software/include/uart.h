@@ -427,7 +427,7 @@ public:
     static constexpr int UNIT=dout0(TX_PIN{}).unit;
     static constexpr int CHANNEL=dout0(TX_PIN{}).channel;
 
-    full_duplex(TX_PIN t, RX_PIN r) {
+    constexpr full_duplex(TX_PIN t, RX_PIN r) {
 	static_assert(
 	    uint32_t(location(dout0(TX_PIN{})))
 	    ==uint32_t(location(dx0(RX_PIN{}))),
@@ -455,7 +455,7 @@ class half_duplex:public base_t<dout0(TX_PIN{})> {
 public:
     static constexpr int UNIT=dout0(TX_PIN{}).unit;
     static constexpr int CHANNEL=dout0(TX_PIN{}).channel;
-    half_duplex(TX_PIN t) {}
+    constexpr half_duplex(TX_PIN t) {}
     XMC_USIC_CH_t* operator->() const { return base::channel; }
 
     void init(std::tuple<int,int,int> baud) {

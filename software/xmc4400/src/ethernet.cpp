@@ -143,19 +143,17 @@ void Ethernet::PHY_Init(void)
     } // else hope for the best
 }
 
-void Ethernet::FinishInit(XMC_ETH_MAC_PORT_CTRL_t const &port_control)
+void Ethernet::FinishInit()
 {
-    ETH0_CON->CON = (uint32_t)port_control.raw;
     instance=this;
 
-    XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_ETH0);
     XMC_SCU_CLOCK_EnableClock(XMC_SCU_CLOCK_ETH);
 #if UC_DEVICE != XMC4500
     XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_ETH0);
 #endif
     XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_ETH0);
 
-    eth.BUS_MODE |= (uint32_t)ETH_BUS_MODE_SWR_Msk;
+    eth.BUS_MODE = (uint32_t)ETH_BUS_MODE_SWR_Msk;
     while ((eth.BUS_MODE & (uint32_t)ETH_BUS_MODE_SWR_Msk) != 0U)
 	;
 

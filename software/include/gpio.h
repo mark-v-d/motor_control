@@ -61,11 +61,11 @@ public:
     }
 
     void input_enable(void) {
-	XMC_GPIO_EnableDigitalInput(&port[PORT],PIN);
+	port[PORT].PDISC&=~(1<<PIN);
     }
 
     void input_disable(void) {
-	XMC_GPIO_DisableDigitalInput(&port[PORT],PIN);
+	port[PORT].PDISC|=~(1<<PIN);
     }
 
     void powersave(int i) {
@@ -124,7 +124,8 @@ public:
 }
 
 
-#if UC_FAMILY == XMC4
+#if 0
+//#if UC_FAMILY == XMC4
 // ETH0 Ports //////////////////////////////////////////////////////////////////
 // REMOVE THIS
 namespace gpio {

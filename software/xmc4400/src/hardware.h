@@ -29,16 +29,17 @@ static gpio::output<4,0> LED1; // TRACED2
 static gpio::output<4,1> LED2; // TRACED1
 static gpio::output<1,15> LED3; // TRACED0
 static gpio::output<2,14> LED4; // TRACECLK
+
 static gpio::pin<15,8> CLK_RMII;
 static gpio::pin<5,2> CRS_DV;
 static gpio::pin<5,0> RXD0;
 static gpio::pin<5,1> RXD1;
 static gpio::pin<0,11> RXER;
-static gpio::ETH0_MDC<2,7> MDC;
-static gpio::ETH0_MDO<2,0> MDIO;
-static gpio::ETH0_TXD0<2,8> TXD0;
-static gpio::ETH0_TXD1<2,9> TXD1;
-static gpio::ETH0_TX_EN<1,12> TX_EN;
+static gpio::pin<2,7> MDC;
+static gpio::pin<2,0> MDIO;
+static gpio::pin<2,8> TXD0;
+static gpio::pin<2,9> TXD1;
+static gpio::pin<1,12> TX_EN;
 static gpio::output<2,10> ETH_RESET;
 
 
