@@ -62,32 +62,31 @@ std::complex<float> Vrotor;
 std::complex<float> Vstator;
 
 constexpr float current_scale=1.0/400;
-constexpr std::complex<float> clarke[3]={
-    {1,    0},
-    {-0.5, sqrt(3)/2},
-    {-0.5, -sqrt(3)/2}
+constexpr std::array<std::complex<float>,3> clarke{
+    1.0f,
+    -0.5f+0.5if*sqrt(3.0f),
+    -0.5f-0.5if*sqrt(3.0f)
 };
 
 inline auto space_vector_mapping(std::complex<float> Vstator)
 {
-    using C=std::complex<float>;
-    std::tuple<float,float,float> output;
+    std::array<float,3> out;
 
-    if( (std::get<0>(output)=real(C{sqrt(3)/2,-0.5}*Vstator))>=0 &&
-	(std::get<1>(output)=real(C{0,-1}*Vstator))>=0
+    if( (out[0]=imag(-clarke[2]*Vstator))>=0 &&
+	(out[1]=imag( clarke[0]*Vstator))>=0
     ) {
-	std::get<2>(output)=0;
+	out[2]=0;
     } else if(
-	(std::get<1>(output)=real(C{-sqrt(3)/2,-0.5}*Vstator))>=0 &&
-	(std::get<2>(output)=real(C{-sqrt(3)/2, 0.5}*Vstator))>=0
+	(out[1]=imag(-clarke[1]*Vstator))>=0 &&
+	(out[2]=imag( clarke[2]*Vstator))>=0
     ) {
-	std::get<0>(output)=0;
+	out[0]=0;
     } else {
-	std::get<0>(output)=real(C{sqrt(3)/2,0.5}*Vstator);
-	std::get<1>(output)=0;
-	std::get<2>(output)=real(C{0,1}*Vstator);
+	out[0]=imag( clarke[1]*Vstator);
+	out[1]=0;
+	out[2]=imag(-clarke[0]*Vstator);
     }
-    return output;
+    return std::tuple_cat(out);
 }
 
 class complex_PI {
@@ -250,7 +249,7 @@ int main()
     LED4.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
     LED4.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
 
-    eth0.init(
+    eth0.init( // Hangt zonder ethernet kabel
 	0,
 	RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO,
 	&icmp
