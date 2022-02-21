@@ -229,3 +229,31 @@ void init_encoder(void)
 {
     encoder.set<mitsubishi_PQ_t>();
 }
+
+/*******************************************************************************
+    Interrupt handlers
+*******************************************************************************/
+
+/* Transmit buffer event */
+extern "C" void USIC0_0_IRQHandler(void)
+{
+    static_assert(encoder_t::tb_irq==0, "Transmit should be mapped to IRQ0");
+    static_assert(uart::half_duplex(ENC_TXD).UNIT==0, "Invalid unit mapping");
+    encoder->tb_handler();
+}
+
+/* Receive buffer event */
+extern "C" void USIC0_1_IRQHandler(void)
+{
+    static_assert(encoder_t::rx_irq==1, "Receive should be mapped to IRQ1");
+    static_assert(uart::half_duplex(ENC_TXD).UNIT==0, "Invalid unit mapping");
+    encoder->rx_handler();
+}
+
+/* Protocol event */
+extern "C" void USIC0_2_IRQHandler(void)
+{
+    static_assert(encoder_t::p_irq==2, "Protocol should be mapped to IRQ2");
+    static_assert(uart::half_duplex(ENC_TXD).UNIT==0, "Invalid unit mapping");
+    encoder->protocol_handler();
+}

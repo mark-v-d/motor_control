@@ -7,7 +7,7 @@
 #include <atomic>
 #include <complex>
 
-constexpr auto PI=acos(-1);
+constexpr float pi=acos(-1);
 
 #include "hardware.h"
 #include "ethernet.h"
@@ -52,14 +52,7 @@ udp_poker poker __attribute__((section ("ETH_RAM")));
 udp_sync syncer __attribute__((section ("ETH_RAM")));
 
 std::array<int16_t,16> rx_data;
-uint32_t pos;
-float angle;
-int32_t position;
-std::complex<float> Istator;
-std::complex<float> Irotor;
 std::complex<float> Iset;
-std::complex<float> Vrotor;
-std::complex<float> Vstator;
 
 constexpr float current_scale=1.0/400;
 constexpr std::array<std::complex<float>,3> clarke{
@@ -112,6 +105,7 @@ public:
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
+    static_assert(std::get<0>(hr_out).UNIT==0, "Wrong interrupt handler");
     constexpr char data=0x05a;
     copro.tx(data);
 
@@ -145,70 +139,15 @@ extern "C" void CCU80_0_IRQHandler(void)
     constexpr auto C0=current_scale*(clarke[0]-clarke[2]);
     constexpr auto C1=current_scale*(clarke[1]-clarke[2]);
 
-    Istator=C0*float(rx_data[0])+C1*float(rx_data[1]);
+    auto Istator=C0*float(rx_data[0])+C1*float(rx_data[1]);
     auto rotate=std::polar(1.0f, -angle);
-    Irotor=rotate*Istator;
-    Vrotor=Kcurrent.compute(Irotor-Iset);
-    Vstator=conj(rotate)*Vrotor;
+    auto Irotor=rotate*Istator;
+    auto Vrotor=Kcurrent.compute(Irotor-Iset);
+    auto Vstator=conj(rotate)*Vrotor;
     hr_out=space_vector_mapping(Vstator);
 
     std::apply(ccu8::shadow_transfer,hr_out);
     IO0=0;
-}
-
-/* This interrupt is used to trigger the encoder */
-extern "C" void CCU80_1_IRQHandler(void)
-{
-    LED3=0;
-    static_assert(std::get<0>(hr_out).UNIT==0,
-	"Wrong interrupt handler for HB0");
-    encoder->trigger();
-    sleep_counter++;
-    ITM->PORT[9].u32=sleep_counter;
-    LED3=1;
-}
-
-/* This interrupt is used to transfer the data */
-extern "C" void CCU80_3_IRQHandler(void)
-{
-    LED3=0;
-    static_assert(std::get<0>(hr_out).UNIT==0,
-	"Wrong interrupt handler for HB0");
-    LED3=1;
-}
-
-/* Receive interrupt (full-duplex serial) */
-extern "C" void USIC0_0_IRQHandler(void)
-{
-    LED3=0;
-    static_assert(encoder_t::tb_irq==0, "Full duplex should be mapped to IRQ0");
-    //static_assert(usic_ch_ns::unit(ENC_RXD)==0, "Invalid unit mapping");
-    static_assert(uart::half_duplex(ENC_TXD).UNIT==0, "Invalid unit mapping");
-    encoder->tb_handler();
-    LED3=1;
-}
-
-/* Mapped to Frame finished (half-duplex serial) */
-extern "C"
-__attribute__((section(".ram_code")))
-void USIC0_1_IRQHandler(void)
-{
-    LED3=0;
-    static_assert(encoder_t::rx_irq==1, "Half duplex should be mapped to IRQ1");
-    //static_assert(usic_ch_ns::unit(ENC_TXD)==0, "Invalid unit mapping");
-    encoder->rx_handler();
-    LED3=1;
-}
-
-extern "C"
-__attribute__((section(".ram_code")))
-void USIC0_2_IRQHandler(void)
-{
-    LED3=0;
-    static_assert(encoder_t::p_irq==2, "Protocol interrupt be mapped to IRQ2");
-    //static_assert(usic_ch_ns::unit(ENC_TXD)==0, "Invalid unit mapping");
-    encoder->protocol_handler();
-    LED3=1;
 }
 
 extern "C" void VADC0_G0_0_IRQHandler(void)
@@ -218,17 +157,25 @@ extern "C" void VADC0_G0_0_IRQHandler(void)
     LED3=1;
 }
 
+/* Need to modify startup_XMC... for this to work,
+    replace "b ." to "b DefaultHandler"
+*/
+extern "C" void Default_Handler(void)
+{
+    itm.PORT[0].u32=SCB->SHCSR;
+    itm.PORT[1].u32=SCB->CFSR;
+    itm.PORT[1].u32=SCB->BFAR;
+    for(uint8_t i=0;i<10;i++)
+	itm.PORT[0].u8=i; // make sure the frame on the traceport is finished
+    for(;;);
+}
+
 volatile uint32_t counter, led, txd=-1, hrpwm_status;
 volatile int init_enable=0;
 
 void init_adc(void);
 int main()
 {
-    /*
-    eth0.add_udp_receiver(&logger,ntohs(1));
-    eth0.add_udp_receiver(&poker,ntohs(2));
-    eth0.add_udp_receiver(&syncer,ntohs(3));
-    */
     SystemCoreClockUpdate();
     ETH_RESET=1; ETH_RESET.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     ENC_5V=0; ENC_5V.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
@@ -236,6 +183,7 @@ int main()
     ENC_DIR=0; ENC_DIR.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     IO7=0; IO7.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);	// power enable copro
     IO0=0; IO0.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    IO3=0; IO3.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
 
     // Turn traceport on.
     LED0.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
@@ -254,6 +202,11 @@ int main()
 	RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO,
 	&icmp
     );
+    /*
+    eth0.add_udp_receiver(&logger,ntohs(1));
+    eth0.add_udp_receiver(&poker,ntohs(2));
+    eth0.add_udp_receiver(&syncer,ntohs(3));
+    */
 
     FCE->CLC=0; // Enable CRC engine
 
@@ -451,3 +404,5 @@ void init_adc(void)
     NVIC_EnableIRQ(VADC0_G0_0_IRQn);
 #endif
 }
+
+// XMC_ETH_MAC_InitRxDescriptors

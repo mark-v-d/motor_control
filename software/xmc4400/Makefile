@@ -17,8 +17,8 @@ OBJS+=xmc1300_bsl.o xmc_hrpwm.o
 # xmc_eth_mac.o 
 # xmc_eth_phy_ksz8031rnl.o
 
-#LDSCRIPT=./$(DEVICE)x$(MEMORY).ld
-LDSCRIPT=$(DEVICE)x$(MEMORY).ld
+LDSCRIPT=./$(DEVICE)x$(MEMORY).ld
+#LDSCRIPT=$(DEVICE)x$(MEMORY).ld
 
 
 CROSS=arm-none-eabi-

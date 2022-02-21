@@ -111,6 +111,7 @@ uint16_t Ethernet::ReadPhy(uint8_t reg_addr)
 	    return eth.GMII_DATA & ETH_GMII_DATA_MD_Msk;
 	}
     };
+    return 0;
 }
 
 void Ethernet::WritePhy(uint8_t reg_addr, uint16_t data)
@@ -153,7 +154,7 @@ void Ethernet::FinishInit()
 #endif
     XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_ETH0);
 
-    eth.BUS_MODE = (uint32_t)ETH_BUS_MODE_SWR_Msk;
+    eth.BUS_MODE |= (uint32_t)ETH_BUS_MODE_SWR_Msk;
     while ((eth.BUS_MODE & (uint32_t)ETH_BUS_MODE_SWR_Msk) != 0U)
 	;
 
@@ -205,6 +206,7 @@ void Ethernet::FinishInit()
     eth.INTERRUPT_ENABLE=
 	ETH_INTERRUPT_ENABLE_RIE_Msk |	// receive
 	ETH_INTERRUPT_ENABLE_NIE_Msk;
+    //eth.MAC_FRAME_FILTER=(1<<32) | 1;
 
     NVIC_SetPriority(ETH0_0_IRQn,
 	NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 63, 0));
@@ -221,6 +223,8 @@ void Ethernet::receiveIRQ(void)
 {
     // Handle all packets not owned by the ethernet DMA
     while(!(rxd[rx_get].status & descriptor::OWN)) {
+	itm.PORT[1].u32=rxd[rx_get].packetType();
+	itm.PORT[2].u32=rx_get;
 	switch(rxd[rx_get].packetType()) {
 	case descriptor::UDP: {
 	    uint16_t port=rxd[rx_get].buffer->udp.dst_port;
@@ -248,10 +252,13 @@ int Ethernet::transmit(
     txd[bufnum].buffer=static_cast<packet*>(data);
     txd[bufnum].length=size;
     txd[bufnum].txp=tx;
-    txd[bufnum].status=descriptor::OWN | descriptor::IC | descriptor::TX_LS
+    std::atomic_thread_fence(std::memory_order_release);
+    txd[bufnum].status=descriptor::OWN | descriptor::TX_LS
 	| descriptor::TX_FS | descriptor::TTSE | descriptor::CIC
 	| descriptor::TCH;
+    std::atomic_thread_fence(std::memory_order_release);
     eth.TRANSMIT_POLL_DEMAND=0;
+    return 0;
 }
 
 void Ethernet::transmitIRQ(void)
@@ -270,18 +277,21 @@ inline void ETH0_0_IRQHandler(uint32_t event)
 	//pwm.set_timestamp();
     }
     if(event&XMC_ETH_MAC_EVENT_RECEIVE) {
+	itm.PORT[1].u32=1;
 	Ethernet::instance->receiveIRQ();
     }
     if(event&XMC_ETH_MAC_EVENT_TRANSMIT) {
+	itm.PORT[1].u32=2;
 	Ethernet::instance->transmitIRQ();
     }
 }
 
 extern "C" void ETH0_0_IRQHandler(void)
 {
-    LED0=0;
+    IO3=1;
     uint32_t event=eth.STATUS;
+    itm.PORT[0].u32=event;
     ETH0_0_IRQHandler(event);
     eth.STATUS = event;
-    LED0=1;
+    IO3=0;
 }

@@ -70,6 +70,12 @@ static gpio::pin<0,0> COPRO_RXD;
 static gpio::pin<0,1> COPRO_TXD;
 
 static gpio::output<1,1> IO0;
+static gpio::output<1,0> IO1;
+static gpio::output<1,9> IO2;
+static gpio::output<1,8> IO3;
+static gpio::output<1,7> IO4;
+static gpio::output<3,5> IO5;
+static gpio::output<3,4> IO6;
 static gpio::output<3,3> IO7;
 
 /*

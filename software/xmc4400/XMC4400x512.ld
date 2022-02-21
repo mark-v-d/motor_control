@@ -196,6 +196,7 @@ SECTIONS
     __bss_size = __bss_end - __bss_start;
 
     /* Shift location counter, so that ETH_RAM and USB_RAM are located above DSRAM_1_system */    
+    /*__shift_loc =  (__bss_end >= ORIGIN(DSRAM_2_comm)) ? 0 : (ORIGIN(DSRAM_2_comm) - __bss_end); */
     __shift_loc =  (__bss_end >= ORIGIN(DSRAM_1_system)) ? 0 : (ORIGIN(DSRAM_1_system) - __bss_end);
 
     USB_RAM  (__bss_end + __shift_loc) (NOLOAD) :
