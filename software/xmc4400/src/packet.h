@@ -1,9 +1,10 @@
 #include <algorithm>
 #include <arpa/inet.h>
+#include <array>
 
 struct __attribute__ ((__packed__)) ethernet_t {
-    uint8_t dst_mac[6];
-    uint8_t src_mac[6];
+    std::array<uint8_t,6> dst_mac;
+    std::array<uint8_t,6> src_mac;
     uint16_t type;
 
 };
@@ -14,17 +15,32 @@ struct __attribute__ ((__packed__)) ipv4_header_t {
     uint8_t services;
     uint16_t length;
     uint16_t id;
-    uint16_t flags_fragment_offset; 
+    uint16_t flags_fragment_offset;
     uint8_t ttl;
     uint8_t protocol;
     uint16_t ipv4_checksum;
-    uint8_t src_ip[4];
-    uint8_t dst_ip[4];
+    std::array<uint8_t,4> src_ip;
+    std::array<uint8_t,4> dst_ip;
+
+    void do_ipv4_checksum(void) {
+	uint8_t *buf=reinterpret_cast<uint8_t*>(this);
+	ipv4_checksum=0;
+	uint32_t c=0;
+	for(int i=0; i<sizeof(*this); i++) {
+	    if(i&1)
+		c+=buf[i]<<8;
+	    else
+		c+=buf[i];
+	}
+	while(c>>16)
+	    c=(c&0xffff)+(c>>16);
+	ipv4_checksum=(~c);
+    }
 };
 
 struct __attribute__ ((__packed__)) ipv4_t:
-    public ethernet_t, 
-    public ipv4_header_t 
+    public ethernet_t,
+    public ipv4_header_t
 {
 };
 
@@ -42,14 +58,28 @@ struct __attribute__ ((__packed__)) icmp_echo_t:public icmp_t {
 };
 
 struct __attribute__ ((__packed__)) icmp_unreachable_t:public icmp_t {
-    ipv4_header_t ipv4; 
+    ipv4_header_t ipv4;
 };
 
 struct __attribute__ ((__packed__)) udp_header_t {
     uint16_t src_port;
     uint16_t dst_port;
     uint16_t udp_length;
-    uint16_t checksum;
+    uint16_t checksum=0;
+    void do_udp_checksum(void) {
+	uint8_t *buf=reinterpret_cast<uint8_t*>(this);
+	checksum=0;
+	uint32_t c=0;
+	for(int i=0; i<sizeof(*this); i++) {
+	    if(i&1)
+		c+=buf[i]<<8;
+	    else
+		c+=buf[i];
+	}
+	while(c>>16)
+	    c=(c&0xffff)+(c>>16);
+	checksum=(~c);
+    }
 };
 
 struct __attribute__ ((__packed__)) udp_t:public ipv4_t, public udp_header_t {
@@ -82,7 +112,7 @@ struct __attribute__ ((__packed__)) ptp_v2_t:public udp_t {
     uint8_t	grandmasterClockAccuracy;
     uint16_t	grandmasterClockVariance;
     uint8_t	priority2;
-    uint8_t	grandmasterClockIdentity[8]; 
+    uint8_t	grandmasterClockIdentity[8];
     uint8_t	localStepsRemoved[2];	// not aligned
     uint8_t	timeSource;
 };
