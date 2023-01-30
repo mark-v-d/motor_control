@@ -15,6 +15,8 @@
 #include <net/if.h>
 #include <netinet/ether.h>
 
+#include <sys/io.h>
+
 #include <limits.h>
 #include <sched.h>
 #include <pthread.h>
@@ -60,7 +62,7 @@ std::ostream &operator<<(std::ostream &s, sync_t d) {
     return s;
 }
 
-std::array<sync_t,15> table;
+std::array<sync_t,45000> table;
 
 struct ifreq if_idx;
 struct ifreq if_mac;
@@ -73,6 +75,13 @@ void *rt_thread(void *data)
 	perror("clock_gettime");
 	return NULL;
     }
+    uint16_t base=0xec00;
+
+
+    if(ioperm(base, 8, 1)) {
+	perror("request_region failed\n");
+	return NULL;
+    }
 
     for(auto &x:table) {
 	struct timespec timestamp;
@@ -80,6 +89,7 @@ void *rt_thread(void *data)
 	    perror("clock_gettime");
 	    return NULL;
 	}
+	outb(0xff,base);
 	struct __attribute__ ((__packed__)) sync_t:public udp_t {
 	    uint32_t now_sec;
 	    uint32_t now_nsec;
@@ -90,7 +100,7 @@ void *rt_thread(void *data)
 	pkt.now_sec=x.timestamp.tv_sec;
 	pkt.now_nsec=x.timestamp.tv_nsec;
 
-	ts.tv_nsec+=222000;
+	ts.tv_nsec+=222222;
 	while(ts.tv_nsec>=1'000'000'000) {
 	    ts.tv_sec++;
 	    ts.tv_nsec-=1'000'000'000;
@@ -144,6 +154,7 @@ void *rt_thread(void *data)
 	    return NULL;
 	}
 
+	outb(0,base);
 	clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, nullptr);
 
 	struct  __attribute__ ((__packed__)) rx_sync_t:public udp_t {
