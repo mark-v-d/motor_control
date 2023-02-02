@@ -160,7 +160,7 @@ void *rt_thread(void *data)
 	struct  __attribute__ ((__packed__)) rx_sync_t:public udp_t {
 	    ::sync_t::sync_response data;
 	} buffer;
-        ssize_t r=recvfrom(rxs, &buffer, sizeof(buffer), MSG_DONTWAIT,
+        x.rx_size=recvfrom(rxs, &buffer, sizeof(buffer), MSG_DONTWAIT,
             NULL, NULL);
 	if(clock_gettime(CLOCK_MONOTONIC, &timestamp)) {
 	    perror("clock_gettime");
@@ -169,7 +169,7 @@ void *rt_thread(void *data)
 	int dt=timestamp.tv_nsec-x.timestamp.tv_nsec;
 	dt+=1'000'000'000*(timestamp.tv_sec-x.timestamp.tv_sec);
 	x.dt=dt;
-	if(r==66) {
+	if(x.rx_size==66) {
 	    x.data=buffer.data;
 	}
 
