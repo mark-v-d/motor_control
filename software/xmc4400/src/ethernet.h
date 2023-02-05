@@ -227,17 +227,11 @@ void Ethernet::init(
     mdo.set(ethernet::MDIO_out(mdo));
 
 
-    rxd0.set(XMC_GPIO_MODE_INPUT_TRISTATE);
-    rxd1.set(XMC_GPIO_MODE_INPUT_TRISTATE);
-    clk_rmii.set(XMC_GPIO_MODE_INPUT_TRISTATE);
-    crs_dv.set(XMC_GPIO_MODE_INPUT_TRISTATE);
-    rxer.set(XMC_GPIO_MODE_INPUT_TRISTATE);
-
-    rxd0.input_enable();
-    rxd1.input_enable();
-    clk_rmii.input_enable();
-    crs_dv.input_enable();
-    rxer.input_enable();
+    auto make_input=[](auto ...x) {
+	(x.set(XMC_GPIO_MODE_INPUT_TRISTATE), ...);
+	(x.input_enable(), ...);
+    };
+    make_input(rxd0, rxd1, clk_rmii, crs_dv, rxer);
 
     ETH0_CON->CON=
 	bitfield<ETH_CON_RXD0_Msk>(ethernet::RXD0(rxd0)) |

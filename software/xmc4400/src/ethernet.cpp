@@ -249,6 +249,7 @@ int Ethernet::transmit(
     size_t size
 ) {
     int bufnum=tx_put++;
+    //  FIXME, properly acquire buffer, which may fail.
     txd[bufnum].buffer=static_cast<packet*>(data);
     txd[bufnum].length=size;
     txd[bufnum].txp=tx;
@@ -274,7 +275,7 @@ void Ethernet::erase_udp_transmitter(Transmitter *tx,int16_t port)
 inline void ETH0_0_IRQHandler(uint32_t event)
 {
     if(eth.TIMESTAMP_STATUS&0x2) {
-	//pwm.set_timestamp();
+	set_timestamp();
     }
     if(event&XMC_ETH_MAC_EVENT_RECEIVE) {
 	itm.PORT[1].u32=1;
