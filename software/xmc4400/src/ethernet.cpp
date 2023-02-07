@@ -208,8 +208,7 @@ void Ethernet::FinishInit()
 	ETH_INTERRUPT_ENABLE_NIE_Msk;
     //eth.MAC_FRAME_FILTER=(1<<32) | 1;
 
-    NVIC_SetPriority(ETH0_0_IRQn,
-	NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 63, 0));
+    NVIC_SetPriority(ETH0_0_IRQn, 0);
     NVIC_ClearPendingIRQ(ETH0_0_IRQn);
     NVIC_EnableIRQ(ETH0_0_IRQn);
 
@@ -275,7 +274,7 @@ void Ethernet::erase_udp_transmitter(Transmitter *tx,int16_t port)
 inline void ETH0_0_IRQHandler(uint32_t event)
 {
     if(eth.TIMESTAMP_STATUS&0x2) {
-	set_timestamp();
+	//set_timestamp();
     }
     if(event&XMC_ETH_MAC_EVENT_RECEIVE) {
 	itm.PORT[1].u32=1;

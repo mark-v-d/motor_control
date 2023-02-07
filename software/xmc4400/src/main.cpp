@@ -36,6 +36,8 @@ std::tuple hr_out{
     hrpwm0::half_bridge(HBH2_HR,HBL2_HR)
 };
 
+constexpr ccu8::resolution_t pwm_time=1.0s/18000;
+
 uart::full_duplex copro(COPRO_TXD,COPRO_RXD);
 
 std::atomic<uint32_t> sleep_counter(0);
@@ -103,17 +105,61 @@ public:
     }
 } Kcurrent;
 
+
+static volatile int subsample;
+
+struct ethernet_pll_t {
+    int32_t error;
+    float Kp=2e-3;
+    float Ki=1e-4;
+    float integrator=0;
+    float setpoint=2.5f*pwm_time.count();
+    float measured;
+    uint32_t old_target_s;
+    uint32_t old_target_ns;
+
+    static constexpr float integrator_limit=10;
+
+    void compute(int subsample) {
+	auto [now_s, now_ns]=eth0.system_time();
+	auto [target_s, target_ns]=eth0.target_time();
+	if(old_target_s==target_s && old_target_ns==target_ns)
+	    return;
+	error=1'000'000'000*(target_s-now_s)+(target_ns-now_ns)
+	    +(subsample-2)*pwm_time/1ns;
+	itm.PORT[8].u32=error;
+	integrator+=Ki*error;
+	if(integrator>integrator_limit)
+	    integrator=integrator_limit;
+	else if(integrator<-integrator_limit)
+	    integrator=-integrator_limit;
+	ccu8::resolution_t t(Kp*error+integrator);
+	t+=pwm_time;
+	itm.PORT[9].u32=t.count();
+	std::apply([=](auto ...x) { (x.period(t),...);}, hr_out);
+	old_target_s=target_s;
+	old_target_ns=target_ns;
+    }
+} pll;
+
+uint32_t get_timestamp()
+{
+    return pll.error;
+}
+
+
 extern "C" void CCU80_0_IRQHandler(void)
 {
     static_assert(std::get<0>(hr_out).UNIT==0, "Wrong interrupt handler");
     constexpr char data=0x05a;
     copro.tx(data);
+    pll.compute(subsample);
 
-    static int subsample;
     if(++subsample>3) {
 	IO0=1;
 	encoder->trigger();
 	subsample=0;
+
     }
 
     FCE_KE2->CFG=0;
@@ -196,6 +242,13 @@ int main()
     LED3.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
     LED4.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
     LED4.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    tpi.CSPSR=8;
+    tpi.SPPR=0;
+    tpi.FFCR=0;
+    dwt.CTRL=0x40010001;
+    itm.LAR=0xC5ACCE55;
+    itm.TCR=0x0001000d;
+    itm.TER=0xffffffff;
 
     eth0.init( // Hangt zonder ethernet kabel
 	0,
@@ -205,8 +258,9 @@ int main()
     /*
     eth0.add_udp_receiver(&logger,ntohs(1));
     eth0.add_udp_receiver(&poker,ntohs(2));
-    eth0.add_udp_receiver(&syncer,ntohs(3));
     */
+    syncer.TimestampInit();
+    eth0.add_udp_receiver(&syncer,ntohs(3));
 
     FCE->CLC=0; // Enable CRC engine
 
@@ -232,7 +286,7 @@ int main()
 
     std::apply([](auto& ... hr) {
 	(hr.init(1,1), ...);
-	(hr.period(1s/18000.0f), ...);
+	(hr.period(pwm_time), ...);
 	(hr.deadtime(100ns, 100ns), ...);
 	(hr.shadow_transfer_mode(ccu8::TRANSFER_PERIOD), ...);
 	((hr=0.25f), ...);

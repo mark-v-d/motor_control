@@ -177,6 +177,13 @@ public:
 	    memcpy(src_ip,s,sizeof(src_ip));
     }
 
+    auto system_time() {
+	return std::tuple(eth.SYSTEM_TIME_SECONDS,eth.SYSTEM_TIME_NANOSECONDS);
+    }
+    auto target_time() {
+	return std::tuple(eth.TARGET_TIME_SECONDS,eth.TARGET_TIME_NANOSECONDS);
+    }
+
 private:
     void FinishInit();
     void SetManagmentClockDivider(void);

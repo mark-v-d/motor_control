@@ -84,7 +84,9 @@ public:
     static constexpr int OUTPUT=0; // ccu8 output
     static constexpr int UNIT=0; // ccu8 unit
 
-    constexpr half_bridge(HIGH h, LOW l) {
+    constexpr half_bridge() {
+	HIGH h{};
+	LOW l{};
 	static_assert(std::is_same<out<HIGH::PORT,HIGH::PIN>, HIGH>::value,
 	    "Pin must be a hrpwm0::out");
 	static_assert(std::is_same<out<LOW::PORT,LOW::PIN>, LOW>::value,
@@ -93,6 +95,8 @@ public:
 	    "Pins should belong to the same SLICE"
 	);
     }
+
+    constexpr half_bridge(HIGH h, LOW l):half_bridge() { }
 
     auto operator ->(void) {
 	static all_registers_t<UNIT,SLICE,OUTPUT> x;
@@ -138,6 +142,10 @@ public:
 	hrc[SLICE].SCR2=factor*(1.0f-b)-0.5f;
 	return i;
     }
+    /* Met dithering,  (pagina 2198)
+	PRS_pseudo=PRS+DCV/16
+	timing iedere pwm cycle aanpassen?
+    */
 };
 
 
