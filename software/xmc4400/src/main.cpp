@@ -113,27 +113,27 @@ struct ethernet_pll_t {
     float Kp=2e-3;
     float Ki=1e-4;
     float integrator=0;
-    float setpoint=2.5f*pwm_time.count();
-    float measured;
+    uint32_t setpoint=2;
     uint32_t old_target_s;
     uint32_t old_target_ns;
-
-    static constexpr float integrator_limit=10;
+    ccu8::resolution_t limit=1us;
+    int sub=2;
 
     void compute(int subsample) {
 	auto [now_s, now_ns]=eth0.system_time();
 	auto [target_s, target_ns]=eth0.target_time();
-	if(old_target_s==target_s && old_target_ns==target_ns)
+
+	if(subsample!=sub ||
+	   old_target_s==target_s && old_target_ns==target_ns)
 	    return;
-	error=1'000'000'000*(target_s-now_s)+(target_ns-now_ns)
-	    +(subsample-2)*pwm_time/1ns;
+	error=1'000'000'000*(target_s-now_s)+(target_ns-now_ns);
 	itm.PORT[8].u32=error;
-	integrator+=Ki*error;
-	if(integrator>integrator_limit)
-	    integrator=integrator_limit;
-	else if(integrator<-integrator_limit)
-	    integrator=-integrator_limit;
 	ccu8::resolution_t t(Kp*error+integrator);
+	integrator+=Ki*error;
+	auto old_t=t;
+	t=std::min(limit,std::max(-limit,t));
+	integrator+=(t-old_t)/1ns*Ki/Kp;
+	itm.PORT[10].f=integrator;
 	t+=pwm_time;
 	itm.PORT[9].u32=t.count();
 	std::apply([=](auto ...x) { (x.period(t),...);}, hr_out);
@@ -154,12 +154,12 @@ extern "C" void CCU80_0_IRQHandler(void)
     constexpr char data=0x05a;
     copro.tx(data);
     pll.compute(subsample);
+    itm.PORT[1].u8=subsample;
 
     if(++subsample>3) {
 	IO0=1;
 	encoder->trigger();
 	subsample=0;
-
     }
 
     FCE_KE2->CFG=0;
