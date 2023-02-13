@@ -208,7 +208,7 @@ void Ethernet::FinishInit()
 	ETH_INTERRUPT_ENABLE_NIE_Msk;
     //eth.MAC_FRAME_FILTER=(1<<32) | 1;
 
-    NVIC_SetPriority(ETH0_0_IRQn, 0);
+    NVIC_SetPriority(ETH0_0_IRQn, 10);
     NVIC_ClearPendingIRQ(ETH0_0_IRQn);
     NVIC_EnableIRQ(ETH0_0_IRQn);
 

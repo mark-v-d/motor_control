@@ -44,7 +44,7 @@ void udp_sync::Received(Ethernet *p_eth, Ethernet::descriptor const &desc)
     control.raw=eth.TIMESTAMP_CONTROL;
 
     // Schedule synchronisation event
-    constexpr int pre_trigger=10'000; // timestamp 50us before rx packet
+    constexpr int pre_trigger=40'000; // timestamp 40us before rx packet
     if(p->rx_nanoseconds>=pre_trigger) {
 	eth.TARGET_TIME_SECONDS=p->rx_seconds;
 	eth.TARGET_TIME_NANOSECONDS=p->rx_nanoseconds-pre_trigger;

@@ -14,8 +14,8 @@ constexpr float pi=acos(-1);
 #include "icmp.h"
 #include "ccu4.h"
 #include "ccu8.h"
-#include "udp_logger.h"
-#include "udp_poker.h"
+//#include "udp_logger.h"
+//#include "udp_poker.h"
 #include "udp_sync.h"
 #include "bitfields.h"
 #include "encoder.h"
@@ -46,11 +46,11 @@ icmpProcessing icmp;
 
 Ethernet eth0;
 
-udp_logger::input_t in;
-udp_logger::output_t out;
+//udp_logger::input_t in;
+//udp_logger::output_t out;
 
-udp_logger logger __attribute__((section ("ETH_RAM"))) (&in);
-udp_poker poker __attribute__((section ("ETH_RAM")));
+//udp_logger logger __attribute__((section ("ETH_RAM"))) (&in);
+//udp_poker poker __attribute__((section ("ETH_RAM")));
 udp_sync syncer __attribute__((section ("ETH_RAM")));
 
 std::array<int16_t,16> rx_data;
@@ -108,17 +108,18 @@ public:
 
 static volatile int subsample;
 
-struct ethernet_pll_t {
+class ethernet_pll_t {
+    static constexpr float Kp=2e-3;
+    static constexpr float Ki=1e-4;
+    static constexpr uint32_t setpoint=2;
+    static constexpr ccu8::resolution_t limit=1us;
     int32_t error;
-    float Kp=2e-3;
-    float Ki=1e-4;
     float integrator=0;
-    uint32_t setpoint=2;
     uint32_t old_target_s;
     uint32_t old_target_ns;
-    ccu8::resolution_t limit=1us;
-    int sub=2;
+    int sub=1;
 
+public:
     void compute(int subsample) {
 	auto [now_s, now_ns]=eth0.system_time();
 	auto [target_s, target_ns]=eth0.target_time();
@@ -140,11 +141,13 @@ struct ethernet_pll_t {
 	old_target_s=target_s;
 	old_target_ns=target_ns;
     }
+
+    int32_t timestamp() { return error; }
 } pll;
 
 uint32_t get_timestamp()
 {
-    return pll.error;
+    return pll.timestamp();
 }
 
 

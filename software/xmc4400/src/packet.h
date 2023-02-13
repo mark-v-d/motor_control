@@ -1,3 +1,6 @@
+#ifndef PACKET_H
+#define PACKET_H
+
 #include <algorithm>
 #include <arpa/inet.h>
 
@@ -14,7 +17,7 @@ struct __attribute__ ((__packed__)) ipv4_header_t {
     uint8_t services;
     uint16_t length;
     uint16_t id;
-    uint16_t flags_fragment_offset; 
+    uint16_t flags_fragment_offset;
     uint8_t ttl;
     uint8_t protocol;
     uint16_t ipv4_checksum;
@@ -23,8 +26,8 @@ struct __attribute__ ((__packed__)) ipv4_header_t {
 };
 
 struct __attribute__ ((__packed__)) ipv4_t:
-    public ethernet_t, 
-    public ipv4_header_t 
+    public ethernet_t,
+    public ipv4_header_t
 {
 };
 
@@ -42,7 +45,7 @@ struct __attribute__ ((__packed__)) icmp_echo_t:public icmp_t {
 };
 
 struct __attribute__ ((__packed__)) icmp_unreachable_t:public icmp_t {
-    ipv4_header_t ipv4; 
+    ipv4_header_t ipv4;
 };
 
 struct __attribute__ ((__packed__)) udp_header_t {
@@ -82,7 +85,7 @@ struct __attribute__ ((__packed__)) ptp_v2_t:public udp_t {
     uint8_t	grandmasterClockAccuracy;
     uint16_t	grandmasterClockVariance;
     uint8_t	priority2;
-    uint8_t	grandmasterClockIdentity[8]; 
+    uint8_t	grandmasterClockIdentity[8];
     uint8_t	localStepsRemoved[2];	// not aligned
     uint8_t	timeSource;
 };
@@ -109,3 +112,5 @@ inline uint16_t hton(uint16_t i)
 {
     return (i>>8)|(i<<8);
 }
+
+#endif
