@@ -91,8 +91,8 @@ void udp_sync::Received(Ethernet *p_eth, Ethernet::descriptor const &desc)
 	pkt.src_port=desc.buffer->udp.dst_port;
 
 	// Set packet destination
-	memcpy(pkt.dst_mac,p->src_mac,sizeof(pkt.dst_mac));
-	memcpy(pkt.dst_ip,p->src_ip,sizeof(pkt.dst_ip));
+	pkt.dst_mac=p->src_mac;
+	pkt.dst_ip=p->src_ip;
 	pkt.dst_port=p->src_port;
 	pkt.type=p->type;
 

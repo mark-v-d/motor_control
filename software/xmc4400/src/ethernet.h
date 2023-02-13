@@ -128,7 +128,7 @@ public:
     std::map<uint16_t,Transmitter*> udp_tx;
 
 private:
-    uint8_t src_ip[4];
+    std::array<uint8_t,4> src_ip;
 
     static Ethernet *instance;
     friend void ETH0_0_IRQHandler(uint32_t event);
@@ -172,9 +172,9 @@ public:
 
     void set_saddr(ethernet_t *p);
     void set_saddr(ipv4_t *p);
-    void set_ipv4_address(uint8_t s[4]) {
+    void set_ipv4_address(std::array<uint8_t,4> s) {
 	if(src_ip[3]==0 && s[3]!=255)
-	    memcpy(src_ip,s,sizeof(src_ip));
+	    src_ip=s;
     }
 
     auto system_time() {
@@ -254,8 +254,9 @@ void Ethernet::init(
 
 inline void Ethernet::set_saddr(ethernet_t *p)
 {
-    // memcpy(p->dst_mac,p->src_mac,sizeof(p->dst_mac));
-    memcpy(p->src_mac,g_chipid,sizeof(p->src_mac));
+    for(int i=0;i<p->src_mac.size(); i++)
+	p->src_mac[i]=g_chipid[i];
+
     p->src_mac[0]&=~1;
     p->src_mac[0]|=2;
 }
@@ -263,7 +264,7 @@ inline void Ethernet::set_saddr(ethernet_t *p)
 inline void Ethernet::set_saddr(ipv4_t *p)
 {
     set_saddr((ethernet_t*)p);
-    memcpy(p->src_ip,src_ip,sizeof(src_ip));
+    p->src_ip=src_ip;
 }
 
 #endif
