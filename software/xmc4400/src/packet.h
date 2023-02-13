@@ -9,7 +9,6 @@ struct __attribute__ ((__packed__)) ethernet_t {
     std::array<uint8_t,6> dst_mac;
     std::array<uint8_t,6> src_mac;
     uint16_t type;
-
 };
 
 struct __attribute__ ((__packed__)) ipv4_header_t {
@@ -68,8 +67,9 @@ struct __attribute__ ((__packed__)) udp_header_t {
     uint16_t src_port;
     uint16_t dst_port;
     uint16_t udp_length;
-    uint16_t checksum=0;
+    uint16_t checksum;
     void do_udp_checksum(void) {
+	checksum=0;
 	uint8_t *buf=reinterpret_cast<uint8_t*>(this);
 	checksum=0;
 	uint32_t c=0;
