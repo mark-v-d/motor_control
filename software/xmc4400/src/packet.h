@@ -1,3 +1,6 @@
+#ifndef PACKET_H
+#define PACKET_H
+
 #include <algorithm>
 #include <arpa/inet.h>
 #include <array>
@@ -139,3 +142,5 @@ inline uint16_t hton(uint16_t i)
 {
     return (i>>8)|(i<<8);
 }
+
+#endif

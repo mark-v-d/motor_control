@@ -36,11 +36,6 @@ void udp_sync::TimestampInit(void)
     eth.TIMESTAMP_CONTROL=control.raw;
 }
 
-udp_sync::udp_sync(void)
-{
-    TimestampInit();
-}
-
 void udp_sync::Received(Ethernet *p_eth, Ethernet::descriptor const &desc)
 {
     sync_t *p=reinterpret_cast<sync_t*>(desc.buffer);
@@ -49,7 +44,7 @@ void udp_sync::Received(Ethernet *p_eth, Ethernet::descriptor const &desc)
     control.raw=eth.TIMESTAMP_CONTROL;
 
     // Schedule synchronisation event
-    constexpr int pre_trigger=0;
+    constexpr int pre_trigger=40'000; // timestamp 40us before rx packet
     if(p->rx_nanoseconds>=pre_trigger) {
 	eth.TARGET_TIME_SECONDS=p->rx_seconds;
 	eth.TARGET_TIME_NANOSECONDS=p->rx_nanoseconds-pre_trigger;
@@ -57,27 +52,32 @@ void udp_sync::Received(Ethernet *p_eth, Ethernet::descriptor const &desc)
 	eth.TARGET_TIME_SECONDS=p->rx_seconds-1;
 	eth.TARGET_TIME_NANOSECONDS=p->rx_nanoseconds+1'000'000'000-pre_trigger;
     }
-    control.tstrig=1;
+    //control.tstrig=1;
 
+    float error=0;
     if(!(control.tsinit | control.tsupdt | control.tsaddreg)) {
 	// When ready update the ADDEND register
 	int32_t d_sec=p->tx_seconds-desc.seconds;
 	int32_t d_nsec=(p->tx_nanoseconds>desc.nanoseconds)?
 	    p->tx_nanoseconds-desc.nanoseconds
 	    :-int32_t(desc.nanoseconds-p->tx_nanoseconds);
-	float error=d_sec+1e-9F*d_nsec;
+	error=d_sec+1e-9F*d_nsec;
+	itm.PORT[4].f=error;
 	if(fabs(error)>1e-3) {
 	    // If the error exceeds 1ms, reset the time
-	    eth.SYSTEM_TIME_SECONDS_UPDATE=error;
-	    eth.SYSTEM_TIME_NANOSECONDS_UPDATE=fmodf(error,1.0F)*1e9;
+	    eth.SYSTEM_TIME_SECONDS_UPDATE=d_sec;
+	    eth.SYSTEM_TIME_NANOSECONDS_UPDATE=d_nsec;
 	    control.tsupdt=1;
 	    integrator=0;
 	} else {
 	    // Usually the time is kept up-to-date using a PI controller
 	    integrator+=error*kI;
-	    eth.TIMESTAMP_ADDEND=addend+integrator+kP*error;
+	    auto t=addend+integrator+kP*error;
+	    eth.TIMESTAMP_ADDEND=t;
+	    itm.PORT[6].f=t;
 	    control.tsaddreg=1;
 	}
+	itm.PORT[5].f=integrator;
     }
 
     eth.TIMESTAMP_CONTROL=control.raw;
@@ -102,7 +102,8 @@ void udp_sync::Received(Ethernet *p_eth, Ethernet::descriptor const &desc)
 	pkt.tx_nanoseconds=p->tx_nanoseconds;
 	pkt.rx_seconds=desc.seconds;
 	pkt.rx_nanoseconds=desc.nanoseconds;
-	//pkt.timer=pwm.get_timestamp();
+	pkt.integrator=error;
+	pkt.timer=get_timestamp();
 	transmit(p_eth);
     }
 }

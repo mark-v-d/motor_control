@@ -68,7 +68,7 @@ mitsubishi_MFS13_t::mitsubishi_MFS13_t(void)
     uart::fifo_configure<0,16>(hd);
 
     hd.enable_protocol_interrupt<p_irq>();
-    NVIC_SetPriority(hd.irq<p_irq>(), 0);
+    NVIC_SetPriority(hd.irq<p_irq>(), 20);
     NVIC_EnableIRQ(hd.irq<p_irq>());
 }
 
@@ -179,7 +179,7 @@ mitsubishi_PQ_t::mitsubishi_PQ_t(void)
     uart::fifo_configure<0,16>(hd);
 
     fd.enable_protocol_interrupt<p_irq>();
-    NVIC_SetPriority(fd.irq<p_irq>(), 10);
+    NVIC_SetPriority(fd.irq<p_irq>(), 20);
     NVIC_EnableIRQ(fd.irq<p_irq>());
 }
 

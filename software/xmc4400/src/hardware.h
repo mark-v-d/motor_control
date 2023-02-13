@@ -22,6 +22,9 @@ inline void sleep(T time)
 	;
 }
 
+void set_timestamp();
+uint32_t get_timestamp();
+
 #include "gpio.h"
 
 static gpio::output<3,6> LED0; // TRACED3

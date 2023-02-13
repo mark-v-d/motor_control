@@ -31,20 +31,20 @@ VPATH+=$(XMCLIB)/CMSIS/Infineon/COMPONENT_$(DEVICE)/Source/
 VPATH+=$(XMCLIB)/CMSIS/Infineon/COMPONENT_$(DEVICE)/Source/TOOLCHAIN_GCC_ARM/
 VPATH+=$(XMCLIB)/XMCLib/src/
 
-CPPFLAGS+=-g -I ../include -I ./include
+CPPFLAGS+=-g -I ../include -I ./include 
 CPPFLAGS+=-I $(XMCLIB)/CMSIS/Infineon/COMPONENT_$(DEVICE)/Include/
 CPPFLAGS+=-I $(XMCLIB)/XMCLib/inc/
 CPPFLAGS+=-I $(XMCLIB)/CMSIS/Core/Include/
-CPPFLAGS+=-I src  
+CPPFLAGS+=-I src   
 CPPFLAGS+=-DCLOCK_CRYSTAL_FREQUENCY=12000000
 CPPFLAGS+=-DFREQUENCY=120000000
 CPPFLAGS+=-D $(DEVICE)_$(PACKAGE)x$(MEMORY) 
 #CPPFLAGS+=-D UC_ID -D OSCHP_FREQUENCY=12000000
 
-CPU = -g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16
+CPU = -g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -gdwarf-4
 
 CFLAGS   += $(CPU)
-CXXFLAGS += $(CPU) -std=c++2a -O2
+CXXFLAGS += $(CPU) -std=c++2a -O2 -Wno-volatile 
 ASFLAGS  += $(CPU)
 LDFLAGS  += $(CPU)
 
