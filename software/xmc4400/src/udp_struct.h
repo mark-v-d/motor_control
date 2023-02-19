@@ -1,3 +1,5 @@
+#ifndef UDP_STRUCT_H
+#define UDP_STRUCT_H
 #include "ethernet.h"
 
 template <typename rx_t, typename tx_t>
@@ -11,6 +13,7 @@ class udp_struct:public Ethernet::Transmitter, public Ethernet::Receiver {
     } pkt;
 
     rx_t data;
+    uint32_t seconds, nanoseconds;
 public:
     rx_t *operator->() { return &data; }
 
@@ -19,6 +22,8 @@ public:
 	Ethernet::descriptor const &desc
     ) override {
 	pkt_in_t *p=reinterpret_cast<pkt_in_t*>(desc.buffer);
+	auto [s, ns]=eth->system_time();
+	seconds=s; nanoseconds=ns;
 
 	eth->set_ipv4_address(p->dst_ip);
 
@@ -66,4 +71,14 @@ public:
 	eth->erase_udp_transmitter(this,pkt.dst_port);
 	pkt.length=0;
     }
+
+    std::chrono::duration<float> age(Ethernet *eth) {
+	using namespace std::chrono_literals;
+	auto [now, now_ns]=eth->system_time();
+	float dt=1e-9f*int32_t(now_ns-nanoseconds);
+	dt+=now-seconds;
+	return dt*1s;
+    }
 };
+
+#endif

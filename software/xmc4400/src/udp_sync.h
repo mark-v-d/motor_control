@@ -5,8 +5,8 @@
 #include "drive_packet.h"
 
 class udp_sync:public Ethernet::Transmitter, public Ethernet::Receiver {
-    float kP=5e10;
-    float kI=1e7;
+    static constexpr float kP=5e10;
+    static constexpr float kI=1e7;
     uint32_t addend;
     float integrator;
 

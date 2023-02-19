@@ -19,6 +19,17 @@ namespace sync_ns {
 }
 
 namespace motion_ns {
+    struct  __attribute__ ((__packed__)) to_host {
+	int32_t position;
+	float angle;
+	int32_t valid;
+	float Irotor[2];
+	float Vrotor[2];
+    };
+
+    struct  __attribute__ ((__packed__)) to_drive {
+	float Iset[2];
+    };
 };
 
 #endif

@@ -19,7 +19,6 @@ constexpr float pi=acos(-1);
 #include "bitfields.h"
 #include "encoder.h"
 #include <arpa/inet.h>
-#include "../include/drive_packet.h"
 
 #include "bsl.h"
 using namespace std::complex_literals;
@@ -47,7 +46,7 @@ icmpProcessing icmp;
 Ethernet eth0;
 
 udp_sync syncer __attribute__((section ("ETH_RAM")));
-udp_struct<interface::to_drive,interface::from_drive> drive_io __attribute__((section ("ETH_RAM")));
+udp_struct<motion_ns::to_drive,motion_ns::to_host> drive_io __attribute__((section ("ETH_RAM")));
 
 std::array<int16_t,16> rx_data;
 std::complex<float> Iset;
@@ -201,13 +200,17 @@ extern "C" void CCU80_0_IRQHandler(void)
     auto Vstator=conj(rotate)*Vrotor;
     hr_out=space_vector_mapping(Vstator);
 
-    interface::from_drive report;
-    report.position=position;
-    report.angle=angle;
-    report.valid=valid;
-    report.Irotor[0]=real(Irotor);
-    report.Vrotor[0]=real(Vrotor);
-    drive_io.transmit(&eth0,report);
+    if(drive_io.age(&eth0)<10ms) {
+	motion_ns::to_host report;
+	report.position=position;
+	report.angle=angle;
+	report.valid=valid;
+	report.Irotor[0]=real(Irotor);
+	report.Vrotor[0]=real(Vrotor);
+	drive_io.transmit(&eth0,report);
+    } else {
+	drive_io->Iset[0]=drive_io->Iset[1]=0;
+    }
 
     std::apply(ccu8::shadow_transfer,hr_out);
     IO0=0;
