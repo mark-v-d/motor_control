@@ -20,7 +20,7 @@ CPPFLAGS+=-I $(XMCLIB)/XMCLib/inc/
 CPPFLAGS+=-D FREQUENCY=32000000
 CPPFLAGS+=-D $(DEVICE)
 
-CPU = -g -mthumb -mcpu=cortex-m0
+CPU = -g -mthumb -mcpu=cortex-m0 -gdwarf-4
 
 CFLAGS   += $(CPU)
 CXXFLAGS += $(CPU) -std=c++2a -O3

@@ -165,7 +165,7 @@ enum edge_t {
     EDGE_BOTH=3
 };
 
-auto shadow_transfer=[](auto& ...x)
+inline auto shadow_transfer=[](auto& ...x)
 {
     if(uint32_t gcss=((x.UNIT==0 ? (1<<(4*x.SLICE)):0) | ...))
 	dev[0].GCSS=gcss;
@@ -173,7 +173,7 @@ auto shadow_transfer=[](auto& ...x)
 	dev[1].GCSS=gcss;
 };
 
-auto start=[](auto& ... x)
+inline auto start=[](auto& ... x)
 {
     if(uint32_t ccu80_gidlc=((x.UNIT==0 ? (1<<x.SLICE):0) | ...))
 	dev[0].GIDLC=ccu80_gidlc | CCU8_GIDLC_SPRB_Msk;

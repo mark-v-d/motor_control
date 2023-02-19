@@ -12,6 +12,8 @@ class udp_sync:public Ethernet::Transmitter, public Ethernet::Receiver {
 
     using sync_t=sync_ns::to_drive;
     sync_t pkt;
+    uint32_t last_s;
+    uint32_t last_ns;
 public:
     udp_sync(void) {}
     virtual void Transmitted(Ethernet*,Ethernet::descriptor const&);
@@ -20,7 +22,16 @@ public:
 
     void transmit(Ethernet *eth);
     void TimestampInit(void);
-private:
+    bool locked(Ethernet *eth) {
+	auto [now_s, now_ns]=eth->system_time();
+	uint32_t dt_s=now_s-last_s;
+	if(dt_s>1)
+	    return 0;
+	int32_t dt_ns=now_ns-last_ns;
+	if(dt_ns<0)
+	    dt_ns+=1'000'000'000;
+	return dt_ns<1'000'000;	// 1ms timeout
+    }
 };
 
 inline void udp_sync::transmit(Ethernet *eth)

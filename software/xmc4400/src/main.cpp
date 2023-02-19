@@ -14,12 +14,12 @@ constexpr float pi=acos(-1);
 #include "icmp.h"
 #include "ccu4.h"
 #include "ccu8.h"
-//#include "udp_logger.h"
-//#include "udp_poker.h"
+#include "udp_struct.h"
 #include "udp_sync.h"
 #include "bitfields.h"
 #include "encoder.h"
 #include <arpa/inet.h>
+#include "../include/drive_packet.h"
 
 #include "bsl.h"
 using namespace std::complex_literals;
@@ -46,12 +46,8 @@ icmpProcessing icmp;
 
 Ethernet eth0;
 
-//udp_logger::input_t in;
-//udp_logger::output_t out;
-
-//udp_logger logger __attribute__((section ("ETH_RAM"))) (&in);
-//udp_poker poker __attribute__((section ("ETH_RAM")));
 udp_sync syncer __attribute__((section ("ETH_RAM")));
+udp_struct<interface::to_drive,interface::from_drive> drive_io __attribute__((section ("ETH_RAM")));
 
 std::array<int16_t,16> rx_data;
 std::complex<float> Iset;
@@ -118,11 +114,16 @@ class ethernet_pll_t {
     uint32_t old_target_s;
     uint32_t old_target_ns;
     int sub=1;
+    uint32_t unlocked=100;
 
 public:
     void compute(int subsample) {
 	auto [now_s, now_ns]=eth0.system_time();
 	auto [target_s, target_ns]=eth0.target_time();
+	if(!syncer.locked(&eth0)) {
+	    unlocked=100;
+	    return;
+	}
 
 	if(subsample!=sub ||
 	   old_target_s==target_s && old_target_ns==target_ns)
@@ -140,16 +141,18 @@ public:
 	std::apply([=](auto ...x) { (x.period(t),...);}, hr_out);
 	old_target_s=target_s;
 	old_target_ns=target_ns;
+	if(unlocked && (error<1000 || error>-1000))
+	    unlocked--;
     }
 
     int32_t timestamp() { return error; }
+    bool locked() { return !unlocked; }
 } pll;
 
 uint32_t get_timestamp()
 {
     return pll.timestamp();
 }
-
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
@@ -181,6 +184,9 @@ extern "C" void CCU80_0_IRQHandler(void)
 	}
     }
 
+    itm.PORT[2].u8=syncer.locked(&eth0);
+    itm.PORT[3].u8=pll.locked();
+
     rx_data[0]-=2047;
     rx_data[1]-=2047;
 
@@ -191,9 +197,17 @@ extern "C" void CCU80_0_IRQHandler(void)
     auto Istator=C0*float(rx_data[0])+C1*float(rx_data[1]);
     auto rotate=std::polar(1.0f, -angle);
     auto Irotor=rotate*Istator;
-    auto Vrotor=Kcurrent.compute(Irotor-Iset);
+    auto Vrotor=Kcurrent.compute(Irotor-(drive_io->Iset[0]+1if*drive_io->Iset[1]));
     auto Vstator=conj(rotate)*Vrotor;
     hr_out=space_vector_mapping(Vstator);
+
+    interface::from_drive report;
+    report.position=position;
+    report.angle=angle;
+    report.valid=valid;
+    report.Irotor[0]=real(Irotor);
+    report.Vrotor[0]=real(Vrotor);
+    drive_io.transmit(&eth0,report);
 
     std::apply(ccu8::shadow_transfer,hr_out);
     IO0=0;
@@ -259,10 +273,10 @@ int main()
 	&icmp
     );
     /*
-    eth0.add_udp_receiver(&logger,ntohs(1));
     eth0.add_udp_receiver(&poker,ntohs(2));
     */
     syncer.TimestampInit();
+    eth0.add_udp_receiver(&drive_io,ntohs(1));
     eth0.add_udp_receiver(&syncer,ntohs(3));
 
     FCE->CLC=0; // Enable CRC engine
