@@ -22,8 +22,8 @@ public:
 	Ethernet::descriptor const &desc
     ) override {
 	pkt_in_t *p=reinterpret_cast<pkt_in_t*>(desc.buffer);
-	auto [s, ns]=eth->system_time();
-	seconds=s; nanoseconds=ns;
+	seconds=desc.seconds;
+	nanoseconds=desc.nanoseconds;
 
 	eth->set_ipv4_address(p->dst_ip);
 

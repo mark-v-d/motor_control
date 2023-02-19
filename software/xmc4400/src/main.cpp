@@ -200,7 +200,8 @@ extern "C" void CCU80_0_IRQHandler(void)
     auto Vstator=conj(rotate)*Vrotor;
     hr_out=space_vector_mapping(Vstator);
 
-    if(drive_io.age(&eth0)<10ms) {
+    if(drive_io->new_data) {
+	drive_io->new_data=0;
 	motion_ns::to_host report;
 	report.position=position;
 	report.angle=angle;
@@ -208,7 +209,7 @@ extern "C" void CCU80_0_IRQHandler(void)
 	report.Irotor[0]=real(Irotor);
 	report.Vrotor[0]=real(Vrotor);
 	drive_io.transmit(&eth0,report);
-    } else {
+    } else if(drive_io.age(&eth0)>10ms) {
 	drive_io->Iset[0]=drive_io->Iset[1]=0;
     }
 

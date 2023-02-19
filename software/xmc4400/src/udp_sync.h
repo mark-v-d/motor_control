@@ -10,7 +10,9 @@ class udp_sync:public Ethernet::Transmitter, public Ethernet::Receiver {
     uint32_t addend;
     float integrator;
 
-    using sync_t=sync_ns::to_drive;
+    class __attribute__ ((__packed__)) sync_t:
+	public udp_t, public sync_ns::to_drive {
+    };
     sync_t pkt;
     uint32_t last_s;
     uint32_t last_ns;
