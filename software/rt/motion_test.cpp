@@ -22,7 +22,9 @@ constexpr std::array<uint8_t,6> dst_mac{0xc2, 0x00, 0x86, 0x05, 0x10, 0xc0};
 constexpr std::array<uint8_t,4> dst_ip{192,168,0,6};
 constexpr uint16_t sync_port=3;
 
-struct __attribute__ ((__packed__)) sync_send_t:public udp_t, public sync_ns::to_drive {
+struct __attribute__ ((__packed__)) sync_send_t:
+    public udp_t, public sync_ns::to_drive
+{
     template <class T>
     sync_send_t(struct timespec now, timespec next, T const &skt) {
 	tx_seconds=now.tv_sec;
@@ -54,6 +56,9 @@ struct __attribute__ ((__packed__)) sync_send_t:public udp_t, public sync_ns::to
     }
 };
 
+struct sync_recv_t:public udp_t, public sync_ns::to_host {
+};
+
 struct sync_t:public sync_ns::to_host {
     timespec timestamp;
     size_t rx_size;
@@ -68,8 +73,9 @@ std::ostream &operator<<(std::ostream &s, sync_t d) {
     return s;
 }
 
-raw_socket skt("eth2");
 std::array<sync_t,10*4500> table;
+
+raw_socket skt("eth2");
 
 void *rt_thread(void *data)
 {
@@ -88,7 +94,7 @@ void *rt_thread(void *data)
     ssize_t rx_size;
     union rx_types {
 	udp_t udp;
-	sync_ns::to_host sync;
+	sync_recv_t sync;
 	char txt[1024];
     } buffer;
     for(auto &x:table) {
@@ -114,8 +120,8 @@ void *rt_thread(void *data)
 	do{
 	    rx_size=recvfrom(skt.socket(),
 		&buffer, sizeof(buffer), MSG_DONTWAIT, NULL, NULL);
-	    if(buffer.udp.src_port==3 && rx_size==sizeof(buffer.sync)) {
-		x=static_cast<decltype(x)>(buffer.sync);
+	    if(buffer.udp.src_port==htons(3) && rx_size==sizeof(buffer.sync)) {
+		static_cast<sync_ns::to_host&>(x)=static_cast<sync_ns::to_host>(buffer.sync);
 	    }
 	} while(rx_size>0);
 

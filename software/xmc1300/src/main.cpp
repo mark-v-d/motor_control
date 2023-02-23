@@ -2,6 +2,7 @@
 #include "vadc.h"
 #include "ccu4.h"
 #include "crc.h"
+#include <array>
 
 using namespace std::chrono_literals;
 

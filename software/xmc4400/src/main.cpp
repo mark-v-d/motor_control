@@ -125,7 +125,7 @@ public:
 	}
 
 	if(subsample!=sub ||
-	   old_target_s==target_s && old_target_ns==target_ns)
+	   (old_target_s==target_s && old_target_ns==target_ns))
 	    return;
 	error=1'000'000'000*(target_s-now_s)+(target_ns-now_ns);
 	itm.PORT[8].u32=error;

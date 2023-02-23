@@ -27,9 +27,11 @@ public:
     bool locked(Ethernet *eth) {
 	auto [now_s, now_ns]=eth->system_time();
 	uint32_t dt_s=now_s-last_s;
+	itm.PORT[30].u32=dt_s;
 	if(dt_s>1)
 	    return 0;
 	int32_t dt_ns=now_ns-last_ns;
+	itm.PORT[31].u32=dt_ns;
 	if(dt_ns<0)
 	    dt_ns+=1'000'000'000;
 	return dt_ns<1'000'000;	// 1ms timeout

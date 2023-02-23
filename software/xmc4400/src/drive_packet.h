@@ -9,7 +9,7 @@ namespace sync_ns {
 	uint32_t tx_nanoseconds;
 	uint32_t rx_seconds;
 	uint32_t rx_nanoseconds;
-	uint32_t timer;
+	int32_t timer;
 	float integrator;
     };
 
