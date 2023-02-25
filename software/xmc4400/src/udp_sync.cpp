@@ -42,8 +42,7 @@ void udp_sync::Received(Ethernet *p_eth, Ethernet::descriptor const &desc)
 
     eth_ns::timestamp_control_t control;
     control.raw=eth.TIMESTAMP_CONTROL;
-    last_s=desc.seconds;
-    last_ns=desc.nanoseconds;
+    last={desc.seconds,desc.nanoseconds};
 
     // Schedule synchronisation event
     constexpr int pre_trigger=40'000; // timestamp 40us before rx packet
@@ -56,25 +55,25 @@ void udp_sync::Received(Ethernet *p_eth, Ethernet::descriptor const &desc)
     }
     //control.tstrig=1;
 
-    float error=0;
+    float err=0;
     if(!(control.tsinit | control.tsupdt | control.tsaddreg)) {
 	// When ready update the ADDEND register
 	int32_t d_sec=p->tx_seconds-desc.seconds;
 	int32_t d_nsec=(p->tx_nanoseconds>desc.nanoseconds)?
 	    p->tx_nanoseconds-desc.nanoseconds
 	    :-int32_t(desc.nanoseconds-p->tx_nanoseconds);
-	error=d_sec+1e-9F*d_nsec;
-	itm.PORT[4].f=error;
-	if(fabs(error)>1e-3) {
-	    // If the error exceeds 1ms, reset the time
+	err=d_sec+1e-9F*d_nsec;
+	itm.PORT[4].f=err;
+	if(fabs(err)>1e-3) {
+	    // If the err exceeds 1ms, reset the time
 	    eth.SYSTEM_TIME_SECONDS_UPDATE=d_sec;
 	    eth.SYSTEM_TIME_NANOSECONDS_UPDATE=d_nsec;
 	    control.tsupdt=1;
 	    integrator=0;
 	} else {
 	    // Usually the time is kept up-to-date using a PI controller
-	    integrator+=error*kI;
-	    auto t=addend+integrator+kP*error;
+	    integrator+=err*kI;
+	    auto t=addend+integrator+kP*err;
 	    eth.TIMESTAMP_ADDEND=t;
 	    itm.PORT[6].f=t;
 	    control.tsaddreg=1;
@@ -104,8 +103,8 @@ void udp_sync::Received(Ethernet *p_eth, Ethernet::descriptor const &desc)
 	pkt.tx_nanoseconds=p->tx_nanoseconds;
 	pkt.rx_seconds=desc.seconds;
 	pkt.rx_nanoseconds=desc.nanoseconds;
-	pkt.integrator=error;
-	pkt.timer=get_timestamp();
+	pkt.integrator=err;
+	pkt.timer=error/1ns;
 	transmit(p_eth);
     }
 }

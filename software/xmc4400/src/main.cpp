@@ -103,62 +103,16 @@ public:
 
 static volatile int subsample;
 
-class ethernet_pll_t {
-    static constexpr float Kp=2e-3;
-    static constexpr float Ki=1e-4;
-    static constexpr uint32_t setpoint=2;
-    static constexpr ccu8::resolution_t limit=1us;
-    int32_t error;
-    float integrator=0;
-    uint32_t old_target_s;
-    uint32_t old_target_ns;
-    int sub=1;
-    uint32_t unlocked=100;
-
-public:
-    void compute(int subsample) {
-	auto [now_s, now_ns]=eth0.system_time();
-	auto [target_s, target_ns]=eth0.target_time();
-	if(!syncer.locked(&eth0)) {
-	    unlocked=100;
-	    return;
-	}
-
-	if(subsample!=sub ||
-	   (old_target_s==target_s && old_target_ns==target_ns))
-	    return;
-	error=1'000'000'000*(target_s-now_s)+(target_ns-now_ns);
-	itm.PORT[8].u32=error;
-	ccu8::resolution_t t(Kp*error+integrator);
-	integrator+=Ki*error;
-	auto old_t=t;
-	t=std::min(limit,std::max(-limit,t));
-	integrator+=(t-old_t)/1ns*Ki/Kp;
-	itm.PORT[10].f=integrator;
-	t+=pwm_time;
-	itm.PORT[9].u32=t.count();
-	std::apply([=](auto ...x) { (x.period(t),...);}, hr_out);
-	old_target_s=target_s;
-	old_target_ns=target_ns;
-	if(unlocked && (error<1000 || error>-1000))
-	    unlocked--;
-    }
-
-    int32_t timestamp() { return error; }
-    bool locked() { return !unlocked; }
-} pll;
-
-uint32_t get_timestamp()
-{
-    return pll.timestamp();
-}
-
 extern "C" void CCU80_0_IRQHandler(void)
 {
     static_assert(std::get<0>(hr_out).UNIT==0, "Wrong interrupt handler");
     constexpr char data=0x05a;
     copro.tx(data);
-    pll.compute(subsample);
+    if(subsample==1) {
+	auto t=syncer.sync(&eth0,1us,2e-3,1e-4);
+	if(t!=0s)
+	    std::apply([=](auto ...x) { (x.period(t+pwm_time),...);}, hr_out);
+    }
     itm.PORT[1].u8=subsample;
 
     if(++subsample>3) {
@@ -184,7 +138,6 @@ extern "C" void CCU80_0_IRQHandler(void)
     }
 
     itm.PORT[2].u8=syncer.locked(&eth0);
-    itm.PORT[3].u8=pll.locked();
 
     rx_data[0]-=2047;
     rx_data[1]-=2047;
