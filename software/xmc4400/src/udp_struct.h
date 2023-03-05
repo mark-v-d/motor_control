@@ -13,7 +13,7 @@ class udp_struct:public Ethernet::Transmitter, public Ethernet::Receiver {
     } pkt;
 
     rx_t data;
-    uint32_t seconds, nanoseconds;
+    Ethernet::timestamp_t timestamp;
 public:
     rx_t *operator->() { return &data; }
 
@@ -22,8 +22,7 @@ public:
 	Ethernet::descriptor const &desc
     ) override {
 	pkt_in_t *p=reinterpret_cast<pkt_in_t*>(desc.buffer);
-	seconds=desc.seconds;
-	nanoseconds=desc.nanoseconds;
+	timestamp={desc.seconds, desc.nanoseconds};
 
 	eth->set_ipv4_address(p->dst_ip);
 
@@ -72,12 +71,9 @@ public:
 	pkt.length=0;
     }
 
-    std::chrono::duration<float> age(Ethernet *eth) {
+    auto age(Ethernet *eth) {
 	using namespace std::chrono_literals;
-	auto [now, now_ns]=eth->system_time();
-	float dt=1e-9f*int32_t(now_ns-nanoseconds);
-	dt+=now-seconds;
-	return dt*1s;
+	return eth->system_time()-timestamp;
     }
 };
 

@@ -17,10 +17,13 @@
 #include "drive_packet.h"
 
 #include <iostream>
+#include <complex>
+using namespace std::complex_literals;
 
 constexpr std::array<uint8_t,6> dst_mac{0xc2, 0x00, 0x86, 0x05, 0x10, 0xc0};
 constexpr std::array<uint8_t,4> dst_ip{192,168,0,6};
 constexpr uint16_t sync_port=3;
+constexpr uint16_t motion_port=2;
 
 struct __attribute__ ((__packed__)) sync_send_t:
     public udp_t, public sync_ns::to_drive
@@ -59,21 +62,64 @@ struct __attribute__ ((__packed__)) sync_send_t:
 struct sync_recv_t:public udp_t, public sync_ns::to_host {
 };
 
-struct sync_t:public sync_ns::to_host {
+struct sync_t:public sync_ns::to_host, public motion_ns::to_host {
     timespec timestamp;
-    size_t rx_size;
 };
 
 std::ostream &operator<<(std::ostream &s, sync_t d) {
-    s << d.timestamp.tv_sec << " " << d.timestamp.tv_nsec << " " << d.rx_size
+    s << d.timestamp.tv_sec << " " << d.timestamp.tv_nsec
 	<< " " << d.tx_seconds << " " << d.tx_nanoseconds
 	<< " " << d.rx_seconds << " " << d.rx_nanoseconds
 	<< " " << d.timer << " " << d.integrator
+	<< " " << d.position
+	<< " " << d.angle
+	<< " " << d.valid
+	<< " " << d.Irotor[0]
+	<< " " << d.Irotor[1]
+	<< " " << d.Vrotor[0]
+	<< " " << d.Vrotor[1]
 	;
     return s;
 }
 
-std::array<sync_t,10*4500> table;
+struct motion_recv_t:public udp_t, public motion_ns::to_host {
+};
+
+struct __attribute__ ((__packed__)) motion_send_t:
+    public udp_t, public motion_ns::to_drive
+{
+    template <class T>
+    motion_send_t(T const &skt,std::complex<float> I) {
+	new_data++; new_data|=0x80000000;
+	Iset[0]=I.real();
+	Iset[1]=I.imag();
+
+	dst_mac=::dst_mac;
+	dst_ip=::dst_ip;
+	dst_port=htons(motion_port);
+
+	src_mac=skt.src_mac;
+	src_ip=skt.src_ip;
+	type=htons(ETH_P_IP);
+
+	src_port=htons(49896);
+	id=0xb3a3;
+
+	version_headerlength=0x45;	// IPv4
+	services=0;
+	checksum=0;
+	flags_fragment_offset=0x40;	// Don't fragment
+	ttl=64;
+	protocol=ipv4_header_t::UDP;
+
+	length=hton(sizeof(*this)-sizeof(ethernet_t));
+	udp_length=hton(sizeof(*this)-sizeof(ipv4_t));
+	do_ipv4_checksum();
+    }
+};
+
+
+std::array<sync_t,1*4500> table;
 
 raw_socket skt("eth2");
 
@@ -95,6 +141,7 @@ void *rt_thread(void *data)
     union rx_types {
 	udp_t udp;
 	sync_recv_t sync;
+	motion_recv_t motion;
 	char txt[1024];
     } buffer;
     for(auto &x:table) {
@@ -112,6 +159,9 @@ void *rt_thread(void *data)
 
 	sync_send_t pkt(x.timestamp, ts, skt);
 	skt.send(pkt);
+	std::complex<float> I=1.0if;
+	motion_send_t mp(skt,I);
+	skt.send(mp);
 
 	outb(0,base);
 	clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, nullptr);
@@ -120,8 +170,16 @@ void *rt_thread(void *data)
 	do{
 	    rx_size=recvfrom(skt.socket(),
 		&buffer, sizeof(buffer), MSG_DONTWAIT, NULL, NULL);
-	    if(buffer.udp.src_port==htons(3) && rx_size==sizeof(buffer.sync)) {
-		static_cast<sync_ns::to_host&>(x)=static_cast<sync_ns::to_host>(buffer.sync);
+	    if(buffer.udp.src_port==htons(sync_port)
+		&& rx_size==sizeof(buffer.sync)
+	    ) {
+		static_cast<sync_ns::to_host&>(x)=
+		    static_cast<sync_ns::to_host>(buffer.sync);
+	    } else if(buffer.udp.src_port==htons(motion_port)
+		&& rx_size==sizeof(buffer.motion)
+	    ) {
+		static_cast<motion_ns::to_host&>(x)=
+		    static_cast<motion_ns::to_host>(buffer.motion);
 	    }
 	} while(rx_size>0);
 

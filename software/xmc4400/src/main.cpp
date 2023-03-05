@@ -46,7 +46,8 @@ icmpProcessing icmp;
 Ethernet eth0;
 
 udp_sync syncer __attribute__((section ("ETH_RAM")));
-udp_struct<motion_ns::to_drive,motion_ns::to_host> drive_io __attribute__((section ("ETH_RAM")));
+udp_struct<motion_ns::to_drive,motion_ns::to_host> drive_io
+    __attribute__((section ("ETH_RAM")));
 
 std::array<int16_t,16> rx_data;
 std::complex<float> Iset;
@@ -137,30 +138,34 @@ extern "C" void CCU80_0_IRQHandler(void)
 	}
     }
 
-    itm.PORT[2].u8=syncer.locked(&eth0);
+    std::complex<float> setpoint=0;
+    if(syncer.locked(&eth0) && drive_io.age(&eth0)<2ms)
+	setpoint=drive_io->Iset[0]+1if*drive_io->Iset[1];
 
     rx_data[0]-=2047;
     rx_data[1]-=2047;
 
     auto [position, angle, valid]=encoder->get_pav();
+    motion_ns::to_host report;
+    report.position=position;
+    report.angle=angle;
+    report.valid=valid;
     constexpr auto C0=current_scale*(clarke[0]-clarke[2]);
     constexpr auto C1=current_scale*(clarke[1]-clarke[2]);
 
     auto Istator=C0*float(rx_data[0])+C1*float(rx_data[1]);
     auto rotate=std::polar(1.0f, -angle);
     auto Irotor=rotate*Istator;
-    auto Vrotor=Kcurrent.compute(Irotor-(drive_io->Iset[0]+1if*drive_io->Iset[1]));
+    auto Vrotor=Kcurrent.compute(Irotor-setpoint);
     auto Vstator=conj(rotate)*Vrotor;
     hr_out=space_vector_mapping(Vstator);
 
     if(drive_io->new_data) {
 	drive_io->new_data=0;
-	motion_ns::to_host report;
-	report.position=position;
-	report.angle=angle;
-	report.valid=valid;
 	report.Irotor[0]=real(Irotor);
+	report.Irotor[1]=imag(Irotor);
 	report.Vrotor[0]=real(Vrotor);
+	report.Vrotor[1]=imag(Vrotor);
 	drive_io.transmit(&eth0,report);
     } else if(drive_io.age(&eth0)>10ms) {
 	drive_io->Iset[0]=drive_io->Iset[1]=0;
@@ -233,7 +238,7 @@ int main()
     eth0.add_udp_receiver(&poker,ntohs(2));
     */
     syncer.TimestampInit();
-    eth0.add_udp_receiver(&drive_io,ntohs(1));
+    eth0.add_udp_receiver(&drive_io,ntohs(2));
     eth0.add_udp_receiver(&syncer,ntohs(3));
 
     FCE->CLC=0; // Enable CRC engine
