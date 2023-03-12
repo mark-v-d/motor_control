@@ -114,10 +114,6 @@ inline void UngateClock(XMC_SCU_PERIPHERAL_CLOCK const &clock)
 
     Can't debug with xmc1301 anyway
 ******************************************************************************/
-struct POSIF_PADDED_t:public POSIF_GLOBAL_TypeDef {
-  __I  uint32_t  RESERVED6[4031];
-};
-
 struct VADC_complete_t:public VADC_GLOBAL_TypeDef
 {
     __I uint32_t RESERVED5[3];
@@ -146,7 +142,6 @@ extern XMC_USIC_CH_t u0c0;
 extern XMC_USIC_CH_t u0c1;
 extern XMC_USIC_CH_t u1c0;
 extern XMC_USIC_CH_t u1c1;
-extern POSIF_PADDED_t posif[2];
 extern VADC_complete_t vadc;
 extern CCU4_complete_t ccu40;
 extern CCU4_complete_t ccu41;

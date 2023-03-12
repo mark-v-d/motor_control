@@ -178,7 +178,7 @@ enum level_t {
     LEVEL_LOW=1
 };
 
-auto shadow_transfer=[](auto& ...x)
+inline auto shadow_transfer=[](auto& ...x)
 {
     if(uint32_t gcss=((x.UNIT==0 ? (1<<(4*x.SLICE)):0) | ...))
 	dev[0].GCSS=gcss;
@@ -186,7 +186,7 @@ auto shadow_transfer=[](auto& ...x)
 	dev[1].GCSS=gcss;
 };
 
-auto start=[](auto& ... x)
+inline auto start=[](auto& ... x)
 {
     // FIXME, create combined CCU4/CCU8 start
     if(uint32_t ccu40_gidlc=((x.UNIT==0 ? (1<<x.SLICE):0) | ...))
@@ -215,6 +215,7 @@ class slice_t {
 public:
     static constexpr int UNIT=UNIT_PAR;
     static constexpr int SLICE=SLICE_PAR;
+    static constexpr auto &cc=dev[UNIT].cc[SLICE];
     CCU4_CC4_TypeDef *operator->(void) { return &dev[UNIT].cc[SLICE]; }
 
 #if UC_FAMILY == XMC4
@@ -257,8 +258,12 @@ public:
 	cc.TCCLR=CCU4_CC4_TCCLR_TRBC_Msk | CCU4_CC4_TCCLR_TCC_Msk;
     }
 
-    template <int EVENT, int PORT, int PIN>
-    void set_event(gpio::pin<PORT,PIN> pin,edge_t edge,
+    void start() {
+	cc.TCSET=CCU4_CC4_TCSET_TRBS_Msk;
+    }
+
+    template <int EVENT>
+    void set_event(int event,edge_t edge,
 	level_t level=LEVEL_HIGH, int low_pass=0
     ) {
 	static_assert(0<=EVENT && EVENT<=2, "Only events 0,1,2 exist");
@@ -268,11 +273,18 @@ public:
 	constexpr uint32_t level_mask=(CCU4_CC4_INS_EV0LM_Msk<<(EVENT));
 	constexpr uint32_t lowpass_mask=(CCU4_CC4_INS_LPF0M_Msk<<(2*EVENT));
 	ins&=~(input_mask | edge_mask | level_mask | lowpass_mask);
-	ins|=bitfield<input_mask>(get_event<UNIT,SLICE>(pin))
+	ins|=bitfield<input_mask>(event)
 	    | bitfield<edge_mask>(edge)
 	    | bitfield<level_mask>(level)
 	    | bitfield<lowpass_mask>(low_pass);
 	dev[UNIT].cc[SLICE].INS=ins;
+    }
+
+    template <int EVENT, int PORT, int PIN>
+    void set_event(gpio::pin<PORT,PIN> pin,edge_t edge,
+	level_t level=LEVEL_HIGH, int low_pass=0
+    ) {
+	set_event<EVENT>(get_event<UNIT,SLICE>(pin),edge,level,low_pass);
     }
 
     template <int EVENT>

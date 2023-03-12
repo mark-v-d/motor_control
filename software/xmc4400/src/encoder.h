@@ -25,6 +25,7 @@ public:
 };
 
 extern polymorphic_t<encoder_t,1024> encoder;
+extern polymorphic_t<encoder_t,1024> encoder2;
 
 void init_encoder(void);
 

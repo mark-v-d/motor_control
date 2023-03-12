@@ -12,7 +12,7 @@ constexpr float pi=acos(-1);
 #include "hardware.h"
 #include "ethernet.h"
 #include "icmp.h"
-#include "ccu4.h"
+//#include "ccu4.h"
 #include "ccu8.h"
 #include "udp_struct.h"
 #include "udp_sync.h"
