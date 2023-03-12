@@ -13,6 +13,8 @@
 uart::full_duplex fd(ENC_TXD,ENC_RXD);
 uart::half_duplex hd(ENC_TXD);
 
+#include "posif.h"
+
 constexpr auto PI=acos(-1);
 
 /*******************************************************************************
@@ -38,6 +40,7 @@ dummy_encoder_t::dummy_encoder_t(void)
 }
 
 decltype(encoder) encoder=decltype(encoder)::make<dummy_encoder_t>();
+decltype(encoder2) encoder2=decltype(encoder2)::make<dummy_encoder_t>();
 
 #if 0
 /* HC-MFS13-S13 motor *********************************************************/
@@ -223,6 +226,12 @@ void mitsubishi_PQ_t::protocol_handler(void)
     }
     NVIC_ClearPendingIRQ(fd.irq<p_irq>());
 }
+////////////////////////////////////////////////////////////////////////////////
+// Encoder 2
+////////////////////////////////////////////////////////////////////////////////
+#include "posif.h"
+posif::qdi32_t sino(ENC_A,ENC_B,ENC_Z);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 void init_encoder(void)
@@ -257,3 +266,5 @@ extern "C" void USIC0_2_IRQHandler(void)
     static_assert(uart::half_duplex(ENC_TXD).UNIT==0, "Invalid unit mapping");
     encoder->protocol_handler();
 }
+
+
