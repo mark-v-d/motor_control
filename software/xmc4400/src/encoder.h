@@ -24,8 +24,13 @@ public:
     static constexpr int tb_irq=0;
 };
 
+#include "posif.h"
+#include "hardware.h"
+
+
 extern polymorphic_t<encoder_t,1024> encoder;
-extern polymorphic_t<encoder_t,1024> encoder2;
+
+extern posif::qdi32_t<decltype(ENC_A),decltype(ENC_B),decltype(ENC_Z)> glass_scale;
 
 void init_encoder(void);
 

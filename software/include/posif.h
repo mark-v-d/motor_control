@@ -32,7 +32,7 @@ SPECIALISATION(unit, int, 1, 2, 0);
 SPECIALISATION(unit, int, 1, 3, 0);
 SPECIALISATION(unit, int, 14, 5, 0);	// posif 0B
 SPECIALISATION(unit, int, 14, 6, 0);
-SPECIALISATION(unit, int, 14, 7, 0); 
+SPECIALISATION(unit, int, 14, 7, 0);
 SPECIALISATION(unit, int, 2, 3, 1); 	// posif 1A
 SPECIALISATION(unit, int, 2, 4, 1);
 SPECIALISATION(unit, int, 2, 5, 1);
@@ -85,7 +85,10 @@ public:
     using cnt_h=ccu4::slice_t<UNIT,1>;
     static constexpr POSIF_PADDED_t *module=&dev[UNIT];
 
-    qdi32_t(enc_a A, enc_b B, enc_z Z) {
+    qdi32_t() {
+	enc_a A;
+	enc_b B;
+	enc_z Z;
 	static_assert(unit(A)==unit(B) && unit(A)==unit(Z),
 	    "A,B,Z should be same posif unit");
 #ifdef POSIF1
@@ -106,11 +109,20 @@ public:
 	static_assert(unit(A)==0, "POSIF1 does not exist");
 #endif
     };
+    qdi32_t(enc_a A, enc_b B, enc_z Z):qdi32_t() { }
 
     void init() {
 	enc_a A; A.set(XMC_GPIO_MODE_INPUT_TRISTATE);
-	enc_a B; B.set(XMC_GPIO_MODE_INPUT_TRISTATE);
-	enc_a Z; Z.set(XMC_GPIO_MODE_INPUT_TRISTATE); 
+	enc_b B; B.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+	enc_z Z; Z.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+	XMC_SCU_CLOCK_EnableClock(XMC_SCU_CLOCK_CCU);
+	if(UNIT==0) {
+	XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_POSIF0);
+	XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_POSIF0);
+	} else {
+	XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_POSIF1);
+	XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_POSIF1);
+	}
 
 	module->PCONF=bitfield<POSIF_PCONF_FSEL_Msk>(1)
 	    | bitfield<POSIF_PCONF_INSEL0_Msk>(pinA(A))
@@ -120,20 +132,34 @@ public:
 	module->QDC=bitfield<POSIF_QDC_ICM_Msk>(2);
 	module->PRUNS=1;
 
+	ccu4::init<UNIT>(
+	    XMC_CCU4_CLOCK_SCU,
+	    XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR
+	);
 	using namespace ccu4;
-	ccu4::init<UNIT>();
 	cnt_l l;
-	cnt_h h;
 	l.template set_event<0>(CCU40_IN0_POSIF0_OUT0,EDGE_RISING); // count
 	l.template set_event<1>(CCU40_IN1_POSIF0_OUT1,EDGE_RISING); // up/down
 	l.template set_event<2>(CCU40_IN2_POSIF0_OUT3,EDGE_RISING); // index
 	l->CMC=bitfield<CCU4_CC4_CMC_CNTS_Msk>(1)
 	    | bitfield<CCU4_CC4_CMC_UDS_Msk>(2)
 	    | bitfield<CCU4_CC4_CMC_CAP0S_Msk>(3);
+	l->PRS=0xffff;
 
-	h->CMC=CCU4_CC4_CMC_TCE_Msk;
+	cnt_h h;
+	h.template set_event<0>(CCU40_IN0_POSIF0_OUT0,EDGE_RISING); // count
+	h.template set_event<1>(CCU40_IN1_POSIF0_OUT1,EDGE_RISING); // up/down
+	h.template set_event<2>(CCU40_IN2_POSIF0_OUT3,EDGE_RISING); // index
+	h->CMC=bitfield<CCU4_CC4_CMC_CNTS_Msk>(1)
+	    | bitfield<CCU4_CC4_CMC_UDS_Msk>(2)
+	    | bitfield<CCU4_CC4_CMC_CAP0S_Msk>(3)
+	    | CCU4_CC4_CMC_TCE_Msk;
+	h->PRS=0xffff;
 
 	l.start();
+	h.start();
+
+	shadow_transfer(l,h);
     }
 
     int32_t count() { return cnt_l{}->TIMER | (cnt_h{}->TIMER<<16); }

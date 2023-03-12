@@ -259,6 +259,7 @@ public:
     }
 
     void start() {
+	dev[UNIT].GIDLC=1<<SLICE;
 	cc.TCSET=CCU4_CC4_TCSET_TRBS_Msk;
     }
 

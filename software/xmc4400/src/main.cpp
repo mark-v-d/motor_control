@@ -45,6 +45,7 @@ icmpProcessing icmp;
 
 Ethernet eth0;
 
+
 udp_sync syncer __attribute__((section ("ETH_RAM")));
 udp_struct<motion_ns::to_drive,motion_ns::to_host> drive_io
     __attribute__((section ("ETH_RAM")));
@@ -104,6 +105,11 @@ public:
 
 static volatile int subsample;
 
+struct glass_t {
+    int32_t count;
+    int32_t index;
+} glass;
+
 extern "C" void CCU80_0_IRQHandler(void)
 {
     static_assert(std::get<0>(hr_out).UNIT==0, "Wrong interrupt handler");
@@ -160,12 +166,17 @@ extern "C" void CCU80_0_IRQHandler(void)
     auto Vstator=conj(rotate)*Vrotor;
     hr_out=space_vector_mapping(Vstator);
 
+    glass.count=glass_scale.count();
+    glass.index=glass_scale.index();
+
     if(drive_io->new_data) {
 	drive_io->new_data=0;
 	report.Irotor[0]=real(Irotor);
 	report.Irotor[1]=imag(Irotor);
 	report.Vrotor[0]=real(Vrotor);
 	report.Vrotor[1]=imag(Vrotor);
+	report.glass_counter=glass_scale.count();
+	report.glass_index=glass_scale.index();
 	drive_io.transmit(&eth0,report);
     } else if(drive_io.age(&eth0)>10ms) {
 	drive_io->Iset[0]=drive_io->Iset[1]=0;

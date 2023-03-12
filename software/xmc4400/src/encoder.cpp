@@ -17,6 +17,9 @@ uart::half_duplex hd(ENC_TXD);
 
 constexpr auto PI=acos(-1);
 
+decltype(glass_scale) glass_scale;
+extern posif::qdi32_t<decltype(ENC_A),decltype(ENC_B),decltype(ENC_Z)> glass_scale;
+
 /*******************************************************************************
     Dummy encoder, encoder is initially of this type and it does nothing
     and is never valid.
@@ -40,7 +43,6 @@ dummy_encoder_t::dummy_encoder_t(void)
 }
 
 decltype(encoder) encoder=decltype(encoder)::make<dummy_encoder_t>();
-decltype(encoder2) encoder2=decltype(encoder2)::make<dummy_encoder_t>();
 
 #if 0
 /* HC-MFS13-S13 motor *********************************************************/
@@ -226,17 +228,12 @@ void mitsubishi_PQ_t::protocol_handler(void)
     }
     NVIC_ClearPendingIRQ(fd.irq<p_irq>());
 }
-////////////////////////////////////////////////////////////////////////////////
-// Encoder 2
-////////////////////////////////////////////////////////////////////////////////
-#include "posif.h"
-posif::qdi32_t sino(ENC_A,ENC_B,ENC_Z);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 void init_encoder(void)
 {
     encoder.set<mitsubishi_PQ_t>();
+    glass_scale.init();
 }
 
 /*******************************************************************************
