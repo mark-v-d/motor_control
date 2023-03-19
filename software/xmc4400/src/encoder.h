@@ -16,12 +16,12 @@ public:
 
     virtual void trigger(void)=0;
     virtual void rx_handler(void)=0;
-    virtual void tb_handler(void)=0;
+    virtual void tx_handler(void)=0;
     virtual void protocol_handler(void)=0;
 
     static constexpr int p_irq=2;
     static constexpr int rx_irq=1;
-    static constexpr int tb_irq=0;
+    static constexpr int tx_irq=0;
 };
 
 #include "posif.h"

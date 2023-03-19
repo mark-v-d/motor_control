@@ -110,6 +110,8 @@ struct glass_t {
     int32_t index;
 } glass;
 
+motion_ns::to_host report;
+
 extern "C" void CCU80_0_IRQHandler(void)
 {
     static_assert(std::get<0>(hr_out).UNIT==0, "Wrong interrupt handler");
@@ -152,7 +154,6 @@ extern "C" void CCU80_0_IRQHandler(void)
     rx_data[1]-=2047;
 
     auto [position, angle, valid]=encoder->get_pav();
-    motion_ns::to_host report;
     report.position=position;
     report.angle=angle;
     report.valid=valid;

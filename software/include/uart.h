@@ -387,12 +387,35 @@ public:
     }
 
     template <int num>
-    void enable_protocol_interrupt(void) { // Transmit buffer
+    void enable_protocol_interrupt(void) {
 	auto x=channel->INPR;
 	x&=~USIC_CH_INPR_PINP_Msk;
 	x|=bitfield<USIC_CH_INPR_PINP_Msk>(num);
 	channel->INPR=x;
 	/* PCR ASC, xmc4400 15-66. not used */
+    }
+
+    void disable_protocol_interrupt() {
+	channel->PSCR&=~(USIC_CH_PCR_ASCMode_FFIEN_Msk
+	    | USIC_CH_PCR_ASCMode_SBIEN_Msk
+	    | USIC_CH_PCR_ASCMode_RNIEN_Msk
+	    | USIC_CH_PCR_ASCMode_FEIEN_Msk
+	    | USIC_CH_PCR_ASCMode_FFIEN_Msk
+	);
+
+    }
+
+    template <int num>
+    void enable_transmit_shift_interrupt(void) {
+	auto x=channel->INPR;
+	x&=~USIC_CH_INPR_TSINP_Msk;
+	x|=bitfield<USIC_CH_INPR_TSINP_Msk>(num);
+	channel->INPR=x;
+	channel->CCR|=USIC_CH_CCR_TSIEN_Msk;
+    }
+
+    void disable_transmit_shift_interrupt(int num) {
+	channel->CCR&=~USIC_CH_CCR_TSIEN_Msk;
     }
 
     template <int i>

@@ -127,8 +127,8 @@ public:
 	module->PCONF=bitfield<POSIF_PCONF_FSEL_Msk>(1)
 	    | bitfield<POSIF_PCONF_INSEL0_Msk>(pinA(A))
 	    | bitfield<POSIF_PCONF_INSEL1_Msk>(pinB(B))
-	    | bitfield<POSIF_PCONF_INSEL2_Msk>(pinZ(Z))
-	    | bitfield<POSIF_PCONF_LPC_Msk>(3);
+	    | bitfield<POSIF_PCONF_INSEL2_Msk>(pinZ(Z));
+	    //| bitfield<POSIF_PCONF_LPC_Msk>(3);
 	module->QDC=bitfield<POSIF_QDC_ICM_Msk>(2);
 	module->PRUNS=1;
 
