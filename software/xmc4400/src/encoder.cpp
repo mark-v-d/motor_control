@@ -76,17 +76,7 @@ mitsubishi_MFS13_t::mitsubishi_MFS13_t(void)
     NVIC_SetPriority(hd.irq<tx_irq>(), 0);
     NVIC_EnableIRQ(hd.irq<tx_irq>());
 
-    auto rbctr=hd->RBCTR;
-    rbctr&=~(USIC_CH_RBCTR_LIMIT_Msk
-	| USIC_CH_RBCTR_SRBTM_Msk
-	| USIC_CH_RBCTR_ARBIEN_Msk
-    );
-    rbctr|=USIC_CH_RBCTR_LOF_Msk
-	| USIC_CH_RBCTR_SRBIEN_Msk
-	| bitfield<USIC_CH_RBCTR_SRBINP_Msk>(rx_irq)
-	| bitfield<USIC_CH_RBCTR_LIMIT_Msk>(9);
-    hd->RBCTR=rbctr;
-
+    hd.enable_receive_buffer_interrupt<rx_irq>(9);
     NVIC_SetPriority(hd.irq<rx_irq>(), 20);
     NVIC_EnableIRQ(hd.irq<rx_irq>());
 }
@@ -172,17 +162,7 @@ mitsubishi_PQ_t::mitsubishi_PQ_t(void)
     fd.init(baudrate);
     uart::fifo_configure<0,16>(hd);
 
-    auto rbctr=hd->RBCTR;
-    rbctr&=~(USIC_CH_RBCTR_LIMIT_Msk
-	| USIC_CH_RBCTR_SRBTM_Msk
-	| USIC_CH_RBCTR_ARBIEN_Msk
-    );
-    rbctr|=USIC_CH_RBCTR_LOF_Msk
-	| USIC_CH_RBCTR_SRBIEN_Msk
-	| bitfield<USIC_CH_RBCTR_SRBINP_Msk>(rx_irq)
-	| bitfield<USIC_CH_RBCTR_LIMIT_Msk>(8);
-    hd->RBCTR=rbctr;
-
+    fd.enable_receive_buffer_interrupt<rx_irq>(8);
     NVIC_SetPriority(fd.irq<rx_irq>(), 20);
     NVIC_EnableIRQ(fd.irq<rx_irq>());
 }

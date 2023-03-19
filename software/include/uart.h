@@ -373,6 +373,26 @@ public:
     }
 
     template <int num>
+    void enable_receive_buffer_interrupt(unsigned level)
+    {
+	auto rbctr=channel->RBCTR;
+	rbctr&=~(USIC_CH_RBCTR_LIMIT_Msk
+	    | USIC_CH_RBCTR_SRBTM_Msk
+	    | USIC_CH_RBCTR_ARBIEN_Msk
+	);
+	rbctr|=USIC_CH_RBCTR_LOF_Msk
+	    | USIC_CH_RBCTR_SRBIEN_Msk
+	    | bitfield<USIC_CH_RBCTR_SRBINP_Msk>(num)
+	    | bitfield<USIC_CH_RBCTR_LIMIT_Msk>(level);
+	channel->RBCTR=rbctr;
+    }
+
+    void disable_receive_buffer_interrupt()
+    {
+	channel->RBCTR&=~USIC_CH_RBCTR_SRBIEN_Msk;
+    }
+
+    template <int num>
     void enable_tb_interrupt(void) { // Transmit buffer
 	auto x=channel->INPR;
 	x&=~USIC_CH_INPR_TBINP_Msk;
