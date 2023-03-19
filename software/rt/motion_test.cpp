@@ -119,7 +119,7 @@ struct __attribute__ ((__packed__)) motion_send_t:
 };
 
 
-std::array<sync_t,1*4500> table;
+std::array<sync_t,3*4500> table;
 
 raw_socket skt("eth2");
 

@@ -105,12 +105,9 @@ public:
 
 static volatile int subsample;
 
-struct glass_t {
-    int32_t count;
-    int32_t index;
-} glass;
-
 motion_ns::to_host report;
+std::complex<float> override=0;
+float angle_offset=0;
 
 extern "C" void CCU80_0_IRQHandler(void)
 {
@@ -149,11 +146,14 @@ extern "C" void CCU80_0_IRQHandler(void)
     std::complex<float> setpoint=0;
     if(syncer.locked(&eth0) && drive_io.age(&eth0)<2ms)
 	setpoint=drive_io->Iset[0]+1if*drive_io->Iset[1];
+    if(abs(override)!=0.0f)
+	setpoint=override;
 
     rx_data[0]-=2047;
     rx_data[1]-=2047;
 
     auto [position, angle, valid]=encoder->get_pav();
+    angle+=angle_offset;
     report.position=position;
     report.angle=angle;
     report.valid=valid;
@@ -166,9 +166,6 @@ extern "C" void CCU80_0_IRQHandler(void)
     auto Vrotor=Kcurrent.compute(Irotor-setpoint);
     auto Vstator=conj(rotate)*Vrotor;
     hr_out=space_vector_mapping(Vstator);
-
-    glass.count=glass_scale.count();
-    glass.index=glass_scale.index();
 
     if(drive_io->new_data) {
 	drive_io->new_data=0;
