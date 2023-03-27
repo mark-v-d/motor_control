@@ -35,7 +35,6 @@ std::tuple hr_out{
     hrpwm0::half_bridge(HBH2_HR,HBL2_HR)
 };
 
-constexpr ccu8::resolution_t pwm_time=1.0s/18000;
 
 uart::full_duplex copro(COPRO_TXD,COPRO_RXD);
 
@@ -45,6 +44,10 @@ icmpProcessing icmp;
 
 Ethernet eth0;
 
+uint8_t rx_buffer[16];
+uint8_t tx_buffer[8];
+uint8_t command=0x53;
+uint8_t addr=0x40;
 
 udp_sync syncer __attribute__((section ("ETH_RAM")));
 udp_struct<motion_ns::to_drive,motion_ns::to_host> drive_io
@@ -167,14 +170,14 @@ extern "C" void CCU80_0_IRQHandler(void)
     auto Vstator=conj(rotate)*Vrotor;
     hr_out=space_vector_mapping(Vstator);
 
+    report.Irotor[0]=real(Irotor);
+    report.Irotor[1]=imag(Irotor);
+    report.Vrotor[0]=real(Vrotor);
+    report.Vrotor[1]=imag(Vrotor);
+    report.glass_counter=glass_scale.count();
+    report.glass_index=glass_scale.index();
     if(drive_io->new_data) {
 	drive_io->new_data=0;
-	report.Irotor[0]=real(Irotor);
-	report.Irotor[1]=imag(Irotor);
-	report.Vrotor[0]=real(Vrotor);
-	report.Vrotor[1]=imag(Vrotor);
-	report.glass_counter=glass_scale.count();
-	report.glass_index=glass_scale.index();
 	drive_io.transmit(&eth0,report);
     } else if(drive_io.age(&eth0)>10ms) {
 	drive_io->Iset[0]=drive_io->Iset[1]=0;
@@ -220,6 +223,8 @@ int main()
     IO3=0; IO3.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
 
     // Turn traceport on.
+    TRACECLK.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
+    TRACECLK.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
     LED0.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
     LED0.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
     LED1.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
@@ -228,8 +233,6 @@ int main()
     LED2.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
     LED3.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
     LED3.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
-    LED4.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
-    LED4.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
     tpi.CSPSR=8;
     tpi.SPPR=0;
     tpi.FFCR=0;

@@ -162,8 +162,13 @@ constexpr auto Baudrate2(unsigned rate)
     return std::tuple(num_min,den_min,ovs_min);
 }
 
+struct baud_t {
+    int step, pdiv, dcqt;
+};
+
 constexpr auto Baudrate(unsigned rate)
 {
+    //if(rate==9600) return baud_t{512,625,10};
     uint32_t den=frequency;
     while(rate>0x003fffff) {
 	den/=2;
@@ -172,11 +177,11 @@ constexpr auto Baudrate(unsigned rate)
     uint32_t num=1024UL*rate;
     int ev=0;
 
-    int error_min=num, num_min=0, den_min=0, ovs_min=0;
+    int error_min=num, step=0, pdiv=0, dctq=0;
     for(int factor=num/1024; factor<num; factor++) {
 	auto NUM=num/factor;
 	auto DEN=den/factor;
-	for(int oversampling=DEN>16? 16:DEN; oversampling>=8;oversampling--){
+	for(int oversampling=DEN>32? 32:DEN; oversampling>=8;oversampling--){
 	    auto error=num*(DEN/oversampling)*oversampling-den*NUM;
 	    if(error<0)
 		error=-error;
@@ -186,17 +191,16 @@ constexpr auto Baudrate(unsigned rate)
 		uint32_t brd=accuracy*frequency*NUM/
 		    (1024*(DEN/oversampling)*oversampling)/rate;
 		error_min=error;
-		num_min=NUM;
-		den_min=DEN/oversampling;
-		ovs_min=oversampling;
-		if(!error || (brd>=accuracy-1 && brd<=accuracy+1))
-		    return std::tuple(num_min,den_min,ovs_min);
+		step=NUM;
+		pdiv=DEN/oversampling;
+		dctq=oversampling;
+                if(!error || (brd>=accuracy-1 && brd<=accuracy+1))
+		    return baud_t{.step=step,.pdiv=pdiv,.dcqt=dctq};
 	    }
 	}
     }
-    return std::tuple(num_min,den_min,ovs_min);
+    return baud_t{.step=step,.pdiv=pdiv,.dcqt=dctq};
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Base class for all uart types
@@ -215,17 +219,23 @@ public:
 
     XMC_USIC_CH_t* operator->() const { return channel; }
 
-    inline void SetBaudrate(std::tuple<int,int,int> baud)
+    inline void SetBaudrate(baud_t baud)
     {
 	channel->FDR=XMC_USIC_CH_BRG_CLOCK_DIVIDER_MODE_FRACTIONAL
-	    | bitfield<USIC_CH_FDR_STEP_Msk>(std::get<0>(baud)-1);
+	    | bitfield<USIC_CH_FDR_STEP_Msk>(baud.step-1);
+	auto pdiv=baud.pdiv;
+	if(!(pdiv&1))
+	    pdiv/=2;
 	channel->BRG=
 	    bitfield<USIC_CH_BRG_PCTQ_Msk>(0)
-	    | bitfield<USIC_CH_BRG_PDIV_Msk>(std::get<1>(baud)-1)
-	    | bitfield<USIC_CH_BRG_DCTQ_Msk>(std::get<2>(baud)-1);
+	    | bitfield<USIC_CH_BRG_PDIV_Msk>(pdiv-1)
+	    | bitfield<USIC_CH_BRG_DCTQ_Msk>(baud.dcqt-1)
+	    | bitfield<USIC_CH_BRG_PPPEN_Msk>(~(baud.pdiv&1));
     }
 
-    void init(std::tuple<int,int,int> baud) {
+    void init(baud_t baud,
+	XMC_USIC_CH_PARITY_MODE parity_mode=XMC_USIC_CH_PARITY_MODE_NONE
+    ) {
 	/*
 	TX_PIN{}.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL |dout0(TX_PIN{}).gpio_mode);
 	TX_PIN{}.set(XMC_GPIO_HWCTRL_DISABLED);
@@ -290,7 +300,7 @@ public:
 
 	channel->PCR_ASCMode =
 	    bitfield<USIC_CH_PCR_ASCMode_STPB_Msk>(stop_bits-1)
-	    | bitfield<USIC_CH_PCR_ASCMode_SP_Msk>(std::get<2>(baud)/2+1)
+	    | bitfield<USIC_CH_PCR_ASCMode_SP_Msk>(baud.dcqt/2+1)
 	    | USIC_CH_PCR_ASCMode_SMD_Msk
 	    | USIC_CH_PCR_ASCMode_RSTEN_Msk
 	    | USIC_CH_PCR_ASCMode_TSTEN_Msk;
@@ -477,12 +487,14 @@ public:
 	    "TXD and RXD not on the same channel");
     }
 
-    void init(std::tuple<int,int,int> baud) {
+    void init(baud_t baud,
+	XMC_USIC_CH_PARITY_MODE parity_mode=XMC_USIC_CH_PARITY_MODE_NONE
+    ) {
 	TX_PIN{}.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL |dout0(TX_PIN{}).gpio_mode);
 	TX_PIN{}.set(XMC_GPIO_HWCTRL_DISABLED);
 	RX_PIN{}.set(XMC_GPIO_MODE_INPUT_TRISTATE);
 
-	base::init(baud);
+	base::init(baud,parity_mode);
 
 	XMC_UART_CH_SetInputSource(channel,
 	    XMC_UART_CH_INPUT_RXD,dx<0>(RX_PIN{}));
@@ -501,10 +513,12 @@ public:
     constexpr half_duplex(TX_PIN t) {}
     XMC_USIC_CH_t* operator->() const { return base::channel; }
 
-    void init(std::tuple<int,int,int> baud) {
+    void init(baud_t baud,
+	XMC_USIC_CH_PARITY_MODE parity_mode=XMC_USIC_CH_PARITY_MODE_NONE
+    ) {
 	TX_PIN{}.set(XMC_GPIO_MODE_INPUT_TRISTATE);
 
-	base::init(baud);
+	base::init(baud,parity_mode);
 
 	XMC_UART_CH_SetInputSource(channel,
 	    XMC_UART_CH_INPUT_RXD,dx<0>(TX_PIN{}));

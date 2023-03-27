@@ -75,22 +75,19 @@ inline void init() {
 /*******************************************************************************
     Base class for using POSIF
 *******************************************************************************/
-
-// Quadrature with index, using a 32-bit counter.
-template <typename enc_a, typename enc_b, typename enc_z>
-class qdi32_t {
+// Quadrature without index, using a 32-bit counter.
+template <typename enc_a, typename enc_b>
+class qd32_t {
 public:
     static constexpr int UNIT=unit(enc_a{});
     using cnt_l=ccu4::slice_t<UNIT,0>;
     using cnt_h=ccu4::slice_t<UNIT,1>;
     static constexpr POSIF_PADDED_t *module=&dev[UNIT];
 
-    qdi32_t() {
+    qd32_t() {
 	enc_a A;
 	enc_b B;
-	enc_z Z;
-	static_assert(unit(A)==unit(B) && unit(A)==unit(Z),
-	    "A,B,Z should be same posif unit");
+	static_assert(unit(A)==unit(B), "A,B should be same posif unit");
 #ifdef POSIF1
 	static_assert(CCU40_IN0_POSIF0_OUT0==CCU41_IN0_POSIF1_OUT0, "Oops");
 	static_assert(CCU40_IN0_POSIF0_OUT1==CCU41_IN0_POSIF1_OUT1, "Oops");
@@ -109,26 +106,23 @@ public:
 	static_assert(unit(A)==0, "POSIF1 does not exist");
 #endif
     };
-    qdi32_t(enc_a A, enc_b B, enc_z Z):qdi32_t() { }
+    qd32_t(enc_a A, enc_b B):qd32_t() { }
 
     void init() {
-	enc_a A; A.set(XMC_GPIO_MODE_INPUT_TRISTATE);
-	enc_b B; B.set(XMC_GPIO_MODE_INPUT_TRISTATE);
-	enc_z Z; Z.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+	enc_a A; A.set(XMC_GPIO_MODE_INPUT_TRISTATE); A.input_enable();
+	enc_b B; B.set(XMC_GPIO_MODE_INPUT_TRISTATE); B.input_enable();
 	XMC_SCU_CLOCK_EnableClock(XMC_SCU_CLOCK_CCU);
 	if(UNIT==0) {
-	XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_POSIF0);
-	XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_POSIF0);
+	 XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_POSIF0);
+	 XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_POSIF0);
 	} else {
-	XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_POSIF1);
-	XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_POSIF1);
+	 XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_POSIF1);
+	 XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_POSIF1);
 	}
 
 	module->PCONF=bitfield<POSIF_PCONF_FSEL_Msk>(1)
 	    | bitfield<POSIF_PCONF_INSEL0_Msk>(pinA(A))
-	    | bitfield<POSIF_PCONF_INSEL1_Msk>(pinB(B))
-	    | bitfield<POSIF_PCONF_INSEL2_Msk>(pinZ(Z));
-	    //| bitfield<POSIF_PCONF_LPC_Msk>(3);
+	    | bitfield<POSIF_PCONF_INSEL1_Msk>(pinB(B));
 	module->QDC=bitfield<POSIF_QDC_ICM_Msk>(2);
 	module->PRUNS=1;
 
@@ -163,7 +157,39 @@ public:
     }
 
     int32_t count() { return cnt_l{}->TIMER | (cnt_h{}->TIMER<<16); }
-    int32_t index() { return (0xffff&cnt_l{}->CV[1]) | (cnt_h{}->CV[1]<<16); }
+    void setcount(int32_t c) { cnt_l{}->TIMER=c; cnt_h{}->TIMER=c>>16; }
+    //int32_t index() { return (0xffff&cnt_l{}->CV[1]) | (cnt_h{}->CV[1]<<16); }
+};
+
+// Quadrature with index, using a 32-bit counter.
+template <typename enc_a, typename enc_b, typename enc_z>
+class qdi32_t:qd32_t<enc_a,enc_b> {
+public:
+    using base_t=qd32_t<enc_a,enc_b>;
+    using base_t::UNIT;
+    using base_t::module;
+    using cnt_l=ccu4::slice_t<UNIT,0>;
+    using cnt_h=ccu4::slice_t<UNIT,1>;
+
+    qdi32_t():base_t() {
+	enc_z Z;
+	static_assert(unit(Z)==UNIT, "A,B,Z should be same posif unit");
+    };
+    qdi32_t(enc_a A, enc_b B, enc_z Z):qdi32_t() { }
+
+    void init() {
+	base_t::init();
+	enc_z Z; Z.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+	Z.input_enable();
+	module->PCONF|=bitfield<POSIF_PCONF_INSEL2_Msk>(pinZ(Z));
+    }
+
+    using base_t::count;
+    int32_t index() {
+	cnt_l L;
+	cnt_h H;
+	return (0xffff&L->CV[1]) | (H->CV[1]<<16);
+    }
 };
 
 

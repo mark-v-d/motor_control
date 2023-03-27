@@ -2,8 +2,10 @@
 #define ENCODER_H
 #include <cstdint>
 #include <tuple>
+
+#include "hardware.h"
+#include "posif.h"
 #include "polymorphic.h"
-#include "xmc_uart.h"
 
 class encoder_t {
 protected:
@@ -24,14 +26,16 @@ public:
     static constexpr int tx_irq=0;
 };
 
-#include "posif.h"
-#include "hardware.h"
+extern polymorphic_t<encoder_t,64> encoder;
 
-
-extern polymorphic_t<encoder_t,1024> encoder;
-
-extern posif::qdi32_t<decltype(ENC_A),decltype(ENC_B),decltype(ENC_Z)> glass_scale;
+extern posif::qdi32_t<decltype(ENC_A),decltype(ENC_B),decltype(ENC_Z)>
+    glass_scale;
 
 void init_encoder(void);
+
+extern uint8_t rx_buffer[16];
+extern uint8_t tx_buffer[8];
+extern uint8_t command;
+extern uint8_t addr;
 
 #endif // ENCODER_H

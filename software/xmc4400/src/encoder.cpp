@@ -1,24 +1,20 @@
-#include "encoder.h"
-#include "hardware.h"
-
-#include "xmc_scu.h"
-#include "xmc_ccu4.h"
-#include "xmc_eru.h"
-#include "uart.h"
-
 #include <atomic>
 #include <math.h>
 
-#include "bitfields.h"
+#include "encoder.h"
+#include "uart.h"
+
+
 uart::full_duplex fd(ENC_TXD,ENC_RXD);
 uart::half_duplex hd(ENC_TXD);
-
-#include "posif.h"
 
 constexpr auto PI=acos(-1);
 
 decltype(glass_scale) glass_scale;
-extern posif::qdi32_t<decltype(ENC_A),decltype(ENC_B),decltype(ENC_Z)> glass_scale;
+extern posif::qdi32_t<decltype(ENC_A),decltype(ENC_B),decltype(ENC_Z)>
+    glass_scale;
+
+typedef std::chrono::duration<int,std::ratio<4,int(1s/pwm_time)>> timebase_t;
 
 /*******************************************************************************
     Dummy encoder, encoder is initially of this type and it does nothing
@@ -202,10 +198,183 @@ void mitsubishi_PQ_t::rx_handler(void) {
     }
 }
 
+/*******************************************************************************
+    Hiperface encoder
+*******************************************************************************/
+
+class hiperface_t:public encoder_t,
+    public posif::qd32_t<decltype(ENC_SIN),decltype(ENC_COS)>
+{
+    using posif_t=posif::qd32_t<decltype(ENC_SIN),decltype(ENC_COS)>;
+    // FIXME, these settings are for the DS56S
+    constexpr static int poles=3;
+    constexpr static int increments_per_revolution=(1<<12);
+    constexpr static float conv=2.0*PI*poles/increments_per_revolution;
+    constexpr static float offset=PI/3;
+    constexpr static auto baudrate=uart::Baudrate(9600);
+    constexpr static timebase_t poll_interval=
+	std::chrono::duration_cast<timebase_t>(200.0ms);
+
+    timebase_t poll_timer;
+    enum state_t { STARTUP, STATUS, POSITION, DONE } state;
+    uint32_t status;
+    int tx_get, tx_len, rx_put;
+
+    void transmit(std::initializer_list<uint8_t> msg)
+    {
+	uint8_t crc=0;
+	tx_len=0;
+	for(auto x: msg) {
+	    crc^=x;
+	    tx_buffer[tx_len++]=x;
+	}
+	tx_buffer[tx_len++]=crc;
+	tx_get=0;
+	rx_put=0;
+
+	ENC_DIR=1;
+	ENC_TXD.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL
+	    | uart::dout0(ENC_TXD).gpio_mode);
+	itm.PORT[7].u8=tx_buffer[tx_get];
+	hd.tx(tx_buffer[tx_get++]);
+    }
+
+public:
+    using qd32_t<decltype(ENC_SIN),decltype(ENC_COS)>::UNIT;
+
+    hiperface_t(void);
+    virtual ~hiperface_t(void);
+
+    virtual void trigger(void) override;
+    virtual void rx_handler(void)  override {}
+    virtual void tx_handler(void)  override;
+    virtual void protocol_handler(void) override {}
+};
+
+hiperface_t::hiperface_t(void)
+{
+    using namespace std::chrono_literals;
+
+    static_assert(baudrate.pdiv>0 && baudrate.pdiv<=1024, "PDIV out of range");
+    static_assert(baudrate.step>0 && baudrate.step<=1024, "STEP out of range");
+    static_assert(baudrate.dcqt>0 && baudrate.dcqt<=32, "DCQT out of range");
+
+    ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
+    ENC_DIR=0;
+    ENC_12V=1;
+    hd.init(baudrate,XMC_USIC_CH_PARITY_MODE_EVEN);
+    uart::fifo_configure<0,16>(hd);
+    posif_t::init();
+
+    hd.enable_transmit_shift_interrupt<tx_irq>();
+    NVIC_SetPriority(hd.irq<tx_irq>(), 0);
+    NVIC_EnableIRQ(hd.irq<tx_irq>());
+
+    // Powerup and wait
+    ENC_12V=1;
+    poll_timer=poll_interval;
+}
+
+hiperface_t::~hiperface_t(void)
+{
+    ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
+    ENC_DIR=0;
+    ENC_12V=0;
+    NVIC_DisableIRQ(hd.irq<tx_irq>());
+    NVIC_DisableIRQ(hd.irq<rx_irq>());
+    hd.disable();
+}
+
+void hiperface_t::tx_handler()
+{
+    if(hd->PSR_ASCMode & USIC_CH_PSR_ASCMode_TSIF_Msk) {
+	itm.PORT[7].u16=(tx_len<<8)|tx_get;
+	if(tx_get<tx_len) {
+	    itm.PORT[7].u8=tx_buffer[tx_get];
+	    hd.tx(tx_buffer[tx_get++]);
+	} else {
+	    ENC_DIR=0;
+	    ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
+	}
+	hd->PSCR=USIC_CH_PSR_ASCMode_TSIF_Msk;
+    }
+}
+
+void hiperface_t::trigger(void)
+{
+    if(poll_timer>0ms)
+	poll_timer--;
+    else {
+	uint8_t crc=0;
+	int d;
+	while((d=hd.rx_fifo())>=0) {
+	    itm.PORT[7].u16=d | (rx_put<<8);
+	    rx_buffer[rx_put++]=d;
+	    crc^=d;
+	    itm.PORT[7].u8=crc;
+	}
+
+#if 1
+	if(state==STARTUP)
+	    state=STATUS;
+	else if(rx_buffer[4]==0x50) {
+	    status=rx_buffer[5];
+	    if(!status && !crc)
+		state=POSITION;
+	    else
+		state=STATUS;
+	} else if(state==POSITION && rx_buffer[4]==0x42 && !crc) {
+	    state=DONE;
+	    uint32_t position=rx_buffer[5]
+		+0x100L*rx_buffer[4]
+		+0x10000L*rx_buffer[3]
+		+0x1000000L*rx_buffer[2];
+	    setcount(position);
+	} else if(state!=DONE)
+	    state=STARTUP;
+
+	poll_timer=poll_interval;
+	switch(state) {
+	case STARTUP:
+	    transmit({addr,0x53});
+	    break;
+	case STATUS:
+	    transmit({addr,0x50});
+	    break;
+	case POSITION:
+	    transmit({addr,0x42});
+	    break;
+	}
+
+    /*
+    int32_t ch0=vadc.G[1].RES[0]&0xffff; ch0-=2047;
+    int32_t ch1=vadc.G[2].RES[0]&0xffff; ch1-=2047;
+    constexpr float c=0.5/PI;
+    int32_t ang=1023.0F*(c*atan2f(-ch1,ch0)+0.5F);
+    uint32_t t=posif_timer();
+    if(ang>>8==3)
+	t--;
+    if(ang>>8==0)
+	t++;
+    t&=0xfffffffc;
+    return t<<8 | ang;
+    */
+	position=count();
+	angle=0;
+	valid=state==DONE;
+
+#else
+	transmit({addr,command});
+	poll_timer=poll_interval;
+#endif
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 void init_encoder(void)
 {
-    encoder.set<mitsubishi_PQ_t>();
+    static_assert(glass_scale.UNIT!=hiperface_t::UNIT, "Posif overlap");
+    encoder.set<hiperface_t>();
     glass_scale.init();
 }
 

@@ -31,7 +31,7 @@ static gpio::output<3,6> LED0; // TRACED3
 static gpio::output<4,0> LED1; // TRACED2
 static gpio::output<4,1> LED2; // TRACED1
 static gpio::output<1,15> LED3; // TRACED0
-static gpio::output<2,14> LED4; // TRACECLK
+static gpio::output<2,14> TRACECLK;
 
 static gpio::pin<15,8> CLK_RMII;
 static gpio::pin<5,2> CRS_DV;
@@ -58,7 +58,7 @@ static hrpwm0::out<0,4> HBH2_HR;
 static gpio::output<1,2> ENC_5V;
 static gpio::output<1,3> ENC_12V;
 static gpio::output<1,10> ENC_DIR;
-static gpio::pin<1,5> ENC_TXD; // FIXME, HWCTRL should only be used fo SSI
+static gpio::pin<1,5> ENC_TXD;
 static gpio::pin<1,4> ENC_RXD;
 //static gpio::pin<0,0> ENC_RXD2;
 
@@ -83,12 +83,15 @@ static gpio::output<3,5> IO5;
 static gpio::output<3,4> IO6;
 static gpio::output<3,3> IO7;
 
+using namespace std::chrono_literals;
+
+constexpr ccu8::resolution_t pwm_time=1.0s/18000;
+
 /*
     Allocated units:
     CCU80 -> PWM
     CCU40 -> POSIF0
-    CCU41 -> POSIF1 (FIXME, do this)
-    ERU1,ETLx,OGU2 -> x=pwm.spare_slice(), latch posif counter
+    CCU41 -> POSIF1
 */
 
 #endif
