@@ -23,7 +23,7 @@ CPPFLAGS+=-D $(DEVICE)
 CPU = -g -mthumb -mcpu=cortex-m0 -gdwarf-4
 
 CFLAGS   += $(CPU)
-CXXFLAGS += $(CPU) -std=c++2a -O3 -Wno-volatile
+CXXFLAGS += $(CPU) -std=c++20 -O3 -Wno-volatile
 ASFLAGS  += $(CPU)
 LDFLAGS  += $(CPU) -nostartfiles -specs=nosys.specs
 

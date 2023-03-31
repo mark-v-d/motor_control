@@ -12,7 +12,7 @@ XMCLIB=../../mtb-xmclib-cat3/
 OBJS=main.o startup_$(DEVICE).o system_$(DEVICE).o ethernet.o icmp.o system.o 
 OBJS+=udp_sync.o
 OBJS+=xmc4_scu.o xmc_ccu8.o xmc_usic.o xmc_uart.o xmc4_gpio.o encoder.o 
-OBJS+=xmc_posif.o xmc_ccu4.o xmc_eru.o xmc4_eru.o
+OBJS+=xmc_posif.o xmc_ccu4.o xmc_eru.o xmc4_eru.o xmc_vadc.o
 OBJS+=xmc1300_bsl.o xmc_hrpwm.o
 # xmc_eth_mac.o 
 # xmc_eth_phy_ksz8031rnl.o
@@ -44,7 +44,7 @@ CPPFLAGS+=-D $(DEVICE)_$(PACKAGE)x$(MEMORY)
 CPU = -g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -gdwarf-4
 
 CFLAGS   += $(CPU)
-CXXFLAGS += $(CPU) -std=c++2a -O2 -Wno-volatile 
+CXXFLAGS += $(CPU) -std=c++20 -O2 -Wno-volatile 
 ASFLAGS  += $(CPU)
 LDFLAGS  += $(CPU)
 

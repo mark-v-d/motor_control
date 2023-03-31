@@ -1,6 +1,7 @@
 #ifndef VADC_H
 #define VADC_H
 #include "xmc_vadc.h"
+#include "gpio.h"
 
 namespace adc {
 
@@ -16,23 +17,17 @@ struct VADC_complete_t:public VADC_GLOBAL_TypeDef
 };
 
 extern VADC_complete_t vadc;
-extern SHS_Type shs0;
 
 template <int group, int port, int pin>
-constexpr int channel(void)
+constexpr int channel()
 {
     static_assert(port==-1, "Invalid ADC pin for this group");
     return -1;
 }
 
-template <int group, int port, int pin>
-constexpr int channel(gpio::pin<port,pin>const &)
-{
-    return channel<port,pin,group>();
-}
-
 
 #if UC_SERIES==XMC13
+extern SHS_Type shs0;
 //  'a,s/G\(\d\+\)CH\(\d\+\).*\s\+I\s\+P\(\d\+\)\.\(\d\+\).*/template<> constexpr int channel<\2,\3,\1>(void0) { return \2; }
 template<> constexpr int channel<2,0,0>(void) { return 5; }
 template<> constexpr int channel<2,1,0>(void) { return 6; }
@@ -51,31 +46,40 @@ template<> constexpr int channel<2,10,1>(void) { return 2; }
 template<> constexpr int channel<2,11,0>(void) { return 4; }
 template<> constexpr int channel<2,11,1>(void) { return 3; }
 #elif UC_SERIES==XMC44
-template<> constexpr int channel<0,14,0> { return 0; }
-template<> constexpr int channel<1,14,0> { return 1; }
-template<> constexpr int channel<2,14,0> { return 2; }
-template<> constexpr int channel<3,14,0> { return 3; }
-template<> constexpr int channel<4,14,0> { return 4; }
-template<> constexpr int channel<5,14,0> { return 5; }
-template<> constexpr int channel<6,14,0> { return 6; }
-template<> constexpr int channel<7,14,0> { return 7; }
-template<> constexpr int channel<0,14,1> { return 0; }
-template<> constexpr int channel<1,14,1> { return 1; }
-template<> constexpr int channel<2,14,1> { return 2; }
-template<> constexpr int channel<3,14,1> { return 3; }
-template<> constexpr int channel<4,14,1> { return 4; }
-template<> constexpr int channel<5,14,1> { return 5; }
-template<> constexpr int channel<6,14,1> { return 6; }
-template<> constexpr int channel<7,14,1> { return 7; }
-template<> constexpr int channel<0,14,2> { return 0; }
-template<> constexpr int channel<1,14,2> { return 1; }
-template<> constexpr int channel<2,15,2> { return 2; }
-template<> constexpr int channel<3,15,2> { return 3; }
-template<> constexpr int channel<0,15,3> { return 0; }
-template<> constexpr int channel<1,15,3> { return 1; }
-template<> constexpr int channel<2,14,3> { return 2; }
-template<> constexpr int channel<3,14,3> { return 3; }
+template<> constexpr int channel<14,0,0>() { return 0; }
+template<> constexpr int channel<14,1,0>() { return 1; }
+template<> constexpr int channel<14,2,0>() { return 2; }
+template<> constexpr int channel<14,3,0>() { return 3; }
+template<> constexpr int channel<14,4,0>() { return 4; }
+template<> constexpr int channel<14,5,0>() { return 5; }
+template<> constexpr int channel<14,6,0>() { return 6; }
+template<> constexpr int channel<14,7,0>() { return 7; }
+
+template<> constexpr int channel<14,2,1>() { return 2; }
+template<> constexpr int channel<14,3,1>() { return 3; }
+template<> constexpr int channel<14,8,1>() { return 0; }
+template<> constexpr int channel<14,9,1>() { return 1; }
+template<> constexpr int channel<14,12,1>() { return 4; }
+template<> constexpr int channel<14,13,1>() { return 5; }
+template<> constexpr int channel<14,14,1>() { return 6; }
+template<> constexpr int channel<14,15,1>() { return 7; }
+
+template<> constexpr int channel<14,4,2>() { return 0; }
+template<> constexpr int channel<14,5,2>() { return 1; }
+template<> constexpr int channel<15,2,2>() { return 2; }
+template<> constexpr int channel<15,3,2>() { return 3; }
+
+template<> constexpr int channel<14,8,3>() { return 2; }
+template<> constexpr int channel<14,9,3>() { return 3; }
+template<> constexpr int channel<15,8,3>() { return 0; }
+template<> constexpr int channel<15,9,3>() { return 1; }
 #endif
+
+template <int group, int port, int pin>
+constexpr int channel(gpio::pin<port,pin>const &)
+{
+    return channel<port,pin,group>();
+}
 
 /*
     Write GxQINR0

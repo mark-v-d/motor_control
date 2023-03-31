@@ -3,6 +3,7 @@
 	30.5mH, 7.5 Ohm @ 400Hz u->v, w open
 	23.0mH, 5.2 Ohm @ 400Hz u->v+w
 */
+#include "vadc.h"
 
 #include <atomic>
 #include <complex>
@@ -291,12 +292,37 @@ int main()
     std::apply(ccu8::shadow_transfer,hr_out);
     std::apply(ccu8::start,hr_out);
 
-    auto old_led=led;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // ADC
+    ////////////////////////////////////////////////////////////////////////////
+    adc::init();
+    adc::global_class<0>(XMC_VADC_CONVMODE_12BIT,15);
+    adc::channel_control<0>(ENC_COS,   XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
+    adc::channel_control<1>(ENC_SIN_A, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
+    adc::queue_config<0>( XMC_VADC_GATEMODE_IGNORE, 0,
+	XMC_VADC_REQ_TR_CCU80_SR2, XMC_VADC_TRIGGER_EDGE_RISING
+    );
+    adc::queue_config<1>( XMC_VADC_GATEMODE_IGNORE, 0,
+	XMC_VADC_REQ_TR_CCU80_SR2, XMC_VADC_TRIGGER_EDGE_RISING
+    );
+
+    for(int i: {0,1}) {
+	adc::vadc.G[i].ARBPR=
+	    bitfield<VADC_G_ARBPR_PRIO0_Msk>(3) |
+	    VADC_G_ARBPR_CSM0_Msk |
+	    VADC_G_ARBPR_ASEN0_Msk;
+	adc::vadc.G[i].ARBCFG=
+	    bitfield<VADC_G_ARBCFG_ANONC_Msk>(3) |
+	    bitfield<VADC_G_ARBCFG_ANONS_Msk>(3);
+    }
+    ////////////////////////////////////////////////////////////////////////////
 
     init_encoder();
 
     std::atomic_thread_fence(std::memory_order_release);
 
+    auto old_led=led;
     for(;;) {
 	if(led!=old_led) {
 	    old_led=led;
@@ -325,129 +351,3 @@ void __gnu_cxx::__verbose_terminate_handler(void)
 	LED2^=1;
     }
 }
-
-void init_adc(void)
-{
-    using namespace vadc_g_ns;
-    /*
-	FIXME, no checks or automation.
-
-	Only channel 0 of the ADCs is used. Group 0 is used in queued mode
-	only and triggered by the timer at the PWM zero crossing.
-	4 results are accumulated in result 1, and put in a fifo to
-	be read at result 0.
-
-	   G0CH0	master CUR0
-	   G1CH6	ENC_SIN (alias)
-	   G2CH0	ENC_COS
-	   G3CH2	CUR1 (alias)
-    */
-    XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_VADC);
-    XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_VADC);
-    vadc.CLC=0;
-    vadc.GLOBCFG=vadc_ns::globcfg_t({{
-	.diva=3,
-	.dcmsb=0,
-	.divd=1,
-	.divwc=1
-    }}).raw;
-    vadc.GLOBICLASS[0]=iclass_t({{
-	.stcs=0,	// no additional cycles
-	.cms=0		// 12-bit conversion
-    }}).raw;
-
-    vadc.G[1].ALIAS=alias_t({{.alias0=6}}).raw;
-    vadc.G[3].ALIAS=alias_t({{.alias0=2}}).raw;
-
-    for(int i=0;i<4;i++) { // All channels
-	// Channel control
-	vadc.G[i].CHCTR[0]=chctr_t({{
-	    .iclsel=2,		// global class 0
-	    .chevmode=0,	// no event
-	    .sync=1,		// Synchronised conversion (G0 master)
-	    .resreg=1		// Top of 2 entry fifo
-	}}).raw;
-	vadc.G[i].RCR[0]=rcr_t({{
-	    .drctr=0,	// 4 results
-	    .dmm=0,	// accumulation
-	    .wfr=0,	// overwrite
-	    .fen=1,	// part of fifo
-	    .srgen=0	// no service request
-	}}).raw;
-    }
-    for(int i: {0,3}) {	// Current measurement channels
-	// Current measurement is averaged
-	vadc.G[i].RCR[1]=rcr_t({{
-	    .drctr=3,	// 4 results
-	    .dmm=0,	// accumulation
-	    .wfr=0,	// overwrite
-	    .fen=0,	// top of fifo
-	    .srgen=uint32_t(i==0? 1:0)	// no service request (only master)
-	}}).raw;
-    }
-    for(int i: {1,2}){
-	vadc.G[i].RCR[1]=rcr_t({{ // Encoder channels
-	    // sincos is not averaged
-	    .drctr=0,// 1 results
-	    .dmm=0,	// accumulation
-	    .wfr=0,	// overwrite
-	    .fen=0,	// top of fifo
-	    .srgen=0	// no service request
-	}}).raw;
-    }
-    for(int i=1;i<4;i++) {
-	// slave
-	vadc.G[i].SYNCTR=synctr_t({{
-	    .stsel=1,	// synchronise to G0
-	}}).raw;
-    }
-    {
-	// master
-	int i=0;
-	// Arbiter, only queued mode is enabled
-	vadc.G[i].ARBPR=arbpr_t({{
-	    .prio0=3,
-	    .csm0=1,
-	    .asen0=1,
-	}}).raw;
-	vadc.G[i].QMR0=qmr0_t({{
-	    .engt=1,
-	    .entr=1
-	}}).raw;
-	vadc.G[i].QINR0=qinr0_t({{
-	    .reqchnr=0,
-	    .rf=1,
-	    .ensi=0,
-	    .extr=1,
-
-	}}).raw;
-	// FIXME, make the xtsel mapping automatic
-	//static_assert(ccu8_ns::unit(HB0)==0, "Wrong timer for ADC trigger");
-	vadc.G[i].QCTRL0=qctrl0_t({{
-	    .xtsel=8, 	// CCU80::SR2 (See asserts)
-	    .xtmode=1,
-	    .xtwc=1,
-	    .tmen=0,	// Uncertain
-	    .tmwc=1
-	}}).raw;
-	vadc.G[i].SYNCTR=synctr_t({{
-	    .stsel=0,	// Master
-	    .evalr1=1,
-	    .evalr2=1,
-	    .evalr3=1
-	}}).raw;
-    }
-    vadc.G[0].ARBCFG=arbcfg_t({{
-	.anonc=3,	// permanently on (master/standalone mode)
-	.arbrnd=0,	// 4 slots per round
-	.arbm=0,	// arbiter runs permanently
-	.anons=3	// G0 is the master
-    }}).raw;
-#if 0
-    NVIC_SetPriority(VADC0_G0_0_IRQn,  0);
-    NVIC_ClearPendingIRQ(VADC0_G0_0_IRQn);
-    NVIC_EnableIRQ(VADC0_G0_0_IRQn);
-#endif
-}
-
-// XMC_ETH_MAC_InitRxDescriptors
