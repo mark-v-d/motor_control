@@ -239,14 +239,21 @@ public:
 	x|=bitfield<CCU8_CC8_STC_STM_Msk>(t);
 	dev[UNIT].cc[SLICE].STC=x;
     }
+
+    void set_trap() { dev[UNIT].cc[SLICE].SWS=CCU8_CC8_SWS_SE2A_Msk; }
+    void clear_trap() { dev[UNIT].cc[SLICE].SWR=CCU8_CC8_SWR_RE2A_Msk; }
 };
 
 template <int UNIT_PAR, int SLICE_PAR, int OUTPUT_PAR>
 class center_aligned:public slice_t<UNIT_PAR,SLICE_PAR> {
+    using base_t=slice_t<UNIT_PAR,SLICE_PAR>;
 public:
     static constexpr int UNIT=UNIT_PAR;
     static constexpr int SLICE=SLICE_PAR;
     static constexpr int OUTPUT=OUTPUT_PAR;
+
+    using base_t::set_trap;
+    using base_t::clear_trap;
 
     void init(void) {
 	auto &cc=dev[UNIT].cc[SLICE];
@@ -272,10 +279,19 @@ public:
 	else
 	    dev[UNIT].cc[SLICE].CR2S=i*dev[UNIT].cc[SLICE].PRS;
     }
+
+    void enable_trap() {
+	dev[UNIT].cc[SLICE].CMC|=CCU8_CC8_CMC_TCE_Msk;
+    }
+
+    void disable_trap() {
+	dev[UNIT].cc[SLICE].CMC&=~CCU8_CC8_CMC_TCE_Msk;
+    }
 };
 
 template <typename HIGH, typename LOW>
 class half_bridge:public center_aligned<HIGH::UNIT,HIGH::SLICE,HIGH::OUTPUT> {
+    using base_t=center_aligned<HIGH::UNIT,HIGH::SLICE,HIGH::OUTPUT>;
 public:
     static constexpr int UNIT=HIGH::UNIT;
     static constexpr int SLICE=HIGH::SLICE;
@@ -326,7 +342,33 @@ public:
 	else
 	    dev[UNIT].cc[SLICE].CR2S=i*dev[UNIT].cc[SLICE].PRS;
     }
+
+    void passive_level(int h, int l) {
+	auto x=dev[UNIT].cc[SLICE].PSL;
+	if(h)
+	    x|=1<<HIGH::OUTPUT;
+	else
+	    x&=~(1<<HIGH::OUTPUT);
+	if(l)
+	    x|=1<<LOW::OUTPUT;
+	else
+	    x&=~(1<<LOW::OUTPUT);
+	dev[UNIT].cc[SLICE].PSL=x;
+	base_t::enable_trap();
+    }
 };
+
+
+template <typename ...T>
+inline void set_trap(std::tuple<T...> &t) {
+    (T{}.set_trap(), ...);
+}
+
+template <typename ...T>
+inline void clear_trap(std::tuple<T...> &t) {
+    (T{}.clear_trap(), ...);
+}
+
 
 };
 #endif

@@ -206,6 +206,16 @@ inline auto start=[](auto& ... x)
     SCU_GENERAL->CCUCON&=~mask;
 };
 
+inline auto stop=[](auto& ... x)
+{
+    // FIXME, create combined CCU4/CCU8 start
+    if(uint32_t ccu40_gidls=((x.UNIT==0 ? (1<<x.SLICE):0) | ...))
+	dev[0].GIDLS=ccu40_gidls;
+    if(uint32_t ccu41_gidls=((x.UNIT==1 ? (1<<x.SLICE):0) | ...))
+	dev[1].GIDLS=ccu41_gidls;
+    // FIXME UNIT2 and 3
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Slice types

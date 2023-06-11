@@ -25,6 +25,9 @@ namespace motion_ns {
 	float Vrotor[2];
 	int32_t glass_counter;
 	int32_t glass_index;
+	int32_t tpower;
+	int32_t offset;
+	int32_t ADC[2];
     };
 
     struct  __attribute__ ((__packed__)) to_drive {

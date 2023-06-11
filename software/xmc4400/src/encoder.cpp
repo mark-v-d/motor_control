@@ -206,11 +206,20 @@ class hiperface_t:public encoder_t,
     public posif::qd32_t<decltype(ENC_SIN),decltype(ENC_COS)>
 {
     using posif_t=posif::qd32_t<decltype(ENC_SIN),decltype(ENC_COS)>;
+#if 0
     // FIXME, these settings are for the DS56S
     constexpr static int poles=3;
     constexpr static int increments_per_revolution=(1<<12);
     constexpr static float conv=2.0*PI*poles/increments_per_revolution;
     constexpr static float offset=PI/3;
+#else
+    // Allen Bradley (P2,P1,P0=1,3,2)
+    constexpr static int poles=4;
+    constexpr static int increments_per_revolution=(1<<12);
+    constexpr static float conv=2.0*PI*poles/increments_per_revolution;
+    constexpr static float offset=PI/3;
+#endif
+
     constexpr static auto baudrate=uart::Baudrate(9600);
     constexpr static timebase_t poll_interval=
 	std::chrono::duration_cast<timebase_t>(200.0ms);
@@ -302,6 +311,7 @@ void hiperface_t::tx_handler()
 
 void hiperface_t::trigger(void)
 {
+    IO0=0;
     if(poll_timer>0ms)
 	poll_timer--;
     else {
@@ -314,7 +324,6 @@ void hiperface_t::trigger(void)
 	    itm.PORT[7].u8=crc;
 	}
 
-#if 1
 	if(state==STARTUP)
 	    state=STATUS;
 	else if(rx_buffer[4]==0x50) {
@@ -323,13 +332,15 @@ void hiperface_t::trigger(void)
 		state=POSITION;
 	    else
 		state=STATUS;
-	} else if(state==POSITION && rx_buffer[4]==0x42 && !crc) {
+	} else if(state==POSITION && rx_buffer[4]==0x42 && rx_put==10 && !crc) {
 	    state=DONE;
-	    uint32_t position=rx_buffer[5]
-		+0x100L*rx_buffer[4]
-		+0x10000L*rx_buffer[3]
-		+0x1000000L*rx_buffer[2];
-	    setcount(position);
+	    IO0=1;
+	    uint32_t position=rx_buffer[8]
+		+0x100L*rx_buffer[7]
+		+0x10000L*rx_buffer[6]
+		+0x1000000L*rx_buffer[5];
+	    itm.PORT[7].u32=position;
+	    setcount(position>>3);
 	} else if(state!=DONE)
 	    state=STARTUP;
 
@@ -345,36 +356,18 @@ void hiperface_t::trigger(void)
 	    transmit({addr,0x42});
 	    break;
 	}
-
-    /*
-    int32_t ch0=vadc.G[1].RES[0]&0xffff; ch0-=2047;
-    int32_t ch1=vadc.G[2].RES[0]&0xffff; ch1-=2047;
-    constexpr float c=0.5/PI;
-    int32_t ang=1023.0F*(c*atan2f(-ch1,ch0)+0.5F);
-    uint32_t t=posif_timer();
-    if(ang>>8==3)
-	t--;
-    if(ang>>8==0)
-	t++;
-    t&=0xfffffffc;
-    return t<<8 | ang;
-    */
-	position=count();
-	angle=0;
-	valid=state==DONE;
-
-#else
-	transmit({addr,command});
-	poll_timer=poll_interval;
-#endif
     }
+    position=count();
+    constexpr float F=2.0*std::numbers::pi/1024.0f;
+    angle=float(position&0x3ff)*F;
+    valid=state==DONE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void init_encoder(void)
 {
     static_assert(glass_scale.UNIT!=hiperface_t::UNIT, "Posif overlap");
-    encoder.set<hiperface_t>();
+    encoder.set<mitsubishi_PQ_t>();
     glass_scale.init();
 }
 

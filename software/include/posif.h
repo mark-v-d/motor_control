@@ -1,6 +1,7 @@
 #ifndef POSIF_H
 #define POSIF_H
 #include "ccu4.h"
+extern int32_t encodercount;
 
 namespace posif {
 
@@ -108,7 +109,7 @@ public:
     };
     qd32_t(enc_a A, enc_b B):qd32_t() { }
 
-    void init() {
+    void init(int reverse=0) {
 	enc_a A; A.set(XMC_GPIO_MODE_INPUT_TRISTATE); A.input_enable();
 	enc_b B; B.set(XMC_GPIO_MODE_INPUT_TRISTATE); B.input_enable();
 	XMC_SCU_CLOCK_EnableClock(XMC_SCU_CLOCK_CCU);
@@ -123,7 +124,8 @@ public:
 	module->PCONF=bitfield<POSIF_PCONF_FSEL_Msk>(1)
 	    | bitfield<POSIF_PCONF_INSEL0_Msk>(pinA(A))
 	    | bitfield<POSIF_PCONF_INSEL1_Msk>(pinB(B));
-	module->QDC=bitfield<POSIF_QDC_ICM_Msk>(2);
+	module->QDC=bitfield<POSIF_QDC_ICM_Msk>(2)
+	    | bitfield<POSIF_QDC_PHS_Msk>(reverse);
 	module->PRUNS=1;
 
 	ccu4::init<UNIT>(
@@ -150,16 +152,21 @@ public:
 	    | CCU4_CC4_CMC_TCE_Msk;
 	h->PRS=0xffff;
 
-	l.start();
-	h.start();
+	ccu4::start(l,h);
 
 	shadow_transfer(l,h);
     }
 
     int32_t count() { return cnt_l{}->TIMER | (cnt_h{}->TIMER<<16); }
-    void setcount(int32_t c) { cnt_l{}->TIMER=c; cnt_h{}->TIMER=c>>16; }
+    void setcount(int32_t c) {
+	cnt_l L;
+	cnt_h H;
+	L->TCCLR=1; L->TIMER=c&0xffff; L->TCSET=1;
+	H->TCCLR=1; H->TIMER=c>>16; H->TCSET=1;
+    }
     //int32_t index() { return (0xffff&cnt_l{}->CV[1]) | (cnt_h{}->CV[1]<<16); }
 };
+
 
 // Quadrature with index, using a 32-bit counter.
 template <typename enc_a, typename enc_b, typename enc_z>

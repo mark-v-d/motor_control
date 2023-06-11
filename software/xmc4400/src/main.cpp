@@ -36,7 +36,6 @@ std::tuple hr_out{
     hrpwm0::half_bridge(HBH2_HR,HBL2_HR)
 };
 
-
 uart::full_duplex copro(COPRO_TXD,COPRO_RXD);
 
 std::atomic<uint32_t> sleep_counter(0);
@@ -89,13 +88,14 @@ class complex_PI {
 public:
     complex<float> integrator;
     float limit=0;
-    float P=-1;
-    float I=-1e-2;
+    float P=-0.2;
+    float I=-5e-3;
+    complex<float> output;
 
     complex<float> compute(complex<float> error) {
 	auto result=P*error+integrator;
 	integrator+=I*error;
-	auto output=result;
+	output=result;
 
 	if(abs(output)>limit) {
 	    output*=limit/abs(output);
@@ -112,8 +112,9 @@ static volatile int subsample;
 motion_ns::to_host report;
 std::complex<float> override=0;
 float angle_offset=0;
+float angle_override=0;
 
-extern "C" void CCU80_0_IRQHandler(void)
+extern "C" void CCU80_2_IRQHandler(void)
 {
     static_assert(std::get<0>(hr_out).UNIT==0, "Wrong interrupt handler");
     constexpr char data=0x05a;
@@ -126,7 +127,6 @@ extern "C" void CCU80_0_IRQHandler(void)
     itm.PORT[1].u8=subsample;
 
     if(++subsample>3) {
-	IO0=1;
 	encoder->trigger();
 	subsample=0;
     }
@@ -148,16 +148,26 @@ extern "C" void CCU80_0_IRQHandler(void)
     }
 
     std::complex<float> setpoint=0;
-    if(syncer.locked(&eth0) && drive_io.age(&eth0)<2ms)
+    if(syncer.locked(&eth0) && drive_io.age(&eth0)<2ms) {
 	setpoint=drive_io->Iset[0]+1if*drive_io->Iset[1];
-    if(abs(override)!=0.0f)
+	ccu8::clear_trap(hr_out);	// enable outputs
+	Kcurrent.limit=0.9f;
+    } else if(abs(override)!=0.0f) {
 	setpoint=override;
+	ccu8::clear_trap(hr_out);	// enable outputs
+	Kcurrent.limit=0.9f;
+    } else {
+	ccu8::set_trap(hr_out);	// disable outputs
+	Kcurrent.limit=0.9f;
+    }
 
     rx_data[0]-=2047;
     rx_data[1]-=2047;
 
     auto [position, angle, valid]=encoder->get_pav();
     angle+=angle_offset;
+    if(angle_override!=0.0f)
+	angle=angle_override;
     report.position=position;
     report.angle=angle;
     report.valid=valid;
@@ -177,6 +187,12 @@ extern "C" void CCU80_0_IRQHandler(void)
     report.Vrotor[1]=imag(Vrotor);
     report.glass_counter=glass_scale.count();
     report.glass_index=glass_scale.index();
+    report.tpower=(0xffff&adc::vadc.G[1].RES[1]);
+    report.offset=(0xffff&adc::vadc.G[0].RES[1]);
+    report.ADC[0]=(0xffff&adc::vadc.G[0].RES[0])-report.offset;
+    report.ADC[1]=(0xffff&adc::vadc.G[1].RES[0])-report.offset;
+    itm.PORT[8].u16=report.ADC[0];
+    itm.PORT[9].u16=report.ADC[1];
     if(drive_io->new_data) {
 	drive_io->new_data=0;
 	drive_io.transmit(&eth0,report);
@@ -185,7 +201,6 @@ extern "C" void CCU80_0_IRQHandler(void)
     }
 
     std::apply(ccu8::shadow_transfer,hr_out);
-    IO0=0;
 }
 
 extern "C" void VADC0_G0_0_IRQHandler(void)
@@ -203,6 +218,13 @@ extern "C" void Default_Handler(void)
     itm.PORT[0].u32=SCB->SHCSR;
     itm.PORT[1].u32=SCB->CFSR;
     itm.PORT[1].u32=SCB->BFAR;
+    uint32_t addr;
+    asm volatile (
+	"ldr.w %0,[sp,0x18];"	// Return address
+	: "=r"(addr)
+    );
+    ccu8::set_trap(hr_out);	// disable outputs
+    itm.PORT[0].u32=addr;
     for(uint8_t i=0;i<10;i++)
 	itm.PORT[0].u8=i; // make sure the frame on the traceport is finished
     for(;;);
@@ -212,6 +234,7 @@ volatile uint32_t counter, led, txd=-1, hrpwm_status;
 volatile int init_enable=0;
 
 void init_adc(void);
+volatile int trap_enable=0;
 int main()
 {
     SystemCoreClockUpdate();
@@ -281,25 +304,29 @@ int main()
 	(hr.period(pwm_time), ...);
 	(hr.deadtime(100ns, 100ns), ...);
 	(hr.shadow_transfer_mode(ccu8::TRANSFER_PERIOD), ...);
+	(hr.enable_trap(), ...);
 	((hr=0.25f), ...);
     }, hr_out);
 
     std::get<0>(hr_out)->ccu8->INTE=CCU8_CC8_INTE_PME_Msk;
-    std::get<0>(hr_out)->ccu8->SRS=bitfield<CCU8_CC8_SRS_POSR_Msk>(0);
-    NVIC_SetPriority(std::get<0>(hr_out).irq<0>(), 1);
-    NVIC_EnableIRQ(std::get<0>(hr_out).irq<0>());
+    std::get<0>(hr_out)->ccu8->SRS=bitfield<CCU8_CC8_SRS_POSR_Msk>(2);
+    NVIC_SetPriority(std::get<0>(hr_out).irq<2>(), 1);
+    NVIC_EnableIRQ(std::get<0>(hr_out).irq<2>());
 
     std::apply(ccu8::shadow_transfer,hr_out);
     std::apply(ccu8::start,hr_out);
 
+    //std::apply([](auto& ... hr) { (hr.enable_trap(), ...); }, hr_out);
 
     ////////////////////////////////////////////////////////////////////////////
     // ADC
     ////////////////////////////////////////////////////////////////////////////
     adc::init();
-    adc::global_class<0>(XMC_VADC_CONVMODE_12BIT,15);
+    adc::global_class<0>(XMC_VADC_CONVMODE_12BIT,8);
     adc::channel_control<0>(ENC_COS,   XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
+    adc::channel_control<0>(AN_IN5,    XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 1);
     adc::channel_control<1>(ENC_SIN_A, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
+    adc::channel_control<1>(TPOWER,    XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 1);
     adc::queue_config<0>( XMC_VADC_GATEMODE_IGNORE, 0,
 	XMC_VADC_REQ_TR_CCU80_SR2, XMC_VADC_TRIGGER_EDGE_RISING
     );
@@ -316,6 +343,10 @@ int main()
 	    bitfield<VADC_G_ARBCFG_ANONC_Msk>(3) |
 	    bitfield<VADC_G_ARBCFG_ANONS_Msk>(3);
     }
+    adc::queue<0>(ENC_COS, adc::EXTERNAL_TRIGGER| adc::REFILL);
+    adc::queue<0>(AN_IN5, adc::REFILL);
+    adc::queue<1>(ENC_SIN_A, adc::EXTERNAL_TRIGGER| adc::REFILL);
+    adc::queue<1>(TPOWER, adc::REFILL);
     ////////////////////////////////////////////////////////////////////////////
 
     init_encoder();
@@ -332,6 +363,16 @@ int main()
 	    LED3=(old_led>>3)&1;
 	}
 	counter++;
+	std::apply([](auto& ... hr) {
+	    if(trap_enable&1)
+		(hr.disable_trap(), ...);
+	    if(trap_enable&2)
+		(hr.enable_trap(), ...);
+	    if(trap_enable&4)
+		(hr.set_trap(), ...);
+	    if(trap_enable&8)
+		(hr.clear_trap(), ...);
+	}, hr_out);
     }
     return 0;
 }
@@ -351,3 +392,5 @@ void __gnu_cxx::__verbose_terminate_handler(void)
 	LED2^=1;
     }
 }
+
+void debug() {}

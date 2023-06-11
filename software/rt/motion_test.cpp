@@ -72,12 +72,14 @@ std::ostream &operator<<(std::ostream &s, sync_t d) {
 	<< " " << d.rx_seconds << " " << d.rx_nanoseconds
 	<< " " << d.timer << " " << d.integrator
 	<< " " << d.position
-	<< " " << d.angle
-	<< " " << d.valid
-	<< " " << d.Irotor[0]
-	<< " " << d.Irotor[1]
-	<< " " << d.Vrotor[0]
-	<< " " << d.Vrotor[1]
+	<< " " << d.angle	// 10
+	<< " " << d.valid	// 11
+	<< " " << d.Irotor[0]	// 12
+	<< " " << d.Irotor[1]	// 13
+	<< " " << d.Vrotor[0]	// 14
+	<< " " << d.Vrotor[1]	// 15
+	<< " " << d.ADC[0]	// 16
+	<< " " << d.ADC[1]	// 17
 	;
     return s;
 }

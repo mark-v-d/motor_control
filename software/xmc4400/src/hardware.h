@@ -84,6 +84,14 @@ static gpio::output<3,5> IO5;
 static gpio::output<3,4> IO6;
 static gpio::output<3,3> IO7;
 
+static gpio::pin<14,0> AN_IN0;
+static gpio::pin<14,1> AN_IN1;
+static gpio::pin<14,2> AN_IN2;
+static gpio::pin<14,3> AN_IN3;
+static gpio::pin<14,4> AN_IN4;
+static gpio::pin<14,5> AN_IN5;
+static gpio::pin<14,13> TPOWER;
+
 using namespace std::chrono_literals;
 
 constexpr ccu8::resolution_t pwm_time=1.0s/18000;

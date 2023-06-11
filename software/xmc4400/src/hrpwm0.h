@@ -79,10 +79,14 @@ struct all_registers_t {
 
 template <typename HIGH, typename LOW>
 class half_bridge:public ccu8::center_aligned<0,HIGH::SLICE,0> {
+    using base_t=ccu8::center_aligned<0,HIGH::SLICE,0>;
 public:
     static constexpr int SLICE=HIGH::SLICE;
     static constexpr int OUTPUT=0; // ccu8 output
     static constexpr int UNIT=0; // ccu8 unit
+
+    using base_t::set_trap;
+    using base_t::clear_trap;
 
     constexpr half_bridge() {
 	HIGH h{};
@@ -122,7 +126,9 @@ public:
 	    bitfield<HRPWM0_HRC_GSEL_C0M_Msk>(0) | // use timer
 	    bitfield<HRPWM0_HRC_GSEL_S0ES_Msk>(1) | // rising edge
 	    bitfield<HRPWM0_HRC_GSEL_C0ES_Msk>(2); // falling edge
-	hr->TSEL=bitfield<HRPWM0_HRC_TSEL_TSEL0_Msk>(SLICE);
+	hr->TSEL=
+	    HRPWM0_HRC_TSEL_TS0E_Msk |
+	    bitfield<HRPWM0_HRC_TSEL_TSEL0_Msk>(SLICE);
 
 	HIGH{}.enable();
 	LOW{}.enable();
@@ -146,6 +152,16 @@ public:
 	PRS_pseudo=PRS+DCV/16
 	timing iedere pwm cycle aanpassen?
     */
+
+    void enable_trap() {
+	auto hr=&hrc[SLICE];
+	hr->GC|=HRPWM0_HRC_GC_TR0E_Msk | HRPWM0_HRC_GC_TR1E_Msk;
+    }
+
+    void disable_trap() {
+	auto hr=&hrc[SLICE];
+	hr->GC&=~(HRPWM0_HRC_GC_TR0E_Msk | HRPWM0_HRC_GC_TR1E_Msk);
+    }
 };
 
 
