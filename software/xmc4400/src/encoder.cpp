@@ -198,6 +198,92 @@ void mitsubishi_PQ_t::rx_handler(void) {
     }
 }
 
+
+/* AMT21 encoder **************************************************************/
+class AMT21_t:public encoder_t
+{
+    constexpr static int poles=4;
+    constexpr static int increments_per_revolution=(1<<12);
+    constexpr static float conv=2.0*PI*poles/increments_per_revolution;
+
+    constexpr static auto baudrate=uart::Baudrate(2.0e6);
+    int putp;
+    uint8_t rx_buffer[16];
+    uint8_t crc;
+public:
+    AMT21_t(void);
+    virtual ~AMT21_t(void);
+
+    virtual void trigger(void) override;
+    virtual void rx_handler(void)  override;
+    virtual void tx_handler(void)  override;
+    virtual void protocol_handler(void) override {}
+};
+
+AMT21_t::AMT21_t(void)
+{
+    ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
+    ENC_DIR=0;
+    ENC_5V=1;
+    hd.init(baudrate);
+    uart::fifo_configure<0,16>(hd);
+
+    hd.enable_transmit_shift_interrupt<tx_irq>();
+    NVIC_SetPriority(hd.irq<tx_irq>(), 0);
+    NVIC_EnableIRQ(hd.irq<tx_irq>());
+
+    hd.enable_receive_buffer_interrupt<rx_irq>(3);
+    NVIC_SetPriority(hd.irq<rx_irq>(), 20);
+    NVIC_EnableIRQ(hd.irq<rx_irq>());
+}
+
+AMT21_t::~AMT21_t(void)
+{
+    ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
+    ENC_DIR=0;
+    ENC_5V=0;
+    NVIC_DisableIRQ(hd.irq<tx_irq>());
+    NVIC_DisableIRQ(hd.irq<rx_irq>());
+    hd.disable();
+}
+
+void AMT21_t::trigger(void)
+{
+    ENC_TXD.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL |uart::dout0(ENC_TXD).gpio_mode);
+    ENC_DIR=1;
+    hd->TBUF[0]=0x54;
+    hd->TRBSCR=USIC_CH_TRBSCR_FLUSHRB_Msk;
+    putp=0;
+    crc=0x1a;
+}
+
+void AMT21_t::tx_handler(void) {
+    if(hd->PSR_ASCMode & USIC_CH_PSR_ASCMode_TSIF_Msk) {
+	hd->PSCR=USIC_CH_PSR_ASCMode_TSIF_Msk;
+	ENC_DIR=0;
+	ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
+    }
+}
+
+void AMT21_t::rx_handler(void) {
+    if(hd->TRBSR & USIC_CH_TRBSCR_CSRBI_Msk) {
+	hd->TRBSCR=USIC_CH_TRBSCR_CSRBI_Msk;
+	int d;
+	while((d=hd.rx_fifo())>=0) {
+	    rx_buffer[putp++]=d;
+	    itm.PORT[7].u16=rx_buffer[putp-1] | (putp<<8);
+	}
+	if(putp==3) {
+	    position=
+		+(1<<28)*(rx_buffer[7]&0x0f);
+	    angle=conv*float(
+		rx_buffer[3]+(1<<8)*rx_buffer[4]+(1<<16)*(rx_buffer[5]));
+	    valid=1;
+	} else if(putp>=10)
+	    valid=0;
+    }
+}
+
 /*******************************************************************************
     Hiperface encoder
 *******************************************************************************/
