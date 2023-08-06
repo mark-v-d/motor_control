@@ -41,7 +41,7 @@ CPPFLAGS+=-DFREQUENCY=120000000
 CPPFLAGS+=-D $(DEVICE)_$(PACKAGE)x$(MEMORY) 
 #CPPFLAGS+=-D UC_ID -D OSCHP_FREQUENCY=12000000
 
-CPU = -g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -gdwarf-4
+CPU = -g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 CFLAGS   += $(CPU)
 CXXFLAGS += $(CPU) -std=c++20 -O2 -Wno-volatile 
