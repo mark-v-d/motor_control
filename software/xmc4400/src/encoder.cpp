@@ -1,5 +1,6 @@
 #include <atomic>
 #include <math.h>
+#include <array>
 
 #include "encoder.h"
 #include "uart.h"
@@ -208,7 +209,7 @@ class AMT21_t:public encoder_t
 
     constexpr static auto baudrate=uart::Baudrate(2.0e6);
     int putp;
-    uint8_t rx_buffer[16];
+    std::array<uint8_t,8> rx_buffer;
 public:
     AMT21_t(void);
     virtual ~AMT21_t(void);
@@ -266,7 +267,7 @@ void AMT21_t::tx_handler(void) {
 void AMT21_t::rx_handler(void) {
     itm.PORT[20].u32=hd->TRBSR;
     int d;
-    while((d=hd.rx_fifo())>=0) {
+    while((d=hd.rx_fifo())>=0 && putp<rx_buffer.size()) {
 	rx_buffer[putp++]=d;
 	itm.PORT[7].u16=rx_buffer[putp-1] | (putp<<8);
 	if(putp==3 && rx_buffer[0]==0x54) {
@@ -280,8 +281,15 @@ void AMT21_t::rx_handler(void) {
 	    }
 	    itm.PORT[9].u16=check;
 	    if(check==3) {
-		position=pos&0x3fff;
-		angle=conv*float(position);
+		int32_t np=(pos&0x3fff)|(position&0xffffc000);
+		int32_t dp=np-position;
+		if(dp>8192)
+		    np-=0x4000;
+		else if(dp<-8192)
+		    np+=0x4000;
+
+		position=np;
+		angle=conv*float(position&0x3fff);
 		valid=1;
 	    } else
 		valid=0;

@@ -9,7 +9,7 @@
 
 class encoder_t {
 protected:
-    uint32_t position;
+    int32_t position;
     float angle;
     int valid=0;
 public:

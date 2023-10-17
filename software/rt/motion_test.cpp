@@ -18,12 +18,16 @@
 
 #include <iostream>
 #include <complex>
+#include <chrono>
 using namespace std::complex_literals;
+using namespace std::chrono_literals;
 
 constexpr std::array<uint8_t,6> dst_mac{0xc2, 0x00, 0x86, 0x05, 0x10, 0xc0};
 constexpr std::array<uint8_t,4> dst_ip{192,168,0,6};
 constexpr uint16_t sync_port=3;
 constexpr uint16_t motion_port=2;
+
+using timebase_t=std::chrono::duration<int,std::ratio<1,4500>>;
 
 struct __attribute__ ((__packed__)) sync_send_t:
     public udp_t, public sync_ns::to_drive
@@ -127,6 +131,7 @@ raw_socket skt("eth2");
 
 void *rt_thread(void *data)
 {
+    timebase_t time=0s;
     struct timespec ts;
     if(clock_gettime(CLOCK_MONOTONIC, &ts)) {
 	perror("clock_gettime");
@@ -147,6 +152,7 @@ void *rt_thread(void *data)
 	char txt[1024];
     } buffer;
     for(auto &x:table) {
+	time++;
 	struct timespec timestamp;
 	if(clock_gettime(CLOCK_MONOTONIC, &x.timestamp)) {
 	    perror("clock_gettime");
@@ -161,7 +167,14 @@ void *rt_thread(void *data)
 
 	sync_send_t pkt(x.timestamp, ts, skt);
 	skt.send(pkt);
-	std::complex<float> I=1.0if;
+	std::complex<float> I=0;
+	if(time>2s)
+	    I=0;
+	else if(time>1s)
+	    I=-2.5i;
+	else if(time>0.1s)
+	    I=2.5i;
+
 	motion_send_t mp(skt,I);
 	skt.send(mp);
 

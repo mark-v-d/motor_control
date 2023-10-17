@@ -168,9 +168,16 @@ extern "C" void CCU80_2_IRQHandler(void)
     angle+=angle_offset;
     if(angle_override!=0.0f)
 	angle=angle_override;
-    report.position=position;
-    report.angle=angle;
-    report.valid=valid;
+    if(valid) {
+	report.position=position;
+	report.angle=angle;
+	report.valid=valid;
+	IO0=0;
+    } else {
+	report.invalid++;
+	angle=report.angle;
+	IO0=1;
+    }
     constexpr auto C0=current_scale*(clarke[0]-clarke[2]);
     constexpr auto C1=current_scale*(clarke[1]-clarke[2]);
 

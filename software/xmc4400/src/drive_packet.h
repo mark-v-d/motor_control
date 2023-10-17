@@ -28,6 +28,7 @@ namespace motion_ns {
 	int32_t tpower;
 	int32_t offset;
 	int32_t ADC[2];
+	int32_t invalid;
     };
 
     struct  __attribute__ ((__packed__)) to_drive {
