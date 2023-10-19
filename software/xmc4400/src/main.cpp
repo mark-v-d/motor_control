@@ -280,7 +280,7 @@ int main()
     eth0.add_udp_receiver(&poker,ntohs(2));
     */
     syncer.TimestampInit();
-    eth0.add_udp_receiver(&drive_io,ntohs(1));
+    eth0.add_udp_receiver(&drive_io,ntohs(2));
     eth0.add_udp_receiver(&syncer,ntohs(3));
 
     FCE->CLC=0; // Enable CRC engine

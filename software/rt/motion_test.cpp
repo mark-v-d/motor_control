@@ -59,6 +59,9 @@ struct sync_t:public sync_ns::to_host {
     size_t rx_size;
 };
 
+struct sync_recv_t:public udp_t, public sync_ns::to_host {
+};
+
 std::ostream &operator<<(std::ostream &s, sync_t d) {
     s << d.timestamp.tv_sec << " " << d.timestamp.tv_nsec << " " << d.rx_size
 	<< " " << d.tx_seconds << " " << d.tx_nanoseconds
@@ -88,7 +91,7 @@ void *rt_thread(void *data)
     ssize_t rx_size;
     union rx_types {
 	udp_t udp;
-	sync_ns::to_host sync;
+	sync_recv_t sync;
 	char txt[1024];
     } buffer;
     for(auto &x:table) {
@@ -114,7 +117,7 @@ void *rt_thread(void *data)
 	do{
 	    rx_size=recvfrom(skt.socket(),
 		&buffer, sizeof(buffer), MSG_DONTWAIT, NULL, NULL);
-	    if(buffer.udp.src_port==3 && rx_size==sizeof(buffer.sync)) {
+	    if(buffer.udp.src_port==htons(3) && rx_size==sizeof(buffer.sync)) {
 		x=static_cast<decltype(x)>(buffer.sync);
 	    }
 	} while(rx_size>0);
