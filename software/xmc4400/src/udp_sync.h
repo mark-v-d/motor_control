@@ -7,8 +7,8 @@
 using namespace std::chrono_literals;
 
 class udp_sync:public Ethernet::Transmitter, public Ethernet::Receiver {
-    static constexpr float kP=5e10;
-    static constexpr float kI=1e7;
+    static constexpr float kP=50e10;
+    static constexpr float kI=15e8;
     uint32_t addend;
     float integrator;
     std::chrono::duration<float> error;

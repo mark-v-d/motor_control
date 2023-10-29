@@ -120,9 +120,10 @@ extern "C" void CCU80_2_IRQHandler(void)
     constexpr char data=0x05a;
     copro.tx(data);
     if(subsample==1) {
-	auto t=syncer.sync(&eth0,1us,2e-3,1e-4);
+	auto t=syncer.sync(&eth0,200ns,20e-3,5e-5);
 	if(t!=0s)
 	    std::apply([=](auto ...x) { (x.period(t+pwm_time),...);}, hr_out);
+	report.timer_delta=t/1ns;
     }
     itm.PORT[1].u8=subsample;
 
@@ -169,14 +170,13 @@ extern "C" void CCU80_2_IRQHandler(void)
     if(angle_override!=0.0f)
 	angle=angle_override;
     if(valid) {
+	IO0=report.position==position;
 	report.position=position;
 	report.angle=angle;
 	report.valid=valid;
-	IO0=0;
     } else {
 	report.invalid++;
 	angle=report.angle;
-	IO0=1;
     }
     constexpr auto C0=current_scale*(clarke[0]-clarke[2]);
     constexpr auto C1=current_scale*(clarke[1]-clarke[2]);
@@ -201,8 +201,11 @@ extern "C" void CCU80_2_IRQHandler(void)
     itm.PORT[8].u16=report.ADC[0];
     itm.PORT[9].u16=report.ADC[1];
     if(drive_io->new_data) {
+	static int32_t old_pos;
+	IO3=old_pos==report.position;
 	drive_io->new_data=0;
 	drive_io.transmit(&eth0,report);
+	old_pos=report.position;
     } else if(drive_io.age(&eth0)>10ms) {
 	drive_io->Iset[0]=drive_io->Iset[1]=0;
     }

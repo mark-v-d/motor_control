@@ -71,11 +71,11 @@ struct sync_t:public sync_ns::to_host, public motion_ns::to_host {
 };
 
 std::ostream &operator<<(std::ostream &s, sync_t d) {
-    s << d.timestamp.tv_sec << " " << d.timestamp.tv_nsec
-	<< " " << d.tx_seconds << " " << d.tx_nanoseconds
-	<< " " << d.rx_seconds << " " << d.rx_nanoseconds
-	<< " " << d.timer << " " << d.integrator
-	<< " " << d.position
+    s << d.timestamp.tv_sec << " " << d.timestamp.tv_nsec	// 1,2
+	<< " " << d.tx_seconds << " " << d.tx_nanoseconds	// 3,4
+	<< " " << d.rx_seconds << " " << d.rx_nanoseconds	// 5,6
+	<< " " << d.timer << " " << d.integrator		// 7,8
+	<< " " << d.position	// 9
 	<< " " << d.angle	// 10
 	<< " " << d.valid	// 11
 	<< " " << d.Irotor[0]	// 12
@@ -84,6 +84,8 @@ std::ostream &operator<<(std::ostream &s, sync_t d) {
 	<< " " << d.Vrotor[1]	// 15
 	<< " " << d.ADC[0]	// 16
 	<< " " << d.ADC[1]	// 17
+	<< " " << d.invalid 	// 18
+	<< " " << d.timer_delta	// 19
 	;
     return s;
 }

@@ -288,10 +288,8 @@ inline void ETH0_0_IRQHandler(uint32_t event)
 
 extern "C" void ETH0_0_IRQHandler(void)
 {
-    IO3=1;
     uint32_t event=eth.STATUS;
     itm.PORT[0].u32=event;
     ETH0_0_IRQHandler(event);
     eth.STATUS = event;
-    IO3=0;
 }
