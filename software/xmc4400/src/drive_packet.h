@@ -30,6 +30,8 @@ namespace motion_ns {
 	int32_t ADC[2];
 	int32_t invalid;
 	int32_t	timer_delta;
+	uint32_t rx_counter;
+	uint16_t rx_data[16];
     };
 
     struct  __attribute__ ((__packed__)) to_drive {

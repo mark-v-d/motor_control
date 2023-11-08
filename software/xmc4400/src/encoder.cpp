@@ -466,7 +466,13 @@ void hiperface_t::trigger(void)
 void init_encoder(void)
 {
     static_assert(glass_scale.UNIT!=hiperface_t::UNIT, "Posif overlap");
-    encoder.set<AMT21_t>();
+    /* 2.2kW AB motor,
+	angle_offset=0.88
+	P=-0.2;
+	I=-5e-3;
+	encoder.set<AMT21_t>();
+    */
+    encoder.set<mitsubishi_PQ_t>();
     glass_scale.init();
 }
 

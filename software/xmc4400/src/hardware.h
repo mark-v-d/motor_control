@@ -74,6 +74,7 @@ static gpio::pin<2,3> ENC_Z;
 
 static gpio::pin<0,0> COPRO_RXD;
 static gpio::pin<0,1> COPRO_TXD;
+static gpio::output<0,10> COPRO_POWER;
 
 static gpio::output<1,1> IO0;
 static gpio::output<1,0> IO1;

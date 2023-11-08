@@ -56,7 +56,8 @@ udp_struct<motion_ns::to_drive,motion_ns::to_host> drive_io
 std::array<int16_t,16> rx_data;
 std::complex<float> Iset;
 
-constexpr float current_scale=1.0/400;
+constexpr float current_scale=27.5/2048;
+
 constexpr std::array<std::complex<float>,3> clarke{
     1.0f,
     -0.5f+0.5if*sqrt(3.0f),
@@ -88,8 +89,8 @@ class complex_PI {
 public:
     complex<float> integrator;
     float limit=0;
-    float P=-0.2;
-    float I=-5e-3;
+    float P=0.2;
+    float I=5e-3;
     complex<float> output;
 
     complex<float> compute(complex<float> error) {
@@ -140,12 +141,14 @@ extern "C" void CCU80_2_IRQHandler(void)
 	d>>=8;
 	d|=copro->OUTR<<8;
 	itm.PORT[0].u8=d>>8;
-	rx_data[rxd_counter++/2]=d;
+	report.rx_data[rxd_counter/2]=rx_data[rxd_counter/2]=d;
+	rxd_counter++;
 	if(!(rxd_counter&1)) {
 	    FCE_KE2->IR=std::byteswap(d);
 	    itm.PORT[rxd_counter/2].u16=d;
 	    itm.PORT[0].u16=FCE_KE2->CRC;
 	}
+	report.rx_counter=rxd_counter;
     }
 
     std::complex<float> setpoint=0;
@@ -159,7 +162,7 @@ extern "C" void CCU80_2_IRQHandler(void)
 	Kcurrent.limit=0.9f;
     } else {
 	ccu8::set_trap(hr_out);	// disable outputs
-	Kcurrent.limit=0.9f;
+	Kcurrent.limit=0.0f;
     }
 
     rx_data[0]-=2047;
@@ -182,9 +185,9 @@ extern "C" void CCU80_2_IRQHandler(void)
     constexpr auto C1=current_scale*(clarke[1]-clarke[2]);
 
     auto Istator=C0*float(rx_data[0])+C1*float(rx_data[1]);
-    auto rotate=std::polar(1.0f, -angle);
+    auto rotate=std::polar(1.0f, angle);
     auto Irotor=rotate*Istator;
-    auto Vrotor=Kcurrent.compute(Irotor-setpoint);
+    auto Vrotor=Kcurrent.compute(setpoint-Irotor);
     auto Vstator=conj(rotate)*Vrotor;
     hr_out=space_vector_mapping(Vstator);
 
@@ -252,9 +255,10 @@ int main()
     ENC_5V=0; ENC_5V.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     ENC_12V=0; ENC_12V.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     ENC_DIR=0; ENC_DIR.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
-    IO7=0; IO7.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);	// power enable copro
+    IO7=0; IO7.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     IO0=0; IO0.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     IO3=0; IO3.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    COPRO_POWER=0; COPRO_POWER.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
 
     // Turn traceport on.
     TRACECLK.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
@@ -296,7 +300,7 @@ int main()
     //PPB->SCR=1;
 
     // Start XMC1300
-    bsl_init(IO7,COPRO_TXD,COPRO_RXD);
+    bsl_init(COPRO_POWER,COPRO_TXD,COPRO_RXD);
     copro.SetBaudrate(uart::Baudrate(4e6));
     uart::fifo_configure<0,16>(copro);
 

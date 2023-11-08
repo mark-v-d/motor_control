@@ -22,12 +22,15 @@
 using namespace std::complex_literals;
 using namespace std::chrono_literals;
 
-constexpr std::array<uint8_t,6> dst_mac{0xc2, 0x00, 0x86, 0x05, 0x10, 0xc0};
+//constexpr std::array<uint8_t,6> dst_mac{0xc2, 0x00, 0x86, 0x05, 0x10, 0xc0};
+constexpr std::array<uint8_t,6> dst_mac{0xc2, 0x00, 0x8d, 0x11, 0x11, 0xc0};
 constexpr std::array<uint8_t,4> dst_ip{192,168,0,6};
 constexpr uint16_t sync_port=3;
 constexpr uint16_t motion_port=2;
 
 using timebase_t=std::chrono::duration<int,std::ratio<1,4500>>;
+
+std::complex<double> current=0.1i;
 
 struct __attribute__ ((__packed__)) sync_send_t:
     public udp_t, public sync_ns::to_drive
@@ -86,6 +89,11 @@ std::ostream &operator<<(std::ostream &s, sync_t d) {
 	<< " " << d.ADC[1]	// 17
 	<< " " << d.invalid 	// 18
 	<< " " << d.timer_delta	// 19
+	<< " " << d.rx_counter	// 20
+	<< " " << d.rx_data[0]	// 21
+	<< " " << d.rx_data[1]	// 22
+	<< " " << d.rx_data[2]	// 23
+	<< " " << d.rx_data[3]	// 24
 	;
     return s;
 }
@@ -173,9 +181,9 @@ void *rt_thread(void *data)
 	if(time>2s)
 	    I=0;
 	else if(time>1s)
-	    I=-2.5i;
+	    I=conj(current);
 	else if(time>0.1s)
-	    I=2.5i;
+	    I=current;
 
 	motion_send_t mp(skt,I);
 	skt.send(mp);
@@ -210,6 +218,10 @@ int main(int argc, char *argv[])
     pthread_attr_t attr;
     pthread_t thread;
     int ret;
+
+    if(argc>2)
+	current=atof(argv[1])+1.0i*atof(argv[2]);
+
 
     /* Lock memory */
     if(mlockall(MCL_CURRENT|MCL_FUTURE) == -1) {
