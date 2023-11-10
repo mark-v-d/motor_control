@@ -3,6 +3,7 @@
 	30.5mH, 7.5 Ohm @ 400Hz u->v, w open
 	23.0mH, 5.2 Ohm @ 400Hz u->v+w
 */
+#include "vadc.h"
 
 #include <atomic>
 #include <complex>
@@ -12,7 +13,7 @@ constexpr float pi=acos(-1);
 #include "hardware.h"
 #include "ethernet.h"
 #include "icmp.h"
-#include "ccu4.h"
+//#include "ccu4.h"
 #include "ccu8.h"
 #include "udp_struct.h"
 #include "udp_sync.h"
@@ -35,8 +36,6 @@ std::tuple hr_out{
     hrpwm0::half_bridge(HBH2_HR,HBL2_HR)
 };
 
-constexpr ccu8::resolution_t pwm_time=1.0s/18000;
-
 uart::full_duplex copro(COPRO_TXD,COPRO_RXD);
 
 std::atomic<uint32_t> sleep_counter(0);
@@ -45,13 +44,20 @@ icmpProcessing icmp;
 
 Ethernet eth0;
 
+uint8_t rx_buffer[16];
+uint8_t tx_buffer[8];
+uint8_t command=0x53;
+uint8_t addr=0x40;
+
 udp_sync syncer __attribute__((section ("ETH_RAM")));
-udp_struct<motion_ns::to_drive,motion_ns::to_host> drive_io __attribute__((section ("ETH_RAM")));
+udp_struct<motion_ns::to_drive,motion_ns::to_host> drive_io
+    __attribute__((section ("ETH_RAM")));
 
 std::array<int16_t,16> rx_data;
 std::complex<float> Iset;
 
-constexpr float current_scale=1.0/400;
+constexpr float current_scale=27.5/2048;
+
 constexpr std::array<std::complex<float>,3> clarke{
     1.0f,
     -0.5f+0.5if*sqrt(3.0f),
@@ -83,13 +89,14 @@ class complex_PI {
 public:
     complex<float> integrator;
     float limit=0;
-    float P=-1;
-    float I=-1e-2;
+    float P=0.2;
+    float I=5e-3;
+    complex<float> output;
 
     complex<float> compute(complex<float> error) {
 	auto result=P*error+integrator;
 	integrator+=I*error;
-	auto output=result;
+	output=result;
 
 	if(abs(output)>limit) {
 	    output*=limit/abs(output);
@@ -103,66 +110,25 @@ public:
 
 static volatile int subsample;
 
-class ethernet_pll_t {
-    static constexpr float Kp=2e-3;
-    static constexpr float Ki=1e-4;
-    static constexpr uint32_t setpoint=2;
-    static constexpr ccu8::resolution_t limit=1us;
-    int32_t error;
-    float integrator=0;
-    uint32_t old_target_s;
-    uint32_t old_target_ns;
-    int sub=1;
-    uint32_t unlocked=100;
+motion_ns::to_host report;
+std::complex<float> override=0;
+float angle_offset=0;
+float angle_override=0;
 
-public:
-    void compute(int subsample) {
-	auto [now_s, now_ns]=eth0.system_time();
-	auto [target_s, target_ns]=eth0.target_time();
-	if(!syncer.locked(&eth0)) {
-	    unlocked=100;
-	    return;
-	}
-
-	if(subsample!=sub ||
-	   old_target_s==target_s && old_target_ns==target_ns)
-	    return;
-	error=1'000'000'000*(target_s-now_s)+(target_ns-now_ns);
-	itm.PORT[8].u32=error;
-	ccu8::resolution_t t(Kp*error+integrator);
-	integrator+=Ki*error;
-	auto old_t=t;
-	t=std::min(limit,std::max(-limit,t));
-	integrator+=(t-old_t)/1ns*Ki/Kp;
-	itm.PORT[10].f=integrator;
-	t+=pwm_time;
-	itm.PORT[9].u32=t.count();
-	std::apply([=](auto ...x) { (x.period(t),...);}, hr_out);
-	old_target_s=target_s;
-	old_target_ns=target_ns;
-	if(unlocked && (error<1000 || error>-1000))
-	    unlocked--;
-    }
-
-    int32_t timestamp() { return error; }
-    bool locked() { return !unlocked; }
-} pll;
-
-uint32_t get_timestamp()
-{
-    return pll.timestamp();
-}
-
-extern "C" void CCU80_0_IRQHandler(void)
+extern "C" void CCU80_2_IRQHandler(void)
 {
     static_assert(std::get<0>(hr_out).UNIT==0, "Wrong interrupt handler");
     constexpr char data=0x05a;
     copro.tx(data);
-    pll.compute(subsample);
+    if(subsample==1) {
+	auto t=syncer.sync(&eth0,200ns,20e-3,5e-5);
+	if(t!=0s)
+	    std::apply([=](auto ...x) { (x.period(t+pwm_time),...);}, hr_out);
+	report.timer_delta=t/1ns;
+    }
     itm.PORT[1].u8=subsample;
 
     if(++subsample>3) {
-	IO0=1;
 	encoder->trigger();
 	subsample=0;
     }
@@ -175,46 +141,79 @@ extern "C" void CCU80_0_IRQHandler(void)
 	d>>=8;
 	d|=copro->OUTR<<8;
 	itm.PORT[0].u8=d>>8;
-	rx_data[rxd_counter++/2]=d;
+	report.rx_data[rxd_counter/2]=rx_data[rxd_counter/2]=d;
+	rxd_counter++;
 	if(!(rxd_counter&1)) {
 	    FCE_KE2->IR=std::byteswap(d);
 	    itm.PORT[rxd_counter/2].u16=d;
 	    itm.PORT[0].u16=FCE_KE2->CRC;
 	}
+	report.rx_counter=rxd_counter;
     }
 
-    itm.PORT[2].u8=syncer.locked(&eth0);
-    itm.PORT[3].u8=pll.locked();
+    std::complex<float> setpoint=0;
+    if(syncer.locked(&eth0) && drive_io.age(&eth0)<2ms) {
+	setpoint=drive_io->Iset[0]+1if*drive_io->Iset[1];
+	ccu8::clear_trap(hr_out);	// enable outputs
+	Kcurrent.limit=0.9f;
+    } else if(abs(override)!=0.0f) {
+	setpoint=override;
+	ccu8::clear_trap(hr_out);	// enable outputs
+	Kcurrent.limit=0.9f;
+    } else {
+	ccu8::set_trap(hr_out);	// disable outputs
+	Kcurrent.limit=0.0f;
+    }
 
     rx_data[0]-=2047;
     rx_data[1]-=2047;
 
     auto [position, angle, valid]=encoder->get_pav();
+    angle+=angle_offset;
+    if(angle_override!=0.0f)
+	angle=angle_override;
+    if(valid) {
+	IO0=report.position==position;
+	report.position=position;
+	report.angle=angle;
+	report.valid=valid;
+    } else {
+	report.invalid++;
+	angle=report.angle;
+    }
     constexpr auto C0=current_scale*(clarke[0]-clarke[2]);
     constexpr auto C1=current_scale*(clarke[1]-clarke[2]);
 
     auto Istator=C0*float(rx_data[0])+C1*float(rx_data[1]);
-    auto rotate=std::polar(1.0f, -angle);
+    auto rotate=std::polar(1.0f, angle);
     auto Irotor=rotate*Istator;
-    auto Vrotor=Kcurrent.compute(Irotor-(drive_io->Iset[0]+1if*drive_io->Iset[1]));
+    auto Vrotor=Kcurrent.compute(setpoint-Irotor);
     auto Vstator=conj(rotate)*Vrotor;
     hr_out=space_vector_mapping(Vstator);
 
+    report.Irotor[0]=real(Irotor);
+    report.Irotor[1]=imag(Irotor);
+    report.Vrotor[0]=real(Vrotor);
+    report.Vrotor[1]=imag(Vrotor);
+    report.glass_counter=glass_scale.count();
+    report.glass_index=glass_scale.index();
+    report.tpower=(0xffff&adc::vadc.G[1].RES[1]);
+    report.offset=(0xffff&adc::vadc.G[0].RES[1]);
+    report.ADC[0]=(0xffff&adc::vadc.G[0].RES[0])-report.offset;
+    report.ADC[1]=(0xffff&adc::vadc.G[1].RES[0])-report.offset;
+    itm.PORT[8].u16=report.ADC[0];
+    itm.PORT[9].u16=report.ADC[1];
     if(drive_io->new_data) {
+	static int32_t old_pos;
+	IO3=old_pos==report.position;
 	drive_io->new_data=0;
-	motion_ns::to_host report;
-	report.position=position;
-	report.angle=angle;
-	report.valid=valid;
-	report.Irotor[0]=real(Irotor);
-	report.Vrotor[0]=real(Vrotor);
 	drive_io.transmit(&eth0,report);
+	old_pos=report.position;
     } else if(drive_io.age(&eth0)>10ms) {
 	drive_io->Iset[0]=drive_io->Iset[1]=0;
     }
 
     std::apply(ccu8::shadow_transfer,hr_out);
-    IO0=0;
 }
 
 extern "C" void VADC0_G0_0_IRQHandler(void)
@@ -232,6 +231,13 @@ extern "C" void Default_Handler(void)
     itm.PORT[0].u32=SCB->SHCSR;
     itm.PORT[1].u32=SCB->CFSR;
     itm.PORT[1].u32=SCB->BFAR;
+    uint32_t addr;
+    asm volatile (
+	"ldr.w %0,[sp,0x18];"	// Return address
+	: "=r"(addr)
+    );
+    ccu8::set_trap(hr_out);	// disable outputs
+    itm.PORT[0].u32=addr;
     for(uint8_t i=0;i<10;i++)
 	itm.PORT[0].u8=i; // make sure the frame on the traceport is finished
     for(;;);
@@ -241,6 +247,7 @@ volatile uint32_t counter, led, txd=-1, hrpwm_status;
 volatile int init_enable=0;
 
 void init_adc(void);
+volatile int trap_enable=0;
 int main()
 {
     SystemCoreClockUpdate();
@@ -248,11 +255,14 @@ int main()
     ENC_5V=0; ENC_5V.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     ENC_12V=0; ENC_12V.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     ENC_DIR=0; ENC_DIR.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
-    IO7=0; IO7.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);	// power enable copro
+    IO7=0; IO7.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     IO0=0; IO0.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     IO3=0; IO3.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    COPRO_POWER=0; COPRO_POWER.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
 
     // Turn traceport on.
+    TRACECLK.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
+    TRACECLK.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
     LED0.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
     LED0.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
     LED1.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
@@ -261,8 +271,6 @@ int main()
     LED2.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
     LED3.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
     LED3.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
-    LED4.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
-    LED4.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
     tpi.CSPSR=8;
     tpi.SPPR=0;
     tpi.FFCR=0;
@@ -292,7 +300,7 @@ int main()
     //PPB->SCR=1;
 
     // Start XMC1300
-    bsl_init(IO7,COPRO_TXD,COPRO_RXD);
+    bsl_init(COPRO_POWER,COPRO_TXD,COPRO_RXD);
     copro.SetBaudrate(uart::Baudrate(4e6));
     uart::fifo_configure<0,16>(copro);
 
@@ -310,23 +318,56 @@ int main()
 	(hr.period(pwm_time), ...);
 	(hr.deadtime(100ns, 100ns), ...);
 	(hr.shadow_transfer_mode(ccu8::TRANSFER_PERIOD), ...);
+	(hr.enable_trap(), ...);
 	((hr=0.25f), ...);
     }, hr_out);
 
     std::get<0>(hr_out)->ccu8->INTE=CCU8_CC8_INTE_PME_Msk;
-    std::get<0>(hr_out)->ccu8->SRS=bitfield<CCU8_CC8_SRS_POSR_Msk>(0);
-    NVIC_SetPriority(std::get<0>(hr_out).irq<0>(), 1);
-    NVIC_EnableIRQ(std::get<0>(hr_out).irq<0>());
+    std::get<0>(hr_out)->ccu8->SRS=bitfield<CCU8_CC8_SRS_POSR_Msk>(2);
+    NVIC_SetPriority(std::get<0>(hr_out).irq<2>(), 1);
+    NVIC_EnableIRQ(std::get<0>(hr_out).irq<2>());
 
     std::apply(ccu8::shadow_transfer,hr_out);
     std::apply(ccu8::start,hr_out);
 
-    auto old_led=led;
+    //std::apply([](auto& ... hr) { (hr.enable_trap(), ...); }, hr_out);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // ADC
+    ////////////////////////////////////////////////////////////////////////////
+    adc::init();
+    adc::global_class<0>(XMC_VADC_CONVMODE_12BIT,8);
+    adc::channel_control<0>(ENC_COS,   XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
+    adc::channel_control<0>(AN_IN5,    XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 1);
+    adc::channel_control<1>(ENC_SIN_A, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
+    adc::channel_control<1>(TPOWER,    XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 1);
+    adc::queue_config<0>( XMC_VADC_GATEMODE_IGNORE, 0,
+	XMC_VADC_REQ_TR_CCU80_SR2, XMC_VADC_TRIGGER_EDGE_RISING
+    );
+    adc::queue_config<1>( XMC_VADC_GATEMODE_IGNORE, 0,
+	XMC_VADC_REQ_TR_CCU80_SR2, XMC_VADC_TRIGGER_EDGE_RISING
+    );
+
+    for(int i: {0,1}) {
+	adc::vadc.G[i].ARBPR=
+	    bitfield<VADC_G_ARBPR_PRIO0_Msk>(3) |
+	    VADC_G_ARBPR_CSM0_Msk |
+	    VADC_G_ARBPR_ASEN0_Msk;
+	adc::vadc.G[i].ARBCFG=
+	    bitfield<VADC_G_ARBCFG_ANONC_Msk>(3) |
+	    bitfield<VADC_G_ARBCFG_ANONS_Msk>(3);
+    }
+    adc::queue<0>(ENC_COS, adc::EXTERNAL_TRIGGER| adc::REFILL);
+    adc::queue<0>(AN_IN5, adc::REFILL);
+    adc::queue<1>(ENC_SIN_A, adc::EXTERNAL_TRIGGER| adc::REFILL);
+    adc::queue<1>(TPOWER, adc::REFILL);
+    ////////////////////////////////////////////////////////////////////////////
 
     init_encoder();
 
     std::atomic_thread_fence(std::memory_order_release);
 
+    auto old_led=led;
     for(;;) {
 	if(led!=old_led) {
 	    old_led=led;
@@ -336,6 +377,16 @@ int main()
 	    LED3=(old_led>>3)&1;
 	}
 	counter++;
+	std::apply([](auto& ... hr) {
+	    if(trap_enable&1)
+		(hr.disable_trap(), ...);
+	    if(trap_enable&2)
+		(hr.enable_trap(), ...);
+	    if(trap_enable&4)
+		(hr.set_trap(), ...);
+	    if(trap_enable&8)
+		(hr.clear_trap(), ...);
+	}, hr_out);
     }
     return 0;
 }
@@ -356,128 +407,4 @@ void __gnu_cxx::__verbose_terminate_handler(void)
     }
 }
 
-void init_adc(void)
-{
-    using namespace vadc_g_ns;
-    /*
-	FIXME, no checks or automation.
-
-	Only channel 0 of the ADCs is used. Group 0 is used in queued mode
-	only and triggered by the timer at the PWM zero crossing.
-	4 results are accumulated in result 1, and put in a fifo to
-	be read at result 0.
-
-	   G0CH0	master CUR0
-	   G1CH6	ENC_SIN (alias)
-	   G2CH0	ENC_COS
-	   G3CH2	CUR1 (alias)
-    */
-    XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_VADC);
-    XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_VADC);
-    vadc.CLC=0;
-    vadc.GLOBCFG=vadc_ns::globcfg_t({{
-	.diva=3,
-	.dcmsb=0,
-	.divd=1,
-	.divwc=1
-    }}).raw;
-    vadc.GLOBICLASS[0]=iclass_t({{
-	.stcs=0,	// no additional cycles
-	.cms=0		// 12-bit conversion
-    }}).raw;
-
-    vadc.G[1].ALIAS=alias_t({{.alias0=6}}).raw;
-    vadc.G[3].ALIAS=alias_t({{.alias0=2}}).raw;
-
-    for(int i=0;i<4;i++) { // All channels
-	// Channel control
-	vadc.G[i].CHCTR[0]=chctr_t({{
-	    .iclsel=2,		// global class 0
-	    .chevmode=0,	// no event
-	    .sync=1,		// Synchronised conversion (G0 master)
-	    .resreg=1		// Top of 2 entry fifo
-	}}).raw;
-	vadc.G[i].RCR[0]=rcr_t({{
-	    .drctr=0,	// 4 results
-	    .dmm=0,	// accumulation
-	    .wfr=0,	// overwrite
-	    .fen=1,	// part of fifo
-	    .srgen=0	// no service request
-	}}).raw;
-    }
-    for(int i: {0,3}) {	// Current measurement channels
-	// Current measurement is averaged
-	vadc.G[i].RCR[1]=rcr_t({{
-	    .drctr=3,	// 4 results
-	    .dmm=0,	// accumulation
-	    .wfr=0,	// overwrite
-	    .fen=0,	// top of fifo
-	    .srgen=uint32_t(i==0? 1:0)	// no service request (only master)
-	}}).raw;
-    }
-    for(int i: {1,2}){
-	vadc.G[i].RCR[1]=rcr_t({{ // Encoder channels
-	    // sincos is not averaged
-	    .drctr=0,// 1 results
-	    .dmm=0,	// accumulation
-	    .wfr=0,	// overwrite
-	    .fen=0,	// top of fifo
-	    .srgen=0	// no service request
-	}}).raw;
-    }
-    for(int i=1;i<4;i++) {
-	// slave
-	vadc.G[i].SYNCTR=synctr_t({{
-	    .stsel=1,	// synchronise to G0
-	}}).raw;
-    }
-    {
-	// master
-	int i=0;
-	// Arbiter, only queued mode is enabled
-	vadc.G[i].ARBPR=arbpr_t({{
-	    .prio0=3,
-	    .csm0=1,
-	    .asen0=1,
-	}}).raw;
-	vadc.G[i].QMR0=qmr0_t({{
-	    .engt=1,
-	    .entr=1
-	}}).raw;
-	vadc.G[i].QINR0=qinr0_t({{
-	    .reqchnr=0,
-	    .rf=1,
-	    .ensi=0,
-	    .extr=1,
-
-	}}).raw;
-	// FIXME, make the xtsel mapping automatic
-	//static_assert(ccu8_ns::unit(HB0)==0, "Wrong timer for ADC trigger");
-	vadc.G[i].QCTRL0=qctrl0_t({{
-	    .xtsel=8, 	// CCU80::SR2 (See asserts)
-	    .xtmode=1,
-	    .xtwc=1,
-	    .tmen=0,	// Uncertain
-	    .tmwc=1
-	}}).raw;
-	vadc.G[i].SYNCTR=synctr_t({{
-	    .stsel=0,	// Master
-	    .evalr1=1,
-	    .evalr2=1,
-	    .evalr3=1
-	}}).raw;
-    }
-    vadc.G[0].ARBCFG=arbcfg_t({{
-	.anonc=3,	// permanently on (master/standalone mode)
-	.arbrnd=0,	// 4 slots per round
-	.arbm=0,	// arbiter runs permanently
-	.anons=3	// G0 is the master
-    }}).raw;
-#if 0
-    NVIC_SetPriority(VADC0_G0_0_IRQn,  0);
-    NVIC_ClearPendingIRQ(VADC0_G0_0_IRQn);
-    NVIC_EnableIRQ(VADC0_G0_0_IRQn);
-#endif
-}
-
-// XMC_ETH_MAC_InitRxDescriptors
+void debug() {}

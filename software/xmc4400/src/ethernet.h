@@ -177,11 +177,22 @@ public:
 	    src_ip=s;
     }
 
+    struct timestamp_t {
+	uint32_t s;
+	uint32_t ns;
+
+
+	auto operator -(timestamp_t o) {
+	    return std::chrono::duration<float>(int32_t(s-o.s)
+		+1.0e-9f*int32_t(ns-o.ns));
+	}
+    };
+
     auto system_time() {
-	return std::tuple(eth.SYSTEM_TIME_SECONDS,eth.SYSTEM_TIME_NANOSECONDS);
+	return timestamp_t(eth.SYSTEM_TIME_SECONDS,eth.SYSTEM_TIME_NANOSECONDS);
     }
     auto target_time() {
-	return std::tuple(eth.TARGET_TIME_SECONDS,eth.TARGET_TIME_NANOSECONDS);
+	return timestamp_t(eth.TARGET_TIME_SECONDS,eth.TARGET_TIME_NANOSECONDS);
     }
 
 private:

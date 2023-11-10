@@ -11,7 +11,7 @@
 #include <chrono>
 
 #include <unistd.h>
-#include <sys/syscall.h> 
+#include <sys/syscall.h>
 /* Ugly, but .... */
 #define gettid() syscall(__NR_gettid)
 #define sigev_notify_thread_id _sigev_un._tid
@@ -28,7 +28,7 @@ struct sync_t {
     uint32_t tx_nsec;
     uint32_t rx_sec;
     uint32_t rx_nsec;
-    uint32_t timer; 
+    uint32_t timer;
     float integrator;
 
     sync_t(void) {}
@@ -43,7 +43,7 @@ std::ostream &operator << (std::ostream &s,struct sync_t const &t)
 {
     double tx=t.tx_sec+1e-9*t.tx_nsec;
     double rx=t.rx_sec+1e-9*t.rx_nsec;
-    return s << std::fixed << std::setprecision(9) 
+    return s << std::fixed << std::setprecision(9)
 	<< tx << " " << rx << " " << t.timer << " "
 	<< t.integrator << std::endl;
 }
@@ -67,7 +67,7 @@ void *sender(void*)
     addr.sin_family=AF_INET;
     addr.sin_port=htons(3);
 
-    struct hostent *hp = gethostbyname("192.168.0.5");
+    struct hostent *hp = gethostbyname("192.168.0.6");
     if (!hp) {
 	perror("hostname");
 	return NULL;
@@ -77,6 +77,7 @@ void *sender(void*)
 	perror("connect");
 	return NULL;
     }
+    std::cout << "Ack " << __LINE__ << std::endl;
 
     // Set real-time scheduling
     struct sched_param param;
@@ -98,19 +99,19 @@ void *sender(void*)
 
     // Start 4500Hz timer
     struct itimerspec its;
-    its.it_value.tv_sec=0;
+    its.it_value.tv_sec=1;
     its.it_value.tv_nsec=222222;	// almost 4500Hz
     its.it_interval.tv_sec=0;
     its.it_interval.tv_nsec=222222;
-    std::cout << "# value=" << its.it_value 
+    std::cout << "# value=" << its.it_value
 	<< " interval=" << its.it_interval << std::endl;
-    if(timer_settime(tid, 0, &its, NULL)) { 
+    if(timer_settime(tid, 0, &its, NULL)) {
 	perror("timer_settime");
     }
 
 
     // send packets for 10 sec
-    for(int i=0;i<loggin.size();i++) { 
+    for(int i=0;i<loggin.size();i++) {
 	int sigs;
 	sigset_t sigset;
 	sigemptyset(&sigset);
@@ -139,7 +140,8 @@ void *sender(void*)
 	n.now_nsec=now.tv_nsec;
 	send(s,&n,sizeof(n),0);
 	uint8_t buffer[1024];
-	recv(s,buffer,sizeof(buffer),0);
+	//std::cout << "Ack " << __LINE__ << std::endl;
+	//recv(s,buffer,sizeof(buffer),0);
 	loggin[i]=buffer;
     }
 
@@ -149,6 +151,7 @@ void *sender(void*)
     std::cout << "# " << timer_getoverrun(tid) << " " << tp << " ok\n";
     for(auto x:loggin)
 	std::cout << x;
+    return 0;
 }
 
 int main(int argc, char **argv)
@@ -187,7 +190,7 @@ int main(int argc, char **argv)
 	} d;
 	int  len=recv(s,&d,sizeof(d),0);
 	std::cout << std::dec << len << " "
-	    << d.counter << " " << std::setw(6) << d.encoder 
+	    << d.counter << " " << std::setw(6) << d.encoder
 	    << std::setprecision(3) << std::fixed;
 	for(int i=0;i<4;i++)
 	    std::cout << " " << std::setw(8) << d.adc[i];

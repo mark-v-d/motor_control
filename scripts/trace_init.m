@@ -18,7 +18,7 @@
 #
 function trace_init(a,varargin)
 	if isfield(a.var,"dbgmcu")
-		a.dbgmcu.CR=bitor(a.dbgmcu.CR,0x20);
+		a.dbgmcu.CR=bitor(a.dbgmcu.CR,0x00000020);
 	end
 	if 0
 		# Asynchronous Clock Prescaler Register, TPIU_ACPR

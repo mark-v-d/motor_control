@@ -109,8 +109,6 @@ void *rt_thread(void *data)
 	char txt[1024];
     } buffer;
     for(auto &x:table) {
-
-
 	struct timespec timestamp;
 	if(clock_gettime(CLOCK_MONOTONIC, &x.timestamp)) {
 	    perror("clock_gettime");

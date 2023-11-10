@@ -10,11 +10,8 @@ gpio::output<0,0> DAC;
 gpio::pin<0,14> RXD;
 gpio::pin<0,15> TXD;
 gpio::pin<2,0> I0_P;
-gpio::pin<2,6> I0_N;
 gpio::pin<2,11> I1_P;
-gpio::pin<2,10> I1_N;
 gpio::pin<2,8> I2_P;
-//gpio::pin<2,9> I2_N;
 gpio::pin<2,9> V;
 gpio::pin<0,9> RXD_TIMER;
 

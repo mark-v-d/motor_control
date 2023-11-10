@@ -4,18 +4,23 @@
 #include "ethernet.h"
 #include "drive_packet.h"
 
+using namespace std::chrono_literals;
+
 class udp_sync:public Ethernet::Transmitter, public Ethernet::Receiver {
-    static constexpr float kP=5e10;
-    static constexpr float kI=1e7;
+    static constexpr float kP=50e10;
+    static constexpr float kI=15e8;
     uint32_t addend;
     float integrator;
+    std::chrono::duration<float> error;
+    std::chrono::duration<float> sync_integrator;
 
+    int unlocked;
     class __attribute__ ((__packed__)) sync_t:
 	public udp_t, public sync_ns::to_drive {
     };
     sync_t pkt;
-    uint32_t last_s;
-    uint32_t last_ns;
+    Ethernet::timestamp_t last;
+    using duration=std::chrono::duration<float>;
 public:
     udp_sync(void) {}
     virtual void Transmitted(Ethernet*,Ethernet::descriptor const&);
@@ -25,14 +30,31 @@ public:
     void transmit(Ethernet *eth);
     void TimestampInit(void);
     bool locked(Ethernet *eth) {
-	auto [now_s, now_ns]=eth->system_time();
-	uint32_t dt_s=now_s-last_s;
-	if(dt_s>1)
+	auto dt=eth->system_time()-last;
+	if(unlocked || dt>2ms)
 	    return 0;
-	int32_t dt_ns=now_ns-last_ns;
-	if(dt_ns<0)
-	    dt_ns+=1'000'000'000;
-	return dt_ns<1'000'000;	// 1ms timeout
+	else
+	    return 1;
+    }
+
+    duration sync(Ethernet *eth, duration limit, float Kp, float Ki) {
+	auto now=eth->system_time();
+	if(now-last>2ms) {
+	    unlocked=100;
+	    return 0ns;
+	}
+
+	error=eth->target_time()-now;
+	itm.PORT[8].f=error/1s;
+	auto t(Kp*error+sync_integrator);
+	sync_integrator+=Ki*error;
+	auto old_t=t;
+	t=std::min(limit,std::max(-limit,t));
+	sync_integrator+=(t-old_t)*Ki/Kp;
+	itm.PORT[10].f=sync_integrator/1s;
+	if(unlocked && (error<1us || error>-1us))
+	    unlocked--;
+	return t;
     }
 };
 

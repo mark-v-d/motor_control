@@ -31,7 +31,7 @@ static gpio::output<3,6> LED0; // TRACED3
 static gpio::output<4,0> LED1; // TRACED2
 static gpio::output<4,1> LED2; // TRACED1
 static gpio::output<1,15> LED3; // TRACED0
-static gpio::output<2,14> LED4; // TRACECLK
+static gpio::output<2,14> TRACECLK;
 
 static gpio::pin<15,8> CLK_RMII;
 static gpio::pin<5,2> CRS_DV;
@@ -58,19 +58,23 @@ static hrpwm0::out<0,4> HBH2_HR;
 static gpio::output<1,2> ENC_5V;
 static gpio::output<1,3> ENC_12V;
 static gpio::output<1,10> ENC_DIR;
-static gpio::pin<1,5> ENC_TXD; // FIXME, HWCTRL should only be used fo SSI
+static gpio::pin<1,5> ENC_TXD;
 static gpio::pin<1,4> ENC_RXD;
 //static gpio::pin<0,0> ENC_RXD2;
 
 static gpio::pin<14,7> ENC_SIN;
+static gpio::pin<14,12> ENC_SIN_A;
 static gpio::pin<14,6> ENC_COS;
 
+static gpio::pin<5,7> ENC_DDIR; // sub-d9
+static gpio::pin<2,6> ENC_CDIR;
 static gpio::pin<2,5> ENC_A;
 static gpio::pin<2,4> ENC_B;
 static gpio::pin<2,3> ENC_Z;
 
 static gpio::pin<0,0> COPRO_RXD;
 static gpio::pin<0,1> COPRO_TXD;
+static gpio::output<0,10> COPRO_POWER;
 
 static gpio::output<1,1> IO0;
 static gpio::output<1,0> IO1;
@@ -81,12 +85,23 @@ static gpio::output<3,5> IO5;
 static gpio::output<3,4> IO6;
 static gpio::output<3,3> IO7;
 
+static gpio::pin<14,0> AN_IN0;
+static gpio::pin<14,1> AN_IN1;
+static gpio::pin<14,2> AN_IN2;
+static gpio::pin<14,3> AN_IN3;
+static gpio::pin<14,4> AN_IN4;
+static gpio::pin<14,5> AN_IN5;
+static gpio::pin<14,13> TPOWER;
+
+using namespace std::chrono_literals;
+
+constexpr ccu8::resolution_t pwm_time=1.0s/18000;
+
 /*
     Allocated units:
     CCU80 -> PWM
     CCU40 -> POSIF0
-    CCU41 -> POSIF1 (FIXME, do this)
-    ERU1,ETLx,OGU2 -> x=pwm.spare_slice(), latch posif counter
+    CCU41 -> POSIF1
 */
 
 #endif
