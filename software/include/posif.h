@@ -1,7 +1,6 @@
 #ifndef POSIF_H
 #define POSIF_H
 #include "ccu4.h"
-extern int32_t encodercount;
 
 namespace posif {
 
@@ -152,9 +151,10 @@ public:
 	    | CCU4_CC4_CMC_TCE_Msk;
 	h->PRS=0xffff;
 
+	h.start();
+	l.start();
 	ccu4::start(l,h);
-
-	shadow_transfer(l,h);
+	ccu4::shadow_transfer(l,h);
     }
 
     int32_t count() { return cnt_l{}->TIMER | (cnt_h{}->TIMER<<16); }

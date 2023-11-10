@@ -412,8 +412,7 @@
     (uuid fda304d1-4810-44c3-a609-7c9c3ad3fed8)
   )
 
-  (text "FIXME\n\nSnubbers (before and after the L)\nSingle sided current measurement\nNo negative gate drive"
-    (at 45.72 29.21 0)
+  (text "FIXME\n\nOPA365 instead of tlv991" (at 45.72 29.21 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 314e5302-c0f7-4ead-a14c-1a5bfbdc93a1)
   )

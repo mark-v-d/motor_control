@@ -474,6 +474,9 @@ void init_encoder(void)
     */
     encoder.set<mitsubishi_PQ_t>();
     glass_scale.init();
+    ccu4::slice_t<1,0> h;
+    ccu4::slice_t<1,1> l;
+    ccu4::start(h,l);
 }
 
 /*******************************************************************************

@@ -66,8 +66,8 @@ static gpio::pin<14,7> ENC_SIN;
 static gpio::pin<14,12> ENC_SIN_A;
 static gpio::pin<14,6> ENC_COS;
 
-static gpio::pin<5,7> ENC_DDIR; // sub-d9
-static gpio::pin<2,6> ENC_CDIR;
+static gpio::output<5,7> ENC_DDIR; // sub-d9
+static gpio::output<2,6> ENC_CDIR;
 static gpio::pin<2,5> ENC_A;
 static gpio::pin<2,4> ENC_B;
 static gpio::pin<2,3> ENC_Z;
