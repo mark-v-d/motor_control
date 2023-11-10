@@ -120,6 +120,7 @@ C override=0;
 C limit{0.1, 0.5};
 float angle_offset=0;
 float angle_override=0;
+float limit=0.9f;
 
 extern "C" void CCU80_2_IRQHandler(void)
 {
