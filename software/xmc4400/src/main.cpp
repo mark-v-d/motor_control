@@ -27,8 +27,8 @@ using namespace std::chrono_literals;
 using std::sqrt;
 using std::cos;
 using std::sin;
-using std::complex;
 using std::abs;
+using C=std::complex<float>;
 
 std::tuple hr_out{
     hrpwm0::half_bridge(HBH0_HR,HBL0_HR),
@@ -54,17 +54,17 @@ udp_struct<motion_ns::to_drive,motion_ns::to_host> drive_io
     __attribute__((section ("ETH_RAM")));
 
 std::array<int16_t,16> rx_data;
-std::complex<float> Iset;
+C Iset;
 
 constexpr float current_scale=27.5/2048;
 
-constexpr std::array<std::complex<float>,3> clarke{
+constexpr std::array<C,3> clarke{
     1.0f,
     -0.5f+0.5if*sqrt(3.0f),
     -0.5f-0.5if*sqrt(3.0f)
 };
 
-inline auto space_vector_mapping(std::complex<float> Vstator)
+inline auto space_vector_mapping(C Vstator)
 {
     std::array<float,3> out;
 
@@ -87,23 +87,28 @@ inline auto space_vector_mapping(std::complex<float> Vstator)
 
 class complex_PI {
 public:
-    complex<float> integrator;
-    float limit=0;
+    C integrator;
+    C limit=0;
     float P=0.2;
     float I=5e-3;
-    complex<float> output;
+    C output;
 
-    complex<float> compute(complex<float> error) {
+    C compute(C error) {
 	auto result=P*error+integrator;
 	integrator+=I*error;
-	output=result;
 
-	if(abs(output)>limit) {
-	    output*=limit/abs(output);
-	    auto correction=output-result;
+	C limited{
+	    abs(real(result))>real(limit)?
+		std::copysign(real(limit),real(result)): real(result),
+	    abs(imag(result))>imag(limit)?
+		std::copysign(imag(limit),imag(result)): imag(result)
+	};
+
+	if(result!=limited) {
+	    auto correction=limited-result;
 	    integrator+=correction*I/P;
 	}
-	return output;
+	return limited;
     }
 } Kcurrent;
 
@@ -111,7 +116,8 @@ public:
 static volatile int subsample;
 
 motion_ns::to_host report;
-std::complex<float> override=0;
+C override=0;
+C limit{0.1, 0.5};
 float angle_offset=0;
 float angle_override=0;
 
@@ -151,15 +157,15 @@ extern "C" void CCU80_2_IRQHandler(void)
 	report.rx_counter=rxd_counter;
     }
 
-    std::complex<float> setpoint=0;
+    C setpoint=0;
     if(syncer.locked(&eth0) && drive_io.age(&eth0)<2ms) {
 	setpoint=drive_io->Iset[0]+1if*drive_io->Iset[1];
 	ccu8::clear_trap(hr_out);	// enable outputs
-	Kcurrent.limit=0.9f;
+	Kcurrent.limit=limit;
     } else if(abs(override)!=0.0f) {
 	setpoint=override;
 	ccu8::clear_trap(hr_out);	// enable outputs
-	Kcurrent.limit=0.9f;
+	Kcurrent.limit=limit;
     } else {
 	ccu8::set_trap(hr_out);	// disable outputs
 	Kcurrent.limit=0.0f;
