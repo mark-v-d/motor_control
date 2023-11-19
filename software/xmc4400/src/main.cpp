@@ -86,12 +86,12 @@ inline auto space_vector_mapping(C Vstator)
 }
 
 class complex_PI {
-public:
-    C integrator;
     C limit=0;
+    C integrator;	// Deze settings z@112.5 rad/s
     float P=0.2;
     float I=5e-3;
     C output;
+public:
 
     C compute(C error) {
 	auto result=P*error+integrator;
@@ -110,8 +110,42 @@ public:
 	}
 	return limited;
     }
-} Kcurrent;
 
+    void set_limit(C l) { limit=l; }
+};
+
+class complex_ss_2 {
+public:
+    float a[4]={0, 0.641180388429955,-1,1.6411803884299541};
+    float b[2]={-7.093310362599589e-02, -7.272720168384604e-02};
+    float c[2]={0,-1};
+    float d=0;
+    C state[2];
+    float K[2];
+    C limit;
+
+    C compute(C error) {
+	C result=d*error+state[0]*c[0]+state[1]*c[1];
+	state[0]=a[0]*state[0]+a[1]*state[1]+b[0]*error;
+	state[1]=a[2]*state[0]+a[3]*state[1]+b[1]*error;
+
+	C limited{
+	    abs(real(result))>real(limit)?
+		std::copysign(real(limit),real(result)): real(result),
+	    abs(imag(result))>imag(limit)?
+		std::copysign(imag(limit),imag(result)): imag(result)
+	};
+
+	state[0]+=K[0]*(limited-result);
+	state[1]+=K[1]*(limited-result);
+	return limited;
+    }
+
+    void set_limit(C l) { limit=l; }
+};
+
+
+complex_ss_2 Kcurrent;
 
 static volatile int subsample;
 
@@ -120,7 +154,6 @@ C override=0;
 C limit{0.1, 0.5};
 float angle_offset=0;
 float angle_override=0;
-float limit=0.9f;
 
 extern "C" void CCU80_2_IRQHandler(void)
 {
@@ -162,18 +195,19 @@ extern "C" void CCU80_2_IRQHandler(void)
     if(syncer.locked(&eth0) && drive_io.age(&eth0)<2ms) {
 	setpoint=drive_io->Iset[0]+1if*drive_io->Iset[1];
 	ccu8::clear_trap(hr_out);	// enable outputs
-	Kcurrent.limit=limit;
+	Kcurrent.set_limit(limit);
     } else if(abs(override)!=0.0f) {
 	setpoint=override;
 	ccu8::clear_trap(hr_out);	// enable outputs
-	Kcurrent.limit=limit;
+	Kcurrent.set_limit(limit);
     } else {
 	ccu8::set_trap(hr_out);	// disable outputs
-	Kcurrent.limit=0.0f;
+	Kcurrent.set_limit(0.0f);
     }
 
     rx_data[0]-=2047;
     rx_data[1]-=2047;
+    rx_data[3]-=2047;
 
     auto [position, angle, valid]=encoder->get_pav();
     angle+=angle_offset;
@@ -191,7 +225,10 @@ extern "C" void CCU80_2_IRQHandler(void)
     constexpr auto C0=current_scale*(clarke[0]-clarke[2]);
     constexpr auto C1=current_scale*(clarke[1]-clarke[2]);
 
-    auto Istator=C0*float(rx_data[0])+C1*float(rx_data[1]);
+    auto Istator=current_scale*(
+	    clarke[0]*float(rx_data[0])+
+	    clarke[1]*float(rx_data[1])+
+	    clarke[2]*float(rx_data[3]));
     auto rotate=std::polar(1.0f, angle);
     auto Irotor=rotate*Istator;
     auto Vrotor=Kcurrent.compute(setpoint-Irotor);
@@ -268,6 +305,7 @@ int main()
     COPRO_POWER=0; COPRO_POWER.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     ENC_DDIR=0; ENC_DDIR.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     ENC_CDIR=0; ENC_CDIR.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    SUPPLY_VOLTAGE=1; SUPPLY_VOLTAGE.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
 
     // Turn traceport on.
     TRACECLK.set(XMC_GPIO_HWCTRL_PERIPHERAL1);
