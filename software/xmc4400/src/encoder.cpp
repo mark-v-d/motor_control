@@ -472,8 +472,8 @@ void init_encoder(void)
 	I=-5e-3;
 	encoder.set<AMT21_t>();
     */
-    //encoder.set<mitsubishi_PQ_t>();
-    encoder.set<mitsubishi_MFS13_t>();
+    encoder.set<mitsubishi_PQ_t>();
+    //encoder.set<mitsubishi_MFS13_t>();
     glass_scale.init();
     ccu4::slice_t<1,0> h;
     ccu4::slice_t<1,1> l;

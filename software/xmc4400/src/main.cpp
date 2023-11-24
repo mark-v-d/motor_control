@@ -116,7 +116,7 @@ public:
 
 class complex_ss_2 {
 public:
-    float a[4]={0, 0.641180388429955,-1,1.6411803884299541};
+    float a[2][2]={{0, 0.641180388429955},{-1,1.6411803884299541}};
     float b[2]={-7.093310362599589e-02, -7.272720168384604e-02};
     float c[2]={0,-1};
     float d=0;
@@ -126,8 +126,8 @@ public:
 
     C compute(C error) {
 	C result=d*error+state[0]*c[0]+state[1]*c[1];
-	state[0]=a[0]*state[0]+a[1]*state[1]+b[0]*error;
-	state[1]=a[2]*state[0]+a[3]*state[1]+b[1]*error;
+	state[0]=a[0][0]*state[0]+a[0][1]*state[1]+b[0]*error;
+	state[1]=a[1][0]*state[0]+a[1][1]*state[1]+b[1]*error;
 
 	C limited{
 	    abs(real(result))>real(limit)?
