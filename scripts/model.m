@@ -5,7 +5,7 @@ k=10
 motor=ss(-R/L, 1/L, 1, 0)
 
 controller=zpk(-3225.8,0,1)
-c2=zpk(-3225.8,[0 -3e4],3e4)
+c2=zpk(-3225.8,[0 -4e4],3e4)
 c3=zpk(-3225.8,[0 -1e4],1e4)
 
 C=c2d(controller,1/18e3);
@@ -27,7 +27,7 @@ step(linspace(0,2e-3,1000),T1,T2,T3)
 #
 # Create limiter for K2 and simulate limiting
 #
-K2=ss(C2)/77;
+K2=ss(C2)/200;
 [Klim Kl]=speedup_limiter(K2)
 I=[ones(1,10), zeros(1,10)+0.7]
 [u t x]=lsim(K2,I)
