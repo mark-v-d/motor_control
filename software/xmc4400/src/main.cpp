@@ -117,11 +117,11 @@ public:
 class complex_ss_2 {
 public:
     float a[2][2]={{1, 0},{0,0}};
-    float b[2]={0.1778, 0};
+    float b[2]={0.02222, 0};
     float c[2]={1,0};
-    float d=1;
+    float d=0.5;
     C state[2];
-    float K[2]={0.1778,0};
+    float K[2]={0.04444,0};
     C limit;
 
     C compute(C error) {
