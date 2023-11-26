@@ -73,6 +73,7 @@ struct sync_t:public sync_ns::to_host, public motion_ns::to_host {
     timespec timestamp;
     std::complex<float> I;
     decltype(controller)::input_t setpoint;
+    decltype(controller)::input_t error;
 };
 
 std::ostream &operator<<(std::ostream &s, sync_t d) {
@@ -98,9 +99,12 @@ std::ostream &operator<<(std::ostream &s, sync_t d) {
 	<< " " << d.rx_data[3]	// 24
 	<< " " << d.glass_counter	// 25
 	<< " " << d.glass_index		// 26
-	<< " " << d.setpoint	// 27
+	<< " " << d.setpoint(0)	// 27
 	<< " " << real(d.I)	// 28
 	<< " " << imag(d.I)	// 29
+	<< " " << d.setpoint(1)	// 30
+	<< " " << d.error(0)	// 31
+	<< " " << d.error(1)	// 32
 	;
     return s;
 }
@@ -170,6 +174,7 @@ void *rt_thread(void *data)
     } buffer;
 
     motion_ns::to_host motion;
+    decltype(controller)::input_t offset;
     for(size_t i=0; i<table.size()-1; i++) {
 	time++;
 	struct timespec timestamp;
@@ -193,11 +198,16 @@ void *rt_thread(void *data)
 		table[i-1].glass_counter,
 		table[i-1].position
 	    };
+	    if(i<=90)
+		offset=inputs;
 
-	    auto r=controller.compute(table[i].setpoint-inputs);
+	    table[i].error=table[i].setpoint-(inputs-offset);
+
+	    auto r=controller.compute(table[i].error);
+	    //auto r=[] (int) { return 0.5;};
+
 	    table[i].I=1.0if*float(r(0));
 	}
-
 
 	motion_send_t mp(skt,table[i].I);
 	skt.send(mp);
@@ -247,7 +257,7 @@ int main(int argc, char *argv[])
 	controller.read(settings);
     }
 
-    {
+    try {
 	std::ifstream setpoints(argv[2]);
 	if(!setpoints) {
 	    perror(argv[2]);
@@ -268,7 +278,11 @@ int main(int argc, char *argv[])
 
 	for(int i=0; i<1s/timebase_t(1); i++) // lead out of 1s
 	    table.emplace_back(sync_t{.I=std::complex<float>{0,0}});
+    } catch(std::string err) {
+	std::cout << err;
+	return 1;
     }
+
 
     /* Lock memory */
     if(mlockall(MCL_CURRENT|MCL_FUTURE) == -1) {

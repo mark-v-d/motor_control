@@ -1,8 +1,7 @@
-function [result, sys]=save_Controller(K,limit=1,Kl=[])
-	[sys Klimiter]=speedup_limiter(K);
-	A=zeros(1,9);
-	B=zeros(1,6);
-	C=zeros(1,2);
+function [result, sys]=save_Controller(K,limit=0.7,Klin=[])
+	A=zeros(3,3);
+	B=zeros(3,2);
+	C=zeros(1,3);
 	D=zeros(1,2);
 	Kl=zeros(1,3);
 	if size(K,1)!=1
@@ -12,25 +11,35 @@ function [result, sys]=save_Controller(K,limit=1,Kl=[])
 	elseif K.tsam!=1/4500
 		error("wrong sampling speed");
 	elseif(size(K.A,1)==1&& size(K.A,2)==1)
+		[sys Klimiter]=speedup_limiter(K);
+		fflush(stdout)
 		A(1)=K.A(1);
 		B(1:2)=K.B;
 		C(1)=K.C;
 		D(1:2)=K.D;
 		Kl(1)=Klimiter;
 	elseif size(K.A,1)==2 && size(K.A,2)==2
+		[sys Klimiter]=speedup_limiter(K,Klin)
+		fflush(stdout)
+		A(1:2,1:2)=K.A
+		B(1:2,1:2)=K.B
+		C(1:2)=K.C
+		D=K.D
+		Kl(1:2)=Klimiter
 	end
 
 	f=fopen("settings","w");
 	fprintf(f,"%f ",A);
-	fprintf(f,"\n");
+	fprintf(f,"# A\n");
 	fprintf(f,"%f ",B);
-	fprintf(f,"\n");
+	fprintf(f,"# B\n");
 	fprintf(f,"%f ",C);
-	fprintf(f,"\n");
+	fprintf(f,"# C\n");
 	fprintf(f,"%f ",D);
-	fprintf(f,"\n");
+	fprintf(f,"# D\n");
 	fprintf(f,"%f ",Kl);
-	fprintf(f,"\n");
+	fprintf(f,"# Kl\n");
 	fprintf(f,"%f ",limit);
+	fprintf(f,"# limit\n");
 	fclose(f);
 endfunction

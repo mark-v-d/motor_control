@@ -1,11 +1,17 @@
-function [Klimiting x0 n nev]=speedup_limiter(K)
+function [Klimiting x0 n nev]=speedup_limiter(K,Kinit=[])
 	kl={};
 	kk=[];
 	stables=0;
 	p=[];
 	attempts=0;
 	do
-		Kk=100*(rand(size(K.a,1),size(K,1))-0.5);
+		attempts++
+		fflush(stdout);
+		if isempty(Kinit)
+			Kk=100*(rand(size(K.a,1),size(K,1))-0.5);
+		else
+			Kk=Kinit;
+		end
 		Klimiting=K;
 		Klimiting.A=K.A-Kk*K.C;
 		Klimiting.B=K.B-Kk*K.D;

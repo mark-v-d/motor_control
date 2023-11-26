@@ -87,7 +87,7 @@ public:
 	}
 	state+=K*(limited-output);
 
-	return output;
+	return limited;
     }
 };
 
