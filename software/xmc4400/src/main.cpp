@@ -168,8 +168,9 @@ extern "C" void CCU80_2_IRQHandler(void)
     }
     itm.PORT[1].u8=subsample;
 
-    if(++subsample>3) {
+    if(subsample==2) 	// 3 is sometimes too late for the ethernet packet
 	encoder->trigger();
+    if(++subsample>3) {
 	subsample=0;
     }
 
