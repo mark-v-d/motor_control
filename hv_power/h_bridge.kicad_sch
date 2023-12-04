@@ -2393,7 +2393,7 @@
     (property "Reference" "R9" (at 215.9 76.708 90)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Value" "270" (at 215.9 78.74 90)
+    (property "Value" "100" (at 215.9 78.74 90)
       (effects (font (size 1.27 1.27)))
     )
     (property "Footprint" "Resistor_SMD:R_2512_6332Metric" (at 215.9 80.518 90)
