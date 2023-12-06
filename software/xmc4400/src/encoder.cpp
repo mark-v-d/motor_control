@@ -203,15 +203,14 @@ void mitsubishi_PQ_t::rx_handler(void) {
 /* AMT21 encoder **************************************************************/
 class AMT21_t:public encoder_t
 {
-    constexpr static int poles=4;
     constexpr static int increments_per_revolution=(1<<14);
-    constexpr static float conv=2.0*PI*poles/increments_per_revolution;
-
     constexpr static auto baudrate=uart::Baudrate(2.0e6);
+
+    float conv;//=2.0*PI*poles/increments_per_revolution;
     int putp;
     std::array<uint8_t,8> rx_buffer;
 public:
-    AMT21_t(void);
+    AMT21_t(int);
     virtual ~AMT21_t(void);
 
     virtual void trigger(void) override;
@@ -220,8 +219,10 @@ public:
     virtual void protocol_handler(void) override {}
 };
 
-AMT21_t::AMT21_t(void)
+AMT21_t::AMT21_t(int poles)
 {
+    conv=2.0*PI*poles/increments_per_revolution;
+
     ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
     ENC_DIR=0;
     ENC_5V=1;
@@ -478,6 +479,16 @@ void init_encoder(void)
     ccu4::slice_t<1,0> h;
     ccu4::slice_t<1,1> l;
     ccu4::start(h,l);
+}
+
+void set_encoder(int type, int poles)
+{
+    switch(type) {
+    case 1: encoder.set<mitsubishi_PQ_t>(); break;
+    case 2: encoder.set<mitsubishi_MFS13_t>(); break;
+    case 3: encoder.set<AMT21_t>(poles); break;
+    //case 4: encoder.set<hiperface_t>(poles); break;
+    }
 }
 
 /*******************************************************************************

@@ -4,6 +4,8 @@
 #include "packet.h"
 
 namespace sync_ns {
+    constexpr uint16_t port=3;
+
     struct __attribute__ ((__packed__)) to_host {
 	uint32_t tx_seconds;
 	uint32_t tx_nanoseconds;
@@ -17,6 +19,8 @@ namespace sync_ns {
 }
 
 namespace motion_ns {
+    constexpr uint16_t port=2;
+
     struct  __attribute__ ((__packed__)) to_host {
 	int32_t position;
 	float angle;
@@ -37,6 +41,21 @@ namespace motion_ns {
     struct  __attribute__ ((__packed__)) to_drive {
 	uint32_t new_data;
 	float Iset[2];
+    };
+};
+
+namespace config_ns {
+    constexpr uint16_t port=4;
+
+    struct  __attribute__ ((__packed__)) to_host {
+    };
+
+    struct  __attribute__ ((__packed__)) to_drive {
+	int new_data;
+	int led;
+	int encoder;
+	int poles;
+	float angle_offset;
     };
 };
 

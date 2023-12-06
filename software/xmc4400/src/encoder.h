@@ -31,7 +31,12 @@ extern polymorphic_t<encoder_t,64> encoder;
 extern posif::qdi32_t<decltype(ENC_A),decltype(ENC_B),decltype(ENC_Z)>
     glass_scale;
 
+struct encoder_parameters_t {
+    int poles;
+};
+
 void init_encoder(void);
+void set_encoder(int,int);
 
 extern uint8_t rx_buffer[16];
 extern uint8_t tx_buffer[8];

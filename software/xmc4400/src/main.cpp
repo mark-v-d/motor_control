@@ -52,6 +52,8 @@ uint8_t addr=0x40;
 udp_sync syncer __attribute__((section ("ETH_RAM")));
 udp_struct<motion_ns::to_drive,motion_ns::to_host> drive_io
     __attribute__((section ("ETH_RAM")));
+udp_struct<config_ns::to_drive,config_ns::to_host> drive_config
+    __attribute__((section ("ETH_RAM")));
 
 std::array<int16_t,16> rx_data;
 C Iset;
@@ -336,8 +338,9 @@ int main()
     eth0.add_udp_receiver(&poker,ntohs(2));
     */
     syncer.TimestampInit();
-    eth0.add_udp_receiver(&drive_io,ntohs(2));
-    eth0.add_udp_receiver(&syncer,ntohs(3));
+    eth0.add_udp_receiver(&drive_io,ntohs(motion_ns::port));
+    eth0.add_udp_receiver(&syncer,ntohs(sync_ns::port));
+    eth0.add_udp_receiver(&drive_config,ntohs(config_ns::port));
 
     FCE->CLC=0; // Enable CRC engine
 
@@ -435,6 +438,12 @@ int main()
 	    if(trap_enable&8)
 		(hr.clear_trap(), ...);
 	}, hr_out);
+	if(drive_config->new_data) {
+	    drive_config->new_data=0;
+	    led=drive_config->led;
+	    if(drive_config->encoder)
+		set_encoder(drive_config->encoder, drive_config->poles);
+	}
     }
     return 0;
 }

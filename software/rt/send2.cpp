@@ -34,7 +34,7 @@
 #define MY_DEST_MAC4	0x10
 #define MY_DEST_MAC5	0xc0
 
-#define DEFAULT_IF	"eth2"
+#define DEFAULT_IF	"eth1"
 #define BUF_SIZ		1024
 #define ETHER_TYPE	0x0800
 
