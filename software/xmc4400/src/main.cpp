@@ -157,6 +157,21 @@ C limit{0.1, 0.5};
 float angle_offset=0;
 float angle_override=0;
 
+std::atomic<int> spinlock;
+class locker_t {
+    bool result;
+    std::atomic<int> *p;
+public:
+    locker_t(std::atomic<int> &lock) {
+	int expected=0;
+	result=lock.compare_exchange_weak(expected,1);
+	p=&lock;
+    }
+    ~locker_t() { (*p)=0; }
+
+    operator bool() { return result; }
+};
+
 extern "C" void CCU80_2_IRQHandler(void)
 {
     static_assert(std::get<0>(hr_out).UNIT==0, "Wrong interrupt handler");
@@ -170,7 +185,9 @@ extern "C" void CCU80_2_IRQHandler(void)
     }
     itm.PORT[1].u8=subsample;
 
-    if(subsample==2) 	// 3 is sometimes too late for the ethernet packet
+    // 3 is sometimes too late for the ethernet packet
+    locker_t encoder_ready(spinlock);
+    if(encoder_ready && subsample==2)
 	encoder->trigger();
     if(++subsample>3) {
 	subsample=0;
@@ -420,6 +437,7 @@ int main()
 
     auto old_led=led;
     for(;;) {
+	//asm volatile ("WFI");
 	if(led!=old_led) {
 	    old_led=led;
 	    LED0=old_led&1;
@@ -439,10 +457,16 @@ int main()
 		(hr.clear_trap(), ...);
 	}, hr_out);
 	if(drive_config->new_data) {
-	    drive_config->new_data=0;
 	    led=drive_config->led;
-	    if(drive_config->encoder)
+	    limit=drive_config->limit_r + 1.0if*drive_config->limit_i;
+	    drive_config->new_data=0;
+	}
+	if(drive_config->encoder) {
+	    locker_t change_encoder(spinlock);
+	    if(change_encoder) {
 		set_encoder(drive_config->encoder, drive_config->poles);
+		drive_config->encoder=0;
+	    }
 	}
     }
     return 0;

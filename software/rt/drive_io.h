@@ -101,11 +101,10 @@ struct __attribute__ ((__packed__)) send_t:public send_base_t, public to_drive
     template <class T>
     send_t(
 	T const &skt, std::array<uint8_t,6> mac, std::array<uint8_t,4> ip,
-	int led_in
-    ):send_base_t(skt,mac,ip,port)
+	to_drive const &data
+    ):send_base_t(skt,mac,ip,port), to_drive(data)
     {
 	new_data++; new_data|=0x80000000;
-	led=led_in;
 	finish_packet(sizeof(*this));
     }
 };
@@ -115,5 +114,53 @@ struct recv_t:public udp_t, public to_host {
 
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+// Used for logging
+////////////////////////////////////////////////////////////////////////////////
+
+struct sync_t:public sync_ns::to_host, public motion_ns::to_host {
+    timespec timestamp;
+/*
+    std::complex<float> I;
+    decltype(controller)::input_t setpoint;
+    decltype(controller)::input_t error;
+*/
+};
+
+std::ostream &operator<<(std::ostream &s, sync_t d) {
+    s << d.timestamp.tv_sec << " " << d.timestamp.tv_nsec	// 1,2
+	<< " " << d.tx_seconds << " " << d.tx_nanoseconds	// 3,4
+	<< " " << d.rx_seconds << " " << d.rx_nanoseconds	// 5,6
+	<< " " << d.timer << " " << d.integrator		// 7,8
+	<< " " << d.position	// 9
+	<< " " << d.angle	// 10
+	<< " " << d.valid	// 11
+	<< " " << d.Irotor[0]	// 12
+	<< " " << d.Irotor[1]	// 13
+	<< " " << d.Vrotor[0]	// 14
+	<< " " << d.Vrotor[1]	// 15
+	<< " " << d.ADC[0]	// 16
+	<< " " << d.ADC[1]	// 17
+	<< " " << d.invalid 	// 18
+	<< " " << d.timer_delta	// 19
+	<< " " << d.rx_counter	// 20
+	<< " " << d.rx_data[0]	// 21
+	<< " " << d.rx_data[1]	// 22
+	<< " " << d.rx_data[2]	// 23
+	<< " " << d.rx_data[3]	// 24
+	<< " " << d.glass_counter	// 25
+	<< " " << d.glass_index		// 26
+/*
+	<< " " << d.setpoint(0)	// 27
+	<< " " << real(d.I)	// 28
+	<< " " << imag(d.I)	// 29
+	<< " " << d.setpoint(1)	// 30
+	<< " " << d.error(0)	// 31
+	<< " " << d.error(1)	// 32
+*/
+	;
+    return s;
+}
 
 #endif

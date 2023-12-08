@@ -9,9 +9,12 @@ raw_socket skt("eth1");
 
 int main(int argc, char *argv[])
 {
-    config_ns::send_t pkt(skt,dst_mac,dst_ip, atoi(argv[1]));
-    for(;;)  {
-	skt.send(pkt);
-	usleep(100);
-    }
+    config_ns::to_drive d{
+	.led=atoi(argv[1]),
+	.encoder=1,
+	.poles=4,	// ignored by PQ/MFS encoders
+	.angle_offset=0.0,
+	.limit_r=0.44, .limit_i=0.8
+    };
+    skt.send(config_ns::send_t(skt,dst_mac,dst_ip, d));
 }
