@@ -128,7 +128,7 @@ struct sync_t:public sync_ns::to_host, public motion_ns::to_host {
 */
 };
 
-std::ostream &operator<<(std::ostream &s, sync_t d) {
+std::ostream &operator<<(std::ostream &s, sync_t const &d) {
     s << d.timestamp.tv_sec << " " << d.timestamp.tv_nsec	// 1,2
 	<< " " << d.tx_seconds << " " << d.tx_nanoseconds	// 3,4
 	<< " " << d.rx_seconds << " " << d.rx_nanoseconds	// 5,6

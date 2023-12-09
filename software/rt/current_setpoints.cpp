@@ -15,6 +15,7 @@
 #include "drive_io.h"
 
 #include <iostream>
+#include <fstream>
 #include <complex>
 #include <chrono>
 using namespace std::complex_literals;
@@ -28,7 +29,16 @@ constexpr std::array<uint8_t,4> ip{192,168,0,6};
 using timebase_t=std::chrono::duration<int,std::ratio<1,4500>>;
 
 std::complex<double> current=0.1i;
-std::array<sync_t,3*4500> table;
+struct sync_I_t:public sync_t {
+    std::complex<float> I;
+};
+std::vector<sync_I_t> table;
+
+std::ostream &operator<<(std::ostream &s, sync_I_t const &d) {
+    s	<< sync_t(d)
+	<< " " << real(d.I) << " " << imag(d.I); // 27,28
+    return s;
+}
 
 raw_socket skt("eth1");
 
@@ -70,15 +80,7 @@ void *rt_thread(void *data)
         ////////////////////////////////////////////////////////////////////////
         // Test specific code
         ////////////////////////////////////////////////////////////////////////
-	std::complex<float> I=0;
-	if(time>2s)
-	    I=0;
-	else if(time>1s)
-	    I=conj(current);
-	else if(time>0.1s)
-	    I=current;
-
-	skt.send(motion_ns::send_t(skt, mac, ip, I));
+	skt.send(motion_ns::send_t(skt, mac, ip, x.I));
 
         ////////////////////////////////////////////////////////////////////////
         // Wait and receive data
@@ -119,8 +121,31 @@ int main(int argc, char *argv[])
     pthread_t thread;
     int ret;
 
-    if(argc>2)
-	current=atof(argv[1])+1.0i*atof(argv[2]);
+    try {
+	std::ifstream setpoints(argv[1]);
+	if(!setpoints) {
+	    perror(argv[1]);
+	    return 1;
+	}
+
+	for(int i=0; i<0.1s/timebase_t(1); i++) // synchronisation for 0.1s
+	    table.emplace_back(sync_I_t{.I=std::complex<float>{0,0}});
+
+	std::string s;
+	while(std::getline(setpoints,s)) {
+	    if(!s.size() || s[0]=='#')
+		continue;
+	    double r,i;
+	    sscanf(s.c_str()," %lf %lf",&r,&i);
+	    table.emplace_back(sync_I_t{.I=std::complex<float>(r,i)});
+	}
+
+	for(int i=0; i<1s/timebase_t(1); i++) // lead out of 1s
+	    table.emplace_back(sync_I_t{.I=std::complex<float>{0,0}});
+    } catch(std::string err) {
+	std::cout << err;
+	return 1;
+    }
 
 
     /* Lock memory */
