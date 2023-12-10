@@ -6,10 +6,12 @@
 #include <string>
 #include <eigen3/Eigen/Dense>
 
+/*
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
 namespace std { using fmt::format; }
+*/
 
 template <class T,int rows,int cols>
 void read(Eigen::Matrix<T,rows,cols> &m, std::string s)
