@@ -12230,7 +12230,7 @@
     (property "Reference" "U20" (at 256.54 90.17 0)
       (effects (font (size 1.524 1.524)))
     )
-    (property "Value" "ETH100_MAG" (at 256.54 129.54 0)
+    (property "Value" "SI-50170-F" (at 256.54 129.54 0)
       (effects (font (size 1.524 1.524)))
     )
     (property "Footprint" "00_Passives:ETH100_MAG" (at 256.54 100.33 0)

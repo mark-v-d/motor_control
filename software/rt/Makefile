@@ -3,9 +3,10 @@ CFLAGS=-g
 CPPFLAGS=-I.
 CXXFLAGS=-O2 -g --std=c++20 -lfmt
 
-motion_test3: packet.h
-motion_test2: packet.h
-motion_test: packet.h
+all: current_setpoints motion_setpoints set_config
 
-send2: packet.h send2.cpp
-test1:
+#INCLUDES=drive_io.h drive_packet.h packet.h raw_socket.h
+
+current_setpoints: $(INCLUDES)
+
+motion_setpoints:  $(INCLUDES) ss.h
