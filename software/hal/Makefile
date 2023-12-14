@@ -6,8 +6,6 @@ obj-m += etherdrive.o
 
 LDFLAGS+=-L $(EMC2_HOME)/lib
 
-CXXFLAGS+=$(shell xeno-config --cflags --posix)
-
 %.o: %.cpp
 	$(ECHO) Compiling realtime $<
 	$(Q)$(CC) -I ../include $(CXXFLAGS) -o $@ $(EXTRA_CFLAGS) -std=c++17 -c $<
@@ -19,4 +17,5 @@ clean:
 
 link:
 	ln -f etherdrive.so $(EMC2_HOME)/rtlib/etherdrive.so
-	ln -f analogy.so $(EMC2_HOME)/rtlib/analogy.so
+
+etherdrive.o: drive_io.h drive_packet.h packet.h raw_socket.h

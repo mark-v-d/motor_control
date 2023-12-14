@@ -259,8 +259,8 @@ extern "C" void CCU80_2_IRQHandler(void)
     report.Irotor[1]=imag(Irotor);
     report.Vrotor[0]=real(Vrotor);
     report.Vrotor[1]=imag(Vrotor);
-    report.glass_counter=glass_scale.count();
-    report.glass_index=glass_scale.index();
+    report.position2=glass_scale.count();
+    report.index2=glass_scale.index();
     report.tpower=(0xffff&adc::vadc.G[1].RES[1]);
     report.offset=(0xffff&adc::vadc.G[0].RES[1]);
     report.ADC[0]=(0xffff&adc::vadc.G[0].RES[0])-report.offset;

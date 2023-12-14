@@ -149,8 +149,8 @@ std::ostream &operator<<(std::ostream &s, sync_t const &d) {
 	<< " " << d.rx_data[1]	// 22
 	<< " " << d.rx_data[2]	// 23
 	<< " " << d.rx_data[3]	// 24
-	<< " " << d.glass_counter	// 25
-	<< " " << d.glass_index		// 26
+	<< " " << d.position2	// 25
+	<< " " << d.index2		// 26
 /*
 	<< " " << d.setpoint(0)	// 27
 	<< " " << real(d.I)	// 28

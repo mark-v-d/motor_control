@@ -11,7 +11,9 @@
 #include <net/if.h>
 #include <netinet/ether.h>
 
+#include <string>
 #include <array>
+using namespace std::string_literals;
 
 class raw_socket {
     static constexpr uint16_t ETHER_TYPE=0x0800;
@@ -19,10 +21,14 @@ class raw_socket {
 public:
     struct sockaddr_ll socket_address;
     std::array<uint8_t,6> src_mac;
-    std::array<uint8_t,4> src_ip{192,168,0,2};
+    std::array<uint8_t,4> src_ip{192,168,0,253};
 
 public:
-    raw_socket(char const *name) {
+    raw_socket() { rxs=-1; }
+
+    raw_socket(char const *name) { init(name); }
+
+    void init(char const *name) {
 	rxs = ::socket(AF_PACKET, SOCK_RAW, htons(ETHER_TYPE));
 	if(rxs==-1) {
 	    perror("receive socket");
@@ -35,29 +41,23 @@ public:
 	strncpy(ifName,name,sizeof(ifName));
 
 	int sockopt;
-	if(setsockopt(rxs, SOL_SOCKET, SO_REUSEADDR,&sockopt,sizeof sockopt)<0){
-	    perror("setsockopt");
-	    exit(1);
-	}
+	if(setsockopt(rxs, SOL_SOCKET, SO_REUSEADDR,&sockopt,sizeof sockopt)<0)
+	    throw("setsockopt"s);
 	/* Bind to device */
-	if(setsockopt(rxs, SOL_SOCKET, SO_BINDTODEVICE, ifName, IFNAMSIZ-1)<0){
-	    perror("SO_BINDTODEVICE");
-	    exit(1);
-	}
+	if(setsockopt(rxs, SOL_SOCKET, SO_BINDTODEVICE, ifName, IFNAMSIZ-1)<0)
+	    throw("SO_BINDTODEVICE"s);
 
 	struct ifreq if_idx;
 	memset(if_idx.ifr_name,0,sizeof(if_idx.ifr_name));
 	strncpy(if_idx.ifr_name, name, sizeof(if_idx.ifr_name));
-	if (ioctl(rxs, SIOCGIFINDEX, &if_idx) < 0) {
-	    perror("SIOCGIFINDEX");
-	    exit(1);
-	}
+	if(ioctl(rxs, SIOCGIFINDEX, &if_idx) < 0)
+	    throw("SIOCGIFINDEX"s);
 	socket_address.sll_ifindex = if_idx.ifr_ifindex;
 	socket_address.sll_halen = ETH_ALEN;
 
 	/* Get the MAC address of the interface to send on */
 	if (ioctl(rxs, SIOCGIFHWADDR, &if_idx) < 0)
-	    perror("SIOCGIFHWADDR");
+	    throw("SIOCGIFHWADDR"s);
 	src_mac={
 	    ((uint8_t *)&if_idx.ifr_hwaddr.sa_data)[0],
 	    ((uint8_t *)&if_idx.ifr_hwaddr.sa_data)[1],
@@ -69,14 +69,13 @@ public:
     }
 
     template <class T>
-    int send(T const &pkt) {
+    void send(T const &pkt) {
+	if(rxs<0)
+	    return;
 	if(sendto(rxs, &pkt, sizeof(pkt), 0,
 	    (struct sockaddr*)&socket_address, sizeof(socket_address) ) < 0
-	)  {
-	    fprintf(stderr,"Send failed\n");
-	    return 1;
-	}
-	return 0;
+	)
+	    throw(stderr,"Send failed"s);
     }
 
     int socket() { return rxs; }

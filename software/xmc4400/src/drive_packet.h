@@ -27,8 +27,9 @@ namespace motion_ns {
 	int32_t valid;
 	float Irotor[2];
 	float Vrotor[2];
-	int32_t glass_counter;
-	int32_t glass_index;
+	int32_t position2;
+	int32_t index2;
+	float Vservo;
 	int32_t tpower;
 	int32_t offset;
 	int32_t ADC[2];

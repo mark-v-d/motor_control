@@ -90,7 +90,7 @@ void *rt_thread(void *data)
         ////////////////////////////////////////////////////////////////////////
 	if(i>0) {
 	    decltype(controller)::input_t inputs{
-		table[i-1].glass_counter,
+		table[i-1].position2,
 		table[i-1].position
 	    };
 	    if(i<=90)
