@@ -29,48 +29,62 @@ raw_socket skt;
 struct comp_state {
     // input pins
     hal_float_t *Iset[2];
+    hal_bit_t *enable;
 
     // output pins
-    hal_s32_t *position;
-    hal_s32_t *position2;
-    hal_s32_t *index2;
+    hal_float_t *position;
+    hal_float_t *position2;
+    hal_float_t *index2;
     hal_float_t *Irotor[2];
     hal_float_t *Vrotor[2];
     hal_float_t *angle;
     hal_float_t *Vservo;
 
+    // parameters
+    hal_float_t *scale[2];
 
     void init(int i) {
 	std::string prefix="etherdrive."+std::to_string(i)+".";
-	auto pinf=[&](hal_pin_dir_t dir,std::string name, auto **p) {
-	    auto s=prefix+name;
+	auto pin=[&](hal_pin_dir_t dir,std::string name, auto p) {
 	    *p=nullptr;
-	    return hal_pin_float_new(s.c_str(),dir,p,comp_id);
-	};
-	auto pins=[&](hal_pin_dir_t dir,std::string name, hal_s32_t **p) {
-	    auto s=prefix+name;
-	    *p=nullptr;
-	    return hal_pin_s32_new(s.c_str(),dir,p,comp_id);
+	    using T=decltype(p);
+	    if constexpr(std::is_same_v<T,hal_float_t**>)
+		return hal_pin_float_new((prefix+name).c_str(),dir,p,comp_id);
+	    else if constexpr(std::is_same_v<T,hal_s32_t**>)
+		return hal_pin_s32_new((prefix+name).c_str(),dir,p,comp_id);
+	    else if constexpr(std::is_same_v<T,hal_bit_t**>)
+		return hal_pin_bit_new((prefix+name).c_str(),dir,p,comp_id);
+	    else
+		return 1;
 	};
 	int ok=
-	    !pinf(HAL_IN, "Iset-0", &Iset[0]) &&
-	    !pinf(HAL_IN, "Iset-1", &Iset[1]) &&
-	    !pins(HAL_OUT,"position", &position) &&
-	    !pins(HAL_OUT,"position2", &position2) &&
-	    !pins(HAL_OUT,"index2", &index2) &&
-	    !pinf(HAL_OUT,"Irotor-0", &Irotor[0]) &&
-	    !pinf(HAL_OUT,"Irotor-1", &Irotor[1]) &&
-	    !pinf(HAL_OUT,"Vrotor-0", &Vrotor[0]) &&
-	    !pinf(HAL_OUT,"Vrotor-1", &Vrotor[1]) &&
-	    !pinf(HAL_OUT,"angle", &angle) &&
-	    !pinf(HAL_OUT,"Vservo", &Vservo)
+	    !pin(HAL_IN, "Iset-0", &Iset[0]) &&
+	    !pin(HAL_IN, "Iset-1", &Iset[1]) &&
+	    !pin(HAL_IN, "enable", &enable) &&
+	    !pin(HAL_IN, "scale", &scale[0]) &&
+	    !pin(HAL_IN, "scale2", &scale[1]) &&
+	    !pin(HAL_OUT,"position", &position) &&
+	    !pin(HAL_OUT,"position2", &position2) &&
+	    !pin(HAL_OUT,"index2", &index2) &&
+	    !pin(HAL_OUT,"Irotor-0", &Irotor[0]) &&
+	    !pin(HAL_OUT,"Irotor-1", &Irotor[1]) &&
+	    !pin(HAL_OUT,"Vrotor-0", &Vrotor[0]) &&
+	    !pin(HAL_OUT,"Vrotor-1", &Vrotor[1]) &&
+	    !pin(HAL_OUT,"angle", &angle) &&
+	    !pin(HAL_OUT,"Vservo", &Vservo)
 	    ;
     }
 
+    int offset[2];
+
     void update(motion_ns::to_host &buffer){
-	*position=buffer.position;
-	*position2=buffer.position2;
-	*index2=buffer.index2;
+	if(offset[0]==0 && offset[1]==0) {
+	    offset[0]=buffer.position;
+	    offset[1]=buffer.position2;
+	}
+	*position=(buffer.position-offset[0]) * *scale[0];
+	*position2=(buffer.position2-offset[1]) * *scale[1];
+	*index2=buffer.index2 * *scale[1];
 	*Irotor[0]=buffer.Irotor[0];
 	*Irotor[1]=buffer.Irotor[1];
 	*Vrotor[0]=buffer.Vrotor[0];
@@ -85,8 +99,13 @@ std::vector<comp_state*> state;
 static void send(void *p, long period)
 {
     for(int i=0; i<state.size(); i++) {
+	if(!*state[i]->enable)
+	    continue;
 	std::array<uint8_t,4> ip{192,168,0,uint8_t(i+1)};
-	std::complex<float> I{float(*state[i]->Iset[0]), float(*state[i]->Iset[1])};
+	std::complex<float> I{
+	    float(*state[i]->Iset[0]),
+	    float(*state[i]->Iset[1])
+	};
 	skt.send(motion_ns::send_t(skt, mac[i], ip, I));
     }
 }

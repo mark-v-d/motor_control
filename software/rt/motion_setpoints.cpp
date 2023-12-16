@@ -34,6 +34,8 @@ constexpr int outputs=1;
 
 ss_t<order,inputs,outputs> controller;
 
+std::array<double,2> scale{1,1};
+
 struct sync_I_t:public sync_t {
     std::complex<float> I;
     decltype(controller)::input_t setpoint;
@@ -43,7 +45,10 @@ std::vector<sync_I_t> table;
 
 std::ostream &operator<<(std::ostream &s, sync_I_t const &d) {
     s	<< sync_t(d)
-	<< " " << real(d.I) << " " << imag(d.I); // 27,28
+	<< " " << real(d.I) << " " << imag(d.I)			// 27,28
+	<< " " << d.setpoint(0,0) << " " << d.setpoint(1,0)	// 29,30
+	<< " " << d.error(0,0) << " " << d.error(1,0)		// 31,32
+	;
     return s;
 }
 
@@ -90,8 +95,8 @@ void *rt_thread(void *data)
         ////////////////////////////////////////////////////////////////////////
 	if(i>0) {
 	    decltype(controller)::input_t inputs{
-		table[i-1].position2,
-		table[i-1].position
+		table[i-1].position2*scale[0],
+		table[i-1].position*scale[1]
 	    };
 	    if(i<=90)
 		offset=inputs;
@@ -149,6 +154,29 @@ int main(int argc, char *argv[])
 	}
 
 	controller.read(settings);
+	std::string s;
+	std::vector<double> v;
+	while(std::getline(settings,s)) {
+	    if(!s.size() || s[0]=='#')
+		continue;
+
+	    size_t start=0;
+	    try {
+		while(s.size()) {
+			v.push_back(stod(s,&start));
+		    s.erase(0,start);
+		}
+	    } catch(std::invalid_argument& ia) {
+		;
+	    }
+	}
+	if(v.size()!=scale.size()) {
+	    std::cout << std::format("Scale should have {} values, read {} "
+		"values from: {}\n", scale.size(), v.size(), s);
+	    return 1;
+	}
+	for(int i=0;i<scale.size();i++)
+	    scale[i]=v[i];
     }
 
     try {

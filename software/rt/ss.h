@@ -39,6 +39,7 @@ void read(Eigen::Matrix<T,rows,cols> &m, std::string s)
 
 template <size_t order, size_t inputs, size_t outputs>
 class ss_t {
+public:
     Eigen::Matrix<double,order,order> A;
     Eigen::Matrix<double,order,inputs> B;
     Eigen::Matrix<double,outputs,order> C;
@@ -47,7 +48,7 @@ class ss_t {
 
     Eigen::Matrix<double,outputs,1> limit;
     Eigen::Matrix<double,order,1> state;
-public:
+
     using input_t=Eigen::Matrix<double,inputs,1>;
     using output_t=Eigen::Matrix<double,outputs,1>;
 
@@ -76,6 +77,11 @@ public:
 	    line, 6));
     }
 
+    void set_A(size_t i, size_t j,double d) { A(i,j)=d; }
+    void set_B(size_t i, size_t j,double d) { B(i,j)=d; }
+    void set_C(size_t i, size_t j,double d) { C(i,j)=d; }
+    void set_D(size_t i, size_t j,double d) { D(i,j)=d; }
+    void set_K(size_t i, size_t j,double d) { K(i,j)=d; }
 
     output_t compute(input_t const &input) {
 	output_t output=C*state+D*input;

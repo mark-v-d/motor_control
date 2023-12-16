@@ -177,18 +177,16 @@ extern "C" void CCU80_2_IRQHandler(void)
     static_assert(std::get<0>(hr_out).UNIT==0, "Wrong interrupt handler");
     constexpr char data=0x05a;
     copro.tx(data);
-    if(subsample==1) {
+    switch(subsample) {
+    case 1: {
 	auto t=syncer.sync(&eth0,200ns,20e-3,5e-5);
 	if(t!=0s)
 	    std::apply([=](auto ...x) { (x.period(t+pwm_time),...);}, hr_out);
 	report.timer_delta=t/1ns;
-    }
-    itm.PORT[1].u8=subsample;
-
-    // 3 is sometimes too late for the ethernet packet
-    locker_t encoder_ready(spinlock);
-    if(encoder_ready && subsample==2)
+	break;}
+    case 2:
 	encoder->trigger();
+    }
     if(++subsample>3) {
 	subsample=0;
     }
