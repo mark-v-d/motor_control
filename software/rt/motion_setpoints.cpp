@@ -21,7 +21,7 @@
 using namespace std::complex_literals;
 using namespace std::chrono_literals;
 
-constexpr std::array<uint8_t,6> mac{0xc2, 0x00, 0x85, 0x0c, 0x10, 0xc0}; // X
+std::array<uint8_t,6> mac{0xc2, 0x00, 0x85, 0x0c, 0x10, 0xc0}; // X
 //constexpr std::array<uint8_t,6> mac{0xc2, 0x00, 0x8d, 0x11, 0x11, 0xc0}; // Z
 //constexpr std::array<uint8_t,6> mac{0xc2, 0x00, 0x86, 0x05, 0x10, 0xc0}; // T
 constexpr std::array<uint8_t,4> ip{192,168,0,6};
@@ -153,21 +153,32 @@ int main(int argc, char *argv[])
 	    return 1;
 	}
 
-	controller.read(settings);
+
 	std::string s;
+	std::getline(settings,s);
+	std::array<int,6> m;
+	if(sscanf(s.c_str(),"%x:%x:%x:%x:%x:%x",&m[0],&m[1],&m[2],&m[3],&m[4],&m[5])!=6) {
+	    std::cout << "Invalid mac address\n";
+	    return 1;
+	}
+	for(int i=0; i<m.size(); i++)
+	    mac[i]=m[i];
+
+	controller.read(settings);
 	std::vector<double> v;
 	while(std::getline(settings,s)) {
 	    if(!s.size() || s[0]=='#')
 		continue;
 
 	    size_t start=0;
-	    try {
-		while(s.size()) {
-			v.push_back(stod(s,&start));
-		    s.erase(0,start);
+	    while(s.size() && s[0]!='#') {
+		try {
+		    double d=stod(s,&start);
+		    v.push_back(d);
+		} catch(std::invalid_argument& ia) {
+		    start=s.size();
 		}
-	    } catch(std::invalid_argument& ia) {
-		;
+		s.erase(0,start+1);
 	    }
 	}
 	if(v.size()!=scale.size()) {

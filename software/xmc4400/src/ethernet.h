@@ -173,7 +173,7 @@ public:
     void set_saddr(ethernet_t *p);
     void set_saddr(ipv4_t *p);
     void set_ipv4_address(std::array<uint8_t,4> s) {
-	if(src_ip[3]==0 && s[3]!=255)
+	if(s[3]!=255)
 	    src_ip=s;
     }
 

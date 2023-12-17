@@ -21,7 +21,7 @@
 using namespace std::complex_literals;
 using namespace std::chrono_literals;
 
-constexpr std::array<uint8_t,6> mac{0xc2, 0x00, 0x85, 0x0c, 0x10, 0xc0}; // X
+std::array<uint8_t,6> mac{0xc2, 0x00, 0x85, 0x0c, 0x10, 0xc0}; // X
 //constexpr std::array<uint8_t,6> mac{0xc2, 0x00, 0x8d, 0x11, 0x11, 0xc0}; // Z
 //constexpr std::array<uint8_t,6> mac{0xc2, 0x00, 0x86, 0x05, 0x10, 0xc0}; // T
 constexpr std::array<uint8_t,4> ip{192,168,0,6};
@@ -145,6 +145,18 @@ int main(int argc, char *argv[])
     } catch(std::string err) {
 	std::cout << err;
 	return 1;
+    }
+
+    if(argc>=3) {
+	std::array<int,6> m;
+	if(sscanf(argv[2],"%x:%x:%x:%x:%x:%x",
+	    &m[0],&m[1],&m[2],&m[3],&m[4],&m[5])!=6
+	) {
+	    std::cout << "Invalid mac address: " << argv[2] << "\n";
+	    return 1;
+	}
+	for(int i=0; i<m.size(); i++)
+	    mac[i]=m[i];
     }
 
 

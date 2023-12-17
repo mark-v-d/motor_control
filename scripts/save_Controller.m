@@ -1,4 +1,6 @@
-function [result, sys]=save_Controller(K,limit=0.7,Klin=[],scale=[1 1])
+function [result, sys]=save_Controller(K,limit=0.7,Klin=[],scale=[1 1],
+	mac="c2:00:85:0c:10:c0"
+)
 	K=K*diag(1./scale);
 	if exist("settings","file") && !length(Klin)
 		f=fopen("settings","r");
@@ -37,6 +39,7 @@ function [result, sys]=save_Controller(K,limit=0.7,Klin=[],scale=[1 1])
 	end
 
 	f=fopen("settings","w");
+	fprintf(f,"%s # mac address\n",mac);
 	fprintf(f,"%e ",A);
 	fprintf(f,"# A\n");
 	fprintf(f,"%e ",B);

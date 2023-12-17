@@ -2,11 +2,12 @@
 # function data=mt2(I)
 # Send a current profile to the drive and record the result
 #
-function data=mt2(I, old=[])
+function data=current_test(A,I, old=[])
 	# a.angle_offset=0.885
 	# Max RPM @ 150V = 52.16/222222e-9*60/2^14 = 860 RPM
 	save -text I I
-	command="../software/rt/current_setpoints I >log"
+	command=sprintf("../software/rt/current_setpoints I %s >log",
+		mac_addr(A));
 	system(command);
 	p; 
 	if length(old)

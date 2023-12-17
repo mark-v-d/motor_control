@@ -18,6 +18,7 @@ void read(Eigen::Matrix<T,rows,cols> &m, std::string s)
 {
     std::vector<double> v;
     size_t start=0;
+    auto orig=s;
     try {
 	while(s.size()) {
 		v.push_back(stod(s,&start));
@@ -27,8 +28,8 @@ void read(Eigen::Matrix<T,rows,cols> &m, std::string s)
 	;
     }
     if(v.size()!=m.reshaped().size()) {
-	throw(std::format("Wrong matrix size, is {}, should be {}",
-	    v.size(), m.reshaped().size()));
+	throw(std::format("Wrong matrix size, is {}, should be {} -> {}",
+	    v.size(), m.reshaped().size(),orig));
     }
 
     for(auto &x: m.reshaped()) {

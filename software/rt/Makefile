@@ -1,7 +1,7 @@
 LDFLAGS=-lpthread
 CFLAGS=-g
 CPPFLAGS=-I.
-CXXFLAGS=-O2 -g --std=c++20 -lfmt
+CXXFLAGS= -g --std=c++20 -lfmt
 
 all: current_setpoints motion_setpoints set_config
 

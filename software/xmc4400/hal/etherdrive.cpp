@@ -40,7 +40,7 @@ struct sync_t {
     uint32_t tx_nsec;
     uint32_t rx_sec;
     uint32_t rx_nsec;
-    uint32_t timer; 
+    uint32_t timer;
     float integrator;
 };
 
@@ -69,6 +69,7 @@ struct comp_state {
     hal_float_t *angle;
     hal_float_t *output[3];
     hal_float_t *vservo;
+    hal_u32_t *invalid;
 
     hal_float_t *scale;
     hal_float_t *scale2;
@@ -78,7 +79,7 @@ struct comp_state {
 };
 struct comp_state *comp_first_inst=0, *comp_last_inst=0;
 
-static inline void update_output_pins(struct comp_state *dest, 
+static inline void update_output_pins(struct comp_state *dest,
     struct output_t *pkt)
 {
     *(dest->counter)=pkt->counter;
@@ -140,11 +141,11 @@ static void send_sync(void *p, long period)
 		continue;
 	    if(!memcmp(&src.sin_addr,&lp->addr.sin_addr,
 		sizeof(lp->addr.sin_addr))
-	    ) { 
+	    ) {
 		switch(ntohs(src.sin_port)) {
-		case 1: 
+		case 1:
 		    update_output_pins(lp,
-			reinterpret_cast<struct output_t*>(buffer)); 
+			reinterpret_cast<struct output_t*>(buffer));
 		    break;
 		}
 		break;
@@ -199,7 +200,7 @@ RTAPI_MP_ARRAY_STRING(ipaddr, 16, "ip address of drives");
     if(r) \
 	return r;
 
-static int export_pins(char *prefix, long index) 
+static int export_pins(char *prefix, long index)
 {
     char buf[HAL_NAME_LEN + 1];
     int r = 0;
@@ -243,7 +244,7 @@ static int export_pins(char *prefix, long index)
 #if 0
     r=hal_param_float_newf(HAL_RO, &(inst->value), comp_id, "%s.value", prefix);
     inst->value = 1.0;
-    if(r) 
+    if(r)
 	return r;
 #endif
 
@@ -252,27 +253,27 @@ static int export_pins(char *prefix, long index)
     struct hostent *hp=gethostbyname(ipaddr[index]);
     memcpy((void*) &inst->addr.sin_addr, hp->h_addr_list[0], hp->h_length);
 
-    if(comp_last_inst) 
+    if(comp_last_inst)
 	comp_last_inst->next = inst;
     comp_last_inst = inst;
-    if(!comp_first_inst) 
+    if(!comp_first_inst)
 	comp_first_inst = inst;
     return 0;
 }
 
-extern "C" int rtapi_app_main(void) 
+extern "C" int rtapi_app_main(void)
 {
     int r = 0;
     int i;
     comp_id = hal_init("etherdrive");
-    if(comp_id < 0) 
+    if(comp_id < 0)
 	return comp_id;
     if(count && names[0]) {
         rtapi_print_msg(RTAPI_MSG_ERR,
 	    "count= and names= are mutually exclusive\n");
         return -EINVAL;
     }
-    if(!count && !names[0]) 
+    if(!count && !names[0])
 	count = default_count;
     if(count) {
         for(i=0; i<count; i++) {
@@ -285,7 +286,7 @@ extern "C" int rtapi_app_main(void)
         int max_names = sizeof(names)/sizeof(names[0]);
         for(i=0; (i < max_names) && names[i]; i++) {
             if (strlen(names[i]) < 1) {
-                rtapi_print_msg(RTAPI_MSG_ERR, 
+                rtapi_print_msg(RTAPI_MSG_ERR,
 		    "names[%d] is invalid (empty string)\n", i);
                 r = -EINVAL;
                 break;
@@ -303,13 +304,13 @@ extern "C" int rtapi_app_main(void)
     memcpy((void*) &sync_addr.sin_addr, hp->h_addr_list[0], hp->h_length);
 
     // Export the send-sync function
-    if(!r) 
-	r = hal_export_funct("etherdrive.sync", 
-	    send_sync, 
+    if(!r)
+	r = hal_export_funct("etherdrive.sync",
+	    send_sync,
 	    NULL, 1, 0, comp_id);
-    if(!r) 
-	r = hal_export_funct("etherdrive.control", 
-	    send_control, 
+    if(!r)
+	r = hal_export_funct("etherdrive.control",
+	    send_control,
 	    NULL, 1, 0, comp_id);
 
     if(r) {
@@ -320,7 +321,7 @@ extern "C" int rtapi_app_main(void)
     return r;
 }
 
-extern "C" void rtapi_app_exit(void) 
+extern "C" void rtapi_app_exit(void)
 {
     hal_exit(comp_id);
 }

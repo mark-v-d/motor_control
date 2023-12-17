@@ -39,6 +39,7 @@ struct comp_state {
     hal_float_t *Vrotor[2];
     hal_float_t *angle;
     hal_float_t *Vservo;
+    hal_u32_t *invalid;
 
     // parameters
     hal_float_t *scale[2];
@@ -52,6 +53,8 @@ struct comp_state {
 		return hal_pin_float_new((prefix+name).c_str(),dir,p,comp_id);
 	    else if constexpr(std::is_same_v<T,hal_s32_t**>)
 		return hal_pin_s32_new((prefix+name).c_str(),dir,p,comp_id);
+	    else if constexpr(std::is_same_v<T,hal_u32_t**>)
+		return hal_pin_u32_new((prefix+name).c_str(),dir,p,comp_id);
 	    else if constexpr(std::is_same_v<T,hal_bit_t**>)
 		return hal_pin_bit_new((prefix+name).c_str(),dir,p,comp_id);
 	    else
@@ -71,7 +74,8 @@ struct comp_state {
 	    !pin(HAL_OUT,"Vrotor-0", &Vrotor[0]) &&
 	    !pin(HAL_OUT,"Vrotor-1", &Vrotor[1]) &&
 	    !pin(HAL_OUT,"angle", &angle) &&
-	    !pin(HAL_OUT,"Vservo", &Vservo)
+	    !pin(HAL_OUT,"Vservo", &Vservo) &&
+	    !pin(HAL_OUT,"invalid", &invalid)
 	    ;
     }
 
@@ -91,6 +95,7 @@ struct comp_state {
 	*Vrotor[1]=buffer.Vrotor[1];
 	*angle=buffer.angle;
 	*Vservo=buffer.Vservo;
+	*invalid+=buffer.valid? 0:1;
     }
 };
 
