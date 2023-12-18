@@ -83,7 +83,7 @@ addf spindle_mass servo-thread
 addf rpm_rps servo-thread
 addf near_speed servo-thread
 addf sim_spindle servo-thread
-addf statespace.compute servo-thread
+addf statespace_3.compute servo-thread
 addf etherdrive.send servo-thread
 
 # setp commands for unconnected input pins
@@ -93,25 +93,25 @@ setp spindle_mass.gain              .07
 setp near_speed.scale               1.1
 setp near_speed.difference          10
 
-setp statespace-3-2-1.0.A-1-1		1.0
-setp statespace-3-2-1.0.B-1-0		1.0
-setp statespace-3-2-1.0.B-0-1		-314.5728
-setp statespace-3-2-1.0.C-0-0		1
-setp statespace-3-2-1.0.C-0-1		1
-setp statespace-3-2-1.0.D-0-0		20
-setp statespace-3-2-1.0.D-0-1		334.573
-setp statespace-3-2-1.0.K-1-0		1
-setp statespace-3-2-1.0.limit-0		2
+setp statespace_3.0.A-1-1		1.0
+setp statespace_3.0.B-1-0		1.0
+setp statespace_3.0.B-0-1		-314.5728
+setp statespace_3.0.C-0-0		1
+setp statespace_3.0.C-0-1		1
+setp statespace_3.0.D-0-0		20
+setp statespace_3.0.D-0-1		334.573
+setp statespace_3.0.K-1-0		1
+setp statespace_3.0.limit-0		2
 
-setp statespace-3-2-1.1.A-1-1		1.0
-setp statespace-3-2-1.1.B-1-0		-0.4
-setp statespace-3-2-1.1.B-0-1		943.7184
-setp statespace-3-2-1.1.C-0-0		1
-setp statespace-3-2-1.1.C-0-1		1
-setp statespace-3-2-1.1.D-0-0		-15
-setp statespace-3-2-1.1.D-0-1		-958.7184
-setp statespace-3-2-1.1.K-1-0		1
-setp statespace-3-2-1.1.limit-0		2
+setp statespace_3.1.A-1-1		1.0
+setp statespace_3.1.B-1-0		-0.4
+setp statespace_3.1.B-0-1		943.7184
+setp statespace_3.1.C-0-0		1
+setp statespace_3.1.C-0-1		1
+setp statespace_3.1.D-0-0		-15
+setp statespace_3.1.D-0-1		-958.7184
+setp statespace_3.1.K-1-0		1
+setp statespace_3.1.limit-0		2
 
 setp etherdrive.0.scale 1.271565755208333e-06
 setp etherdrive.0.scale2 5e-3
@@ -119,14 +119,14 @@ setp etherdrive.0.scale2 5e-3
 setp etherdrive.1.scale 1.589457194010417e-06
 setp etherdrive.1.scale2 5e-3
 
-net J0:pos-cmd joint.0.motor-pos-cmd  => statespace-3-2-1.0.setpoint
-net J0:pos-fb0 etherdrive.0.position  => statespace-3-2-1.0.in-1
-net J0:pos-fb1 etherdrive.0.position2 => statespace-3-2-1.0.in-0 joint.0.motor-pos-fb
-net J0:pos-current statespace-3-2-1.0.out => etherdrive.0.Iset-1
-net J0:enable joint.0.amp-enable-out => etherdrive.0.enable  statespace-3-2-1.0.enable
+net J0:pos-cmd joint.0.motor-pos-cmd  => statespace_3.0.setpoint
+net J0:pos-fb0 etherdrive.0.position  => statespace_3.0.in-1
+net J0:pos-fb1 etherdrive.0.position2 => statespace_3.0.in-0 joint.0.motor-pos-fb
+net J0:pos-current statespace_3.0.out => etherdrive.0.Iset-1
+net J0:enable joint.0.amp-enable-out => etherdrive.0.enable  statespace_3.0.enable
 
-net J1:pos-cmd joint.1.motor-pos-cmd  => statespace-3-2-1.1.setpoint
-net J1:pos-fb0 etherdrive.1.position  => statespace-3-2-1.1.in-1
-net J1:pos-fb1 etherdrive.1.position2 => statespace-3-2-1.1.in-0 joint.1.motor-pos-fb
-net J1:pos-current statespace-3-2-1.1.out => etherdrive.1.Iset-1
-net J1:enable joint.1.amp-enable-out => etherdrive.1.enable statespace-3-2-1.1.enable
+net J1:pos-cmd joint.1.motor-pos-cmd  => statespace_3.1.setpoint
+net J1:pos-fb0 etherdrive.1.position  => statespace_3.1.in-1
+net J1:pos-fb1 etherdrive.1.position2 => statespace_3.1.in-0 joint.1.motor-pos-fb
+net J1:pos-current statespace_3.1.out => etherdrive.1.Iset-1
+net J1:enable joint.1.amp-enable-out => etherdrive.1.enable statespace_3.1.enable
