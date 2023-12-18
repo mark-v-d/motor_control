@@ -153,7 +153,7 @@ static volatile int subsample;
 
 motion_ns::to_host report;
 C override=0;
-C limit{0.1, 0.5};
+C limit{0.44, 0.8};
 float angle_offset=0;
 float angle_override=0;
 
@@ -179,7 +179,7 @@ extern "C" void CCU80_2_IRQHandler(void)
     copro.tx(data);
     switch(subsample) {
     case 1: {
-	auto t=syncer.sync(&eth0,200ns,20e-3,5e-5);
+	auto t=syncer.sync(&eth0,200ns,20e-4,5e-6);
 	if(t!=0s)
 	    std::apply([=](auto ...x) { (x.period(t+pwm_time),...);}, hr_out);
 	report.timer_delta=t/1ns;

@@ -15,6 +15,7 @@ MODULE_INFO(linuxcnc, const_cast<char*>("license:GPL"));
 MODULE_LICENSE("GPL");
 #endif // MODULE_INFO
 
+
 #include "raw_socket.h"
 #include "drive_io.h"
 
@@ -32,17 +33,15 @@ struct comp_state {
     hal_bit_t *enable;
 
     // output pins
-    hal_float_t *position;
-    hal_float_t *position2;
-    hal_float_t *index2;
+    hal_s32_t *position;
+    hal_s32_t *position2;
+    hal_s32_t *index2;
     hal_float_t *Irotor[2];
     hal_float_t *Vrotor[2];
     hal_float_t *angle;
     hal_float_t *Vservo;
     hal_u32_t *invalid;
-
-    // parameters
-    hal_float_t *scale[2];
+    hal_s32_t *timer_delta;
 
     void init(int i) {
 	std::string prefix="etherdrive."+std::to_string(i)+".";
@@ -64,8 +63,6 @@ struct comp_state {
 	    !pin(HAL_IN, "Iset-0", &Iset[0]) &&
 	    !pin(HAL_IN, "Iset-1", &Iset[1]) &&
 	    !pin(HAL_IN, "enable", &enable) &&
-	    !pin(HAL_IN, "scale", &scale[0]) &&
-	    !pin(HAL_IN, "scale2", &scale[1]) &&
 	    !pin(HAL_OUT,"position", &position) &&
 	    !pin(HAL_OUT,"position2", &position2) &&
 	    !pin(HAL_OUT,"index2", &index2) &&
@@ -75,7 +72,8 @@ struct comp_state {
 	    !pin(HAL_OUT,"Vrotor-1", &Vrotor[1]) &&
 	    !pin(HAL_OUT,"angle", &angle) &&
 	    !pin(HAL_OUT,"Vservo", &Vservo) &&
-	    !pin(HAL_OUT,"invalid", &invalid)
+	    !pin(HAL_OUT,"invalid", &invalid) &&
+	    !pin(HAL_OUT,"timer_delta", &timer_delta)
 	    ;
     }
 
@@ -86,9 +84,9 @@ struct comp_state {
 	    offset[0]=buffer.position;
 	    offset[1]=buffer.position2;
 	}
-	*position=(buffer.position-offset[0]) * *scale[0];
-	*position2=(buffer.position2-offset[1]) * *scale[1];
-	*index2=buffer.index2 * *scale[1];
+	*position=buffer.position-offset[0];
+	*position2=buffer.position2-offset[1];
+	*index2=buffer.index2-offset[1];
 	*Irotor[0]=buffer.Irotor[0];
 	*Irotor[1]=buffer.Irotor[1];
 	*Vrotor[0]=buffer.Vrotor[0];
@@ -96,6 +94,7 @@ struct comp_state {
 	*angle=buffer.angle;
 	*Vservo=buffer.Vservo;
 	*invalid+=buffer.valid? 0:1;
+	*timer_delta=buffer.timer_delta;
     }
 };
 

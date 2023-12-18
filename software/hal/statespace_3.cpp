@@ -17,6 +17,9 @@ MODULE_INFO(linuxcnc, const_cast<char*>("license:GPL"));
 MODULE_LICENSE("GPL");
 #endif // MODULE_INFO
 
+#include <string>
+using namespace std::string_literals;
+
 constexpr int order=3;
 constexpr int inputs=2;
 constexpr int outputs=1;
@@ -24,11 +27,13 @@ constexpr int outputs=1;
 
 /******************************************************************************/
 struct comp_state {
-    hal_float_t *in[inputs];
+    hal_s32_t *in[inputs];
+    hal_float_t *scale[inputs];
     hal_float_t *setpoint;
     hal_bit_t *enable;
     hal_float_t *error[inputs];
     hal_float_t *out[outputs];
+    hal_float_t *position[inputs];
 
     std::array<hal_float_t*,order*order> A;
     std::array<hal_float_t*,order*inputs> B;
@@ -57,11 +62,9 @@ struct comp_state {
 		return 1;
 	};
 	int fail=
-	    pin(HAL_IN, "in-0", &in[0]) ||
-	    pin(HAL_IN, "in-1", &in[1]) ||
 	    pin(HAL_IN, "enable", &enable) ||
-	    pin(HAL_OUT, "out", &out[0])
-	    ;
+	    pin(HAL_OUT, "out", &out[0]) ||
+	    pin(HAL_IN,"setpoint",&setpoint);
 
 	// Initialise the A,B,C,K matrices
 	for(int i=0; i<order; i++) {
@@ -101,9 +104,12 @@ struct comp_state {
 	for(int i=0; !fail && i<inputs; i++) {
 		char buffer[100];
 		sprintf(buffer,"error-%d",i);
-		fail=pin(HAL_OUT,buffer,&error[i]);
+		std::string n=std::to_string(i);
+		fail=pin(HAL_OUT,"error-"s+n, &error[i]) ||
+		    pin(HAL_IN, "in-"s+n, &in[i]) ||
+		    pin(HAL_IN, "scale-"s+n, &scale[i]) ||
+		    pin(HAL_OUT, "position-"s+n, &position[i]);
 	}
-	fail=pin(HAL_IN,"setpoint",&setpoint);
 	return fail;
     }
 
@@ -128,9 +134,12 @@ struct comp_state {
 	}
 	decltype(controller)::input_t inp;
 	for(int i=0; i<inputs; i++) {
-	    double d=*setpoint-*in[i];
-	    *error[i]=d;
-	    inp(i)=d;
+	    double SCALE=*scale[i];
+	    double IN=*in[i];
+	    *position[i]=IN/SCALE;
+	    double ERROR=round(*setpoint*SCALE-IN);
+	    *error[i]=ERROR/SCALE;
+	    inp(i)=ERROR;
 	}
 	auto r=controller.compute(inp);
 	*out[0]=r(0);
