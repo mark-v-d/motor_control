@@ -7,8 +7,10 @@
 using namespace std::chrono_literals;
 
 class udp_sync:public Ethernet::Transmitter, public Ethernet::Receiver {
-    static constexpr float kP=50e10;
-    static constexpr float kI=15e8;
+    // static constexpr float kP=50e10;
+    // static constexpr float kI=15e8;
+    static constexpr float kP=50e8;
+    static constexpr float kI=15e6;
     uint32_t addend;
     float integrator;
     std::chrono::duration<float> error;
@@ -27,6 +29,8 @@ public:
     virtual void Received(Ethernet*,Ethernet::descriptor const&);
     virtual void Unreachable(Ethernet*);
 
+    duration last_error() const { return error; }
+
     void transmit(Ethernet *eth);
     void TimestampInit(void);
     bool locked(Ethernet *eth) {
@@ -41,6 +45,7 @@ public:
 	auto now=eth->system_time();
 	if(now-last>2ms) {
 	    unlocked=100;
+	    integrator=0;
 	    return 0ns;
 	}
 

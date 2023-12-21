@@ -75,6 +75,13 @@ public:
 	using namespace std::chrono_literals;
 	return eth->system_time()-timestamp;
     }
+    void set_age(Ethernet *eth, Ethernet::timestamp_t t) {
+	timestamp=eth->system_time()-t;
+    }
+    void clear_timestamp() {
+	timestamp.s=0;
+	timestamp.ns=0;
+    }
 };
 
 #endif

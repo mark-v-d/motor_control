@@ -21,3 +21,7 @@ if size(log,2)>29
 	data.setpoint=log(:,[27,30]);
 	data.error=log(:,[31,32]);
 end
+if size(log,2)>32
+	data.timer_error=log(:,33);
+	data.counter=log(:,34);
+end

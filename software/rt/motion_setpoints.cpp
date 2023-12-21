@@ -48,6 +48,8 @@ std::ostream &operator<<(std::ostream &s, sync_I_t const &d) {
 	<< " " << real(d.I) << " " << imag(d.I)			// 27,28
 	<< " " << d.setpoint(0,0) << " " << d.setpoint(1,0)	// 29,30
 	<< " " << d.error(0,0) << " " << d.error(1,0)		// 31,32
+	<< " " << d.timer_error					// 33
+	<< " " << d.counter					// 34
 	;
     return s;
 }
@@ -90,6 +92,27 @@ void *rt_thread(void *data)
 
 	skt.send(sync_ns::send_t(skt,mac,ip,table[i].timestamp,ts));
 
+
+	ssize_t rx_size;
+	do{
+	    union rx_types {
+		udp_t udp;
+		sync_ns::recv_t sync;
+		motion_ns::recv_t motion;
+		char txt[1024];
+	    } buffer;
+	    rx_size=recv(skt.socket(), &buffer, sizeof(buffer), MSG_DONTWAIT);
+	    if(buffer.udp.src_port==htons(sync_ns::port)
+		&& rx_size==sizeof(buffer.sync)
+	    ) {
+		static_cast<sync_ns::to_host&>(table[i])=buffer.sync;
+	    } else if(buffer.udp.src_port==htons(motion_ns::port)
+		&& rx_size==sizeof(buffer.motion)
+	    ) {
+		static_cast<motion_ns::to_host&>(table[i])=buffer.motion;
+	    }
+	} while(rx_size>0);
+
         ////////////////////////////////////////////////////////////////////////
         // Test specific code
         ////////////////////////////////////////////////////////////////////////
@@ -112,30 +135,10 @@ void *rt_thread(void *data)
         ////////////////////////////////////////////////////////////////////////
         // Wait and receive data
         ////////////////////////////////////////////////////////////////////////
-	outb(0,base);
+	if(table[i].valid)
+	    outb(0,base);
 	clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, nullptr);
-	outb(0xff,base);
-
-	ssize_t rx_size;
-	do{
-	    union rx_types {
-		udp_t udp;
-		sync_ns::recv_t sync;
-		motion_ns::recv_t motion;
-		char txt[1024];
-	    } buffer;
-	    rx_size=recvfrom(skt.socket(),
-		&buffer, sizeof(buffer), MSG_DONTWAIT, NULL, NULL);
-	    if(buffer.udp.src_port==htons(sync_ns::port)
-		&& rx_size==sizeof(buffer.sync)
-	    ) {
-		static_cast<sync_ns::to_host&>(table[i])=buffer.sync;
-	    } else if(buffer.udp.src_port==htons(motion_ns::port)
-		&& rx_size==sizeof(buffer.motion)
-	    ) {
-		static_cast<motion_ns::to_host&>(table[i])=buffer.motion;
-	    }
-	} while(rx_size>0);
+	outb(255,base);
 
     }
     return NULL;

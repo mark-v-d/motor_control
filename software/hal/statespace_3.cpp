@@ -137,7 +137,7 @@ struct comp_state {
 	    double SCALE=*scale[i];
 	    double IN=*in[i];
 	    *position[i]=IN/SCALE;
-	    double ERROR=round(*setpoint*SCALE-IN);
+	    double ERROR=(*setpoint*SCALE-IN);
 	    *error[i]=ERROR/SCALE;
 	    inp(i)=ERROR;
 	}

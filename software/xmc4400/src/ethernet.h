@@ -181,11 +181,22 @@ public:
 	uint32_t s;
 	uint32_t ns;
 
+	timestamp_t() {}
+	timestamp_t(uint32_t seconds, uint32_t nanoseconds) { s=seconds; ns=nanoseconds; }
+	template <class T>
+	timestamp_t(T t) {
+	    using namespace std::chrono_literals;
+	    s=t/1s;
+	    ns=(t-1s*s)/1ns;
+	}
 
 	auto operator -(timestamp_t o) {
 	    return std::chrono::duration<float>(int32_t(s-o.s)
 		+1.0e-9f*int32_t(ns-o.ns));
 	}
+
+
+
     };
 
     auto system_time() {
@@ -233,15 +244,15 @@ void Ethernet::init(
     phy_addr=pa;
     icmpHandler=icmp;
 
-    txd0.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    txd0.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_MEDIUM_EDGE);
     txd0.set(ethernet::TXD0(txd0));
-    txd1.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    txd1.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_MEDIUM_EDGE);
     txd1.set(ethernet::TXD1(txd1));
-    txen.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    txen.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_MEDIUM_EDGE);
     txen.set(ethernet::TXEN(txen));
-    mdc.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    mdc.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_MEDIUM_EDGE);
     mdc.set(ethernet::MDC(mdc));
-    mdo.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
+    mdo.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_MEDIUM_EDGE);
     mdo.set(ethernet::MDIO_out(mdo));
 
 

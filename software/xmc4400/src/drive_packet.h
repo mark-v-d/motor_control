@@ -35,6 +35,8 @@ namespace motion_ns {
 	int32_t ADC[2];
 	int32_t invalid;
 	int32_t	timer_delta;
+	int32_t	timer_error;
+	int32_t	counter;
 	uint32_t rx_counter;
 	uint16_t rx_data[16];
     };

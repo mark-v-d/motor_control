@@ -41,7 +41,13 @@ struct comp_state {
     hal_float_t *angle;
     hal_float_t *Vservo;
     hal_u32_t *invalid;
+    hal_u32_t *valid_rx;
+    hal_u32_t *valid_tx;
+    hal_u32_t *drive_rx;
     hal_s32_t *timer_delta;
+    hal_s32_t *dt;
+
+    bool valid;
 
     void init(int i) {
 	std::string prefix="etherdrive."+std::to_string(i)+".";
@@ -73,7 +79,11 @@ struct comp_state {
 	    !pin(HAL_OUT,"angle", &angle) &&
 	    !pin(HAL_OUT,"Vservo", &Vservo) &&
 	    !pin(HAL_OUT,"invalid", &invalid) &&
-	    !pin(HAL_OUT,"timer_delta", &timer_delta)
+	    !pin(HAL_OUT,"valid_rx", &valid_rx) &&
+	    !pin(HAL_OUT,"valid_tx", &valid_tx) &&
+	    !pin(HAL_OUT,"drive_rx", &drive_rx) &&
+	    !pin(HAL_OUT,"timer_delta", &timer_delta) &&
+	    !pin(HAL_OUT,"timer_error", &dt)
 	    ;
     }
 
@@ -93,8 +103,10 @@ struct comp_state {
 	*Vrotor[1]=buffer.Vrotor[1];
 	*angle=buffer.angle;
 	*Vservo=buffer.Vservo;
-	*invalid+=buffer.valid? 0:1;
+	*invalid=buffer.valid? 0:2;
 	*timer_delta=buffer.timer_delta;
+	*dt=buffer.timer_error;
+	*drive_rx=buffer.counter;
     }
 };
 
@@ -103,7 +115,7 @@ std::vector<comp_state*> state;
 static void send(void *p, long period)
 {
     for(int i=0; i<state.size(); i++) {
-	if(!*state[i]->enable)
+	if(!(*state[i]->enable))
 	    continue;
 	std::array<uint8_t,4> ip{192,168,0,uint8_t(i+1)};
 	std::complex<float> I{
@@ -111,14 +123,23 @@ static void send(void *p, long period)
 	    float(*state[i]->Iset[1])
 	};
 	skt.send(motion_ns::send_t(skt, mac[i], ip, I));
+	(*state[i]->valid_tx)++;
     }
 }
 
 static void sync(void *p, long period)
 {
-    struct timespec timestamp;
-    if(clock_gettime(CLOCK_MONOTONIC, &timestamp)) {
-	perror("clock_gettime");
+    static struct timespec timestamp;
+    if(!timestamp.tv_sec) {
+	if(clock_gettime(CLOCK_MONOTONIC, &timestamp)) {
+	    perror("clock_gettime");
+	}
+    } else {
+	timestamp.tv_nsec+=period;
+	while(timestamp.tv_nsec>=1'000'000'000) {
+	    timestamp.tv_sec++;
+	    timestamp.tv_nsec-=1'000'000'000;
+	}
     }
 
     auto ts=timestamp;
@@ -130,8 +151,12 @@ static void sync(void *p, long period)
 
     skt.send(sync_ns::send_t(skt,bcast_mac,bcast_ip,timestamp,ts));
 
+    for(auto p: state)
+	*(p->invalid)=1;
+
     ssize_t rx_size;
-    do{
+    int valid=0;
+    while(rx_size>0) {
 	union rx_types {
 	    udp_t udp;
 	    sync_ns::recv_t sync;
@@ -149,6 +174,8 @@ static void sync(void *p, long period)
 	    && rx_size==sizeof(buffer.motion) && index<state.size()
 	) {
 	    state[index]->update(buffer.motion);
+	    (*state[index]->valid_rx)++;
+	    valid++;
 	}
     } while(rx_size>0);
 }

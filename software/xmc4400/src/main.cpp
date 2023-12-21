@@ -172,6 +172,9 @@ public:
     operator bool() { return result; }
 };
 
+float sync_Kp=20e-4;
+float sync_Ki=5e-6;
+
 extern "C" void CCU80_2_IRQHandler(void)
 {
     static_assert(std::get<0>(hr_out).UNIT==0, "Wrong interrupt handler");
@@ -179,10 +182,11 @@ extern "C" void CCU80_2_IRQHandler(void)
     copro.tx(data);
     switch(subsample) {
     case 1: {
-	auto t=syncer.sync(&eth0,200ns,20e-4,5e-6);
+	auto t=syncer.sync(&eth0,200ns,sync_Kp,sync_Ki);
 	if(t!=0s)
 	    std::apply([=](auto ...x) { (x.period(t+pwm_time),...);}, hr_out);
 	report.timer_delta=t/1ns;
+	report.timer_error=syncer.last_error()/1ns;
 	break;}
     case 2:
 	encoder->trigger();
@@ -210,7 +214,9 @@ extern "C" void CCU80_2_IRQHandler(void)
     }
 
     C setpoint=0;
-    if(syncer.locked(&eth0) && drive_io.age(&eth0)<2ms) {
+    if(drive_io.age(&eth0)<0ms)
+	drive_io.clear_timestamp();
+    else if(syncer.locked(&eth0) && drive_io.age(&eth0)<2ms) {
 	setpoint=drive_io->Iset[0]+1if*drive_io->Iset[1];
 	ccu8::clear_trap(hr_out);	// enable outputs
 	Kcurrent.set_limit(limit);
@@ -240,8 +246,6 @@ extern "C" void CCU80_2_IRQHandler(void)
 	report.invalid++;
 	angle=report.angle;
     }
-    constexpr auto C0=current_scale*(clarke[0]-clarke[2]);
-    constexpr auto C1=current_scale*(clarke[1]-clarke[2]);
 
     auto Istator=current_scale*(
 	    clarke[0]*float(rx_data[0])+
@@ -270,6 +274,7 @@ extern "C" void CCU80_2_IRQHandler(void)
 	IO3=old_pos==report.position;
 	drive_io->new_data=0;
 	drive_io.transmit(&eth0,report);
+	report.counter++;
 	old_pos=report.position;
     } else if(drive_io.age(&eth0)>10ms) {
 	drive_io->Iset[0]=drive_io->Iset[1]=0;
