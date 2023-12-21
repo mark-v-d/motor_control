@@ -2491,7 +2491,7 @@
     (property "domain" "3,4-1,2=5.5" (at 161.29 92.71 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (property "Mouser" "" (at 0 185.42 0)
+    (property "Mouser" "782-TCLT1003" (at 0 185.42 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "ec_mfg" "Vishay" (at 161.29 92.71 0)
