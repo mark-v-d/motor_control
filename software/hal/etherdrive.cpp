@@ -16,6 +16,8 @@ MODULE_LICENSE("GPL");
 #endif // MODULE_INFO
 
 
+#include <sys/io.h>
+
 #include "raw_socket.h"
 #include "drive_io.h"
 
@@ -25,6 +27,7 @@ constexpr std::array<uint8_t,4> bcast_ip{255,255,255,255};
 std::array<std::array<uint8_t,6>,16> mac;
 
 raw_socket skt;
+constexpr uint16_t base=0xec00;
 
 /******************************************************************************/
 struct comp_state {
@@ -154,9 +157,10 @@ static void sync(void *p, long period)
     for(auto p: state)
 	*(p->invalid)=1;
 
+    outb(0,base);
     ssize_t rx_size;
     int valid=0;
-    while(rx_size>0) {
+    do {
 	union rx_types {
 	    udp_t udp;
 	    sync_ns::recv_t sync;
@@ -178,6 +182,7 @@ static void sync(void *p, long period)
 	    valid++;
 	}
     } while(rx_size>0);
+    outb(255,base);
 }
 
 
@@ -195,6 +200,11 @@ extern "C" int rtapi_app_main(void)
     comp_id = hal_init("etherdrive");
     if(comp_id < 0)
 	return comp_id;
+    if(ioperm(base, 8, 1)) {
+	perror("request_region failed\n");
+	return -1;
+    }
+
 
     for(int i=0; names[i] && i<16; i++) {
 	std::array<unsigned,6> d;
