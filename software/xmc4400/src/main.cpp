@@ -180,43 +180,37 @@ extern "C" void CCU80_2_IRQHandler(void)
     static_assert(std::get<0>(hr_out).UNIT==0, "Wrong interrupt handler");
     constexpr char data=0x05a;
     copro.tx(data);
-    switch(subsample) {
-    case 1: {
-	auto t=syncer.sync(&eth0,200ns,sync_Kp,sync_Ki);
+    itm.PORT[0].u8=subsample;
+    if(subsample==1) {
+	auto t=syncer.sync(&eth0,200ns,sync_Kp,sync_Ki,20us);
 	if(t!=0s)
 	    std::apply([=](auto ...x) { (x.period(t+pwm_time),...);}, hr_out);
 	report.timer_delta=t/1ns;
 	report.timer_error=syncer.last_error()/1ns;
-	break;}
-    case 2:
+    } else if(subsample==2)
 	encoder->trigger();
-    }
-    if(++subsample>3) {
+    if(++subsample>3)
 	subsample=0;
-    }
 
     FCE_KE2->CFG=0;
     FCE_KE2->CRC=0xffff;
-    itm.PORT[0].u16=FCE_KE2->CRC;
     uint16_t d;
     for(int rxd_counter=0; copro->TRBSR & USIC_CH_TRBSR_RBFLVL_Msk;) {
 	d>>=8;
 	d|=copro->OUTR<<8;
-	itm.PORT[0].u8=d>>8;
 	report.rx_data[rxd_counter/2]=rx_data[rxd_counter/2]=d;
 	rxd_counter++;
 	if(!(rxd_counter&1)) {
 	    FCE_KE2->IR=std::byteswap(d);
-	    itm.PORT[rxd_counter/2].u16=d;
-	    itm.PORT[0].u16=FCE_KE2->CRC;
 	}
 	report.rx_counter=rxd_counter;
     }
 
     C setpoint=0;
+    bool locked=syncer.locked(&eth0) && drive_io.age(&eth0)<2ms;
     if(drive_io.age(&eth0)<0ms)
 	drive_io.clear_timestamp();
-    else if(syncer.locked(&eth0) && drive_io.age(&eth0)<2ms) {
+    else if(locked) {
 	setpoint=drive_io->Iset[0]+1if*drive_io->Iset[1];
 	ccu8::clear_trap(hr_out);	// enable outputs
 	Kcurrent.set_limit(limit);
@@ -267,17 +261,18 @@ extern "C" void CCU80_2_IRQHandler(void)
     report.offset=(0xffff&adc::vadc.G[0].RES[1]);
     report.ADC[0]=(0xffff&adc::vadc.G[0].RES[0])-report.offset;
     report.ADC[1]=(0xffff&adc::vadc.G[1].RES[0])-report.offset;
-    itm.PORT[8].u16=report.ADC[0];
-    itm.PORT[9].u16=report.ADC[1];
-    if(drive_io->new_data) {
+    if(locked && subsample==3) {
+	itm.PORT[0].u8=subsample|0x80;
 	static int32_t old_pos;
 	IO3=old_pos==report.position;
 	drive_io->new_data=0;
 	drive_io.transmit(&eth0,report);
 	report.counter++;
 	old_pos=report.position;
-    } else if(drive_io.age(&eth0)>10ms) {
-	drive_io->Iset[0]=drive_io->Iset[1]=0;
+    } else {
+	itm.PORT[0].u8=subsample;
+	if(drive_io.age(&eth0)>10ms)
+	    drive_io->Iset[0]=drive_io->Iset[1]=0;
     }
 
     std::apply(ccu8::shadow_transfer,hr_out);

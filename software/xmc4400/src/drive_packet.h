@@ -4,7 +4,7 @@
 #include "packet.h"
 
 namespace sync_ns {
-    constexpr uint16_t port=3;
+    constexpr uint16_t port=2003;
 
     struct __attribute__ ((__packed__)) to_host {
 	uint32_t tx_seconds;
@@ -19,7 +19,7 @@ namespace sync_ns {
 }
 
 namespace motion_ns {
-    constexpr uint16_t port=2;
+    constexpr uint16_t port=2002;
 
     struct  __attribute__ ((__packed__)) to_host {
 	int32_t position;
@@ -48,7 +48,7 @@ namespace motion_ns {
 };
 
 namespace config_ns {
-    constexpr uint16_t port=4;
+    constexpr uint16_t port=2004;
 
     struct  __attribute__ ((__packed__)) to_host {
     };

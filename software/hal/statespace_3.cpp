@@ -42,6 +42,7 @@ struct comp_state {
     std::array<hal_float_t*,order*outputs> K;
     std::array<hal_float_t*,outputs> limit;
 
+    double old_setpoint;
     ss_t<order,inputs,outputs> controller;
 
     int init(int i) {
@@ -139,8 +140,12 @@ struct comp_state {
 	    *position[i]=IN/SCALE;
 	    double ERROR=(*setpoint*SCALE-IN);
 	    *error[i]=ERROR/SCALE;
-	    inp(i)=ERROR;
+	    if(old_setpoint==*setpoint)
+		inp(i)=round(ERROR);
+	    else
+		inp(i)=ERROR;
 	}
+	old_setpoint=*setpoint;
 	auto r=controller.compute(inp);
 	*out[0]=r(0);
     }

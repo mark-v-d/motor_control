@@ -41,7 +41,7 @@ public:
 	    return 1;
     }
 
-    duration sync(Ethernet *eth, duration limit, float Kp, float Ki) {
+    duration sync(Ethernet *eth, duration limit, float Kp, float Ki,duration offset) {
 	auto now=eth->system_time();
 	if(now-last>2ms) {
 	    unlocked=100;
@@ -49,14 +49,14 @@ public:
 	    return 0ns;
 	}
 
-	error=eth->target_time()-now;
-	itm.PORT[8].f=error/1s;
+	error=eth->target_time()-now-offset;
+	itm.PORT[7].f=error/1s;
 	auto t(Kp*error+sync_integrator);
 	sync_integrator+=Ki*error;
 	auto old_t=t;
 	t=std::min(limit,std::max(-limit,t));
 	sync_integrator+=(t-old_t)*Ki/Kp;
-	itm.PORT[10].f=sync_integrator/1s;
+	itm.PORT[8].f=sync_integrator/1s;
 	if(unlocked && (error<1us || error>-1us))
 	    unlocked--;
 	return t;

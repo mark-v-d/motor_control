@@ -112,9 +112,7 @@ void mitsubishi_MFS13_t::rx_handler(void) {
 	int d;
 	while((d=hd.rx_fifo())>=0) {
 	    rx_buffer[putp++]=d;
-	    itm.PORT[7].u16=rx_buffer[putp-1] | (putp<<8);
 	    crc^=d;
-	    itm.PORT[7].u8=crc;
 	}
 	if(putp==10 && crc==0) {
 	    position=
@@ -187,7 +185,6 @@ void mitsubishi_PQ_t::rx_handler(void) {
 	while((d=fd.rx_fifo())>=0) {
 	    rx_buffer[putp++]=d;
 	    crc^=d;
-	    itm.PORT[7].u16=rx_buffer[putp-1] | (putp<<8);
 	}
 	if(putp==9 && crc==0) {
 	    position=((rx_buffer[2]+(1<<8)*rx_buffer[3] +(1<<12)*rx_buffer[5]
@@ -266,21 +263,17 @@ void AMT21_t::tx_handler(void) {
 }
 
 void AMT21_t::rx_handler(void) {
-    itm.PORT[20].u32=hd->TRBSR;
     int d;
     while((d=hd.rx_fifo())>=0 && putp<rx_buffer.size()) {
 	rx_buffer[putp++]=d;
-	itm.PORT[7].u16=rx_buffer[putp-1] | (putp<<8);
 	if(putp==3 && rx_buffer[0]==0x54) {
 	    uint16_t pos=(uint16_t(rx_buffer[2])<<8) | rx_buffer[1];
-	    itm.PORT[8].u16=pos;
 	    auto check=pos;
 	    for(int i=0;i<7;i++) {
 		auto o=check;
 		check>>=2;
 		check^=o&3;
 	    }
-	    itm.PORT[9].u16=check;
 	    if(check==3) {
 		int32_t np=(pos&0x3fff)|(position&0xffffc000);
 		int32_t dp=np-position;
@@ -344,7 +337,6 @@ class hiperface_t:public encoder_t,
 	ENC_DIR=1;
 	ENC_TXD.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL
 	    | uart::dout0(ENC_TXD).gpio_mode);
-	itm.PORT[7].u8=tx_buffer[tx_get];
 	hd.tx(tx_buffer[tx_get++]);
     }
 
@@ -397,9 +389,7 @@ hiperface_t::~hiperface_t(void)
 void hiperface_t::tx_handler()
 {
     if(hd->PSR_ASCMode & USIC_CH_PSR_ASCMode_TSIF_Msk) {
-	itm.PORT[7].u16=(tx_len<<8)|tx_get;
 	if(tx_get<tx_len) {
-	    itm.PORT[7].u8=tx_buffer[tx_get];
 	    hd.tx(tx_buffer[tx_get++]);
 	} else {
 	    ENC_DIR=0;
@@ -418,10 +408,8 @@ void hiperface_t::trigger(void)
 	uint8_t crc=0;
 	int d;
 	while((d=hd.rx_fifo())>=0) {
-	    itm.PORT[7].u16=d | (rx_put<<8);
 	    rx_buffer[rx_put++]=d;
 	    crc^=d;
-	    itm.PORT[7].u8=crc;
 	}
 
 	if(state==STARTUP)
@@ -439,7 +427,6 @@ void hiperface_t::trigger(void)
 		+0x100L*rx_buffer[7]
 		+0x10000L*rx_buffer[6]
 		+0x1000000L*rx_buffer[5];
-	    itm.PORT[7].u32=position;
 	    setcount(position>>3);
 	} else if(state!=DONE)
 	    state=STARTUP;
