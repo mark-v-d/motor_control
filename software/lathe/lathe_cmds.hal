@@ -82,11 +82,11 @@ setp statespace_3.0.scale-0		-200		# 1/5um
 setp statespace_3.0.scale-1		-786432		# 3*2^20/4
 setp statespace_3.0.A-1-1		1.0
 setp statespace_3.0.B-1-0		0.005
-setp statespace_3.0.B-0-1		-0.0004
+setp statespace_3.0.B-0-1		-8e-4
 setp statespace_3.0.C-0-0		1
 setp statespace_3.0.C-0-1		1
 setp statespace_3.0.D-0-0		0.1
-setp statespace_3.0.D-0-1		0.0004254
+setp statespace_3.0.D-0-1		8.2543e-04
 setp statespace_3.0.K-1-0		1
 setp statespace_3.0.limit-0		2
 
@@ -100,7 +100,7 @@ setp statespace_3.1.C-0-1		1
 setp statespace_3.1.D-0-0		-0.075
 setp statespace_3.1.D-0-1		-1.523841857910156e-03
 setp statespace_3.1.K-1-0		1
-setp statespace_3.1.limit-0		2
+setp statespace_3.1.limit-0		3
 
 
 # realtime thread/function links

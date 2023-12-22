@@ -24,4 +24,5 @@ end
 if size(log,2)>32
 	data.timer_error=log(:,33);
 	data.counter=log(:,34);
+	data.timer_delta=log(:,35);
 end

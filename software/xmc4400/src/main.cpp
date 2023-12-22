@@ -172,23 +172,25 @@ public:
     operator bool() { return result; }
 };
 
-float sync_Kp=20e-4;
+float sync_Kp=4e-3;
 float sync_Ki=5e-6;
 
 extern "C" void CCU80_2_IRQHandler(void)
 {
     static_assert(std::get<0>(hr_out).UNIT==0, "Wrong interrupt handler");
+    static uint8_t trace_info;
     constexpr char data=0x05a;
     copro.tx(data);
-    itm.PORT[0].u8=subsample;
+    itm.PORT[0].u8=trace_info=subsample;
     if(subsample==1) {
-	auto t=syncer.sync(&eth0,200ns,sync_Kp,sync_Ki,20us);
+	auto t=syncer.sync(&eth0,50ns,sync_Kp,sync_Ki,20us);
 	if(t!=0s)
 	    std::apply([=](auto ...x) { (x.period(t+pwm_time),...);}, hr_out);
 	report.timer_delta=t/1ns;
 	report.timer_error=syncer.last_error()/1ns;
-    } else if(subsample==2)
+	itm.PORT[0].u8=(trace_info|=0x40);
 	encoder->trigger();
+    }
     if(++subsample>3)
 	subsample=0;
 
@@ -261,8 +263,8 @@ extern "C" void CCU80_2_IRQHandler(void)
     report.offset=(0xffff&adc::vadc.G[0].RES[1]);
     report.ADC[0]=(0xffff&adc::vadc.G[0].RES[0])-report.offset;
     report.ADC[1]=(0xffff&adc::vadc.G[1].RES[0])-report.offset;
-    if(locked && subsample==3) {
-	itm.PORT[0].u8=subsample|0x80;
+    if(locked && subsample==0) {
+	itm.PORT[0].u8=(trace_info|=0x80);
 	static int32_t old_pos;
 	IO3=old_pos==report.position;
 	drive_io->new_data=0;
@@ -270,7 +272,6 @@ extern "C" void CCU80_2_IRQHandler(void)
 	report.counter++;
 	old_pos=report.position;
     } else {
-	itm.PORT[0].u8=subsample;
 	if(drive_io.age(&eth0)>10ms)
 	    drive_io->Iset[0]=drive_io->Iset[1]=0;
     }

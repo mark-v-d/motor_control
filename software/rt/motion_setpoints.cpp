@@ -50,6 +50,7 @@ std::ostream &operator<<(std::ostream &s, sync_I_t const &d) {
 	<< " " << d.error(0,0) << " " << d.error(1,0)		// 31,32
 	<< " " << d.timer_error					// 33
 	<< " " << d.counter					// 34
+	<< " " << d.timer_delta					// 35
 	;
     return s;
 }
@@ -121,7 +122,7 @@ void *rt_thread(void *data)
 		table[i-1].position2*scale[0],
 		table[i-1].position*scale[1]
 	    };
-	    if(i<=90)
+	    if(i<=2000)
 		offset=inputs;
 
 	    table[i].error=table[i].setpoint-(inputs-offset);
@@ -136,9 +137,10 @@ void *rt_thread(void *data)
         // Wait and receive data
         ////////////////////////////////////////////////////////////////////////
 	if(table[i].valid)
-	    outb(0,base);
+	    outb(255,base);
 	clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, nullptr);
-	outb(255,base);
+	if(i>4500)
+	    outb(0,base);
 
     }
     return NULL;
@@ -200,7 +202,7 @@ int main(int argc, char *argv[])
 	    return 1;
 	}
 
-	for(int i=0; i<0.1s/timebase_t(1); i++) // synchronisation for 0.1s
+	for(int i=0; i<1s/timebase_t(1); i++) // synchronisation for 1s
 	    table.emplace_back(sync_I_t{.I=std::complex<float>{0,0}});
 
 	std::string s;
