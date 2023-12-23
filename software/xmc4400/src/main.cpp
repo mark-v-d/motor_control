@@ -263,12 +263,15 @@ extern "C" void CCU80_2_IRQHandler(void)
     report.offset=(0xffff&adc::vadc.G[0].RES[1]);
     report.ADC[0]=(0xffff&adc::vadc.G[0].RES[0])-report.offset;
     report.ADC[1]=(0xffff&adc::vadc.G[1].RES[0])-report.offset;
+    report.digin=IO0 | (IO2<<1);
     if(locked && subsample==0) {
 	itm.PORT[0].u8=(trace_info|=0x80);
 	static int32_t old_pos;
 	IO3=old_pos==report.position;
 	drive_io->new_data=0;
 	drive_io.transmit(&eth0,report);
+	RELAY0=drive_io->digout&1;
+	RELAY1=drive_io->digout&2;
 	report.counter++;
 	old_pos=report.position;
     } else {
@@ -320,6 +323,10 @@ int main()
     ENC_DIR=0; ENC_DIR.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     IO7=0; IO7.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     IO0=0; IO0.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    IO1.set(XMC_GPIO_MODE_INPUT_PULL_UP);
+    IO2.set(XMC_GPIO_MODE_INPUT_PULL_UP);
+    RELAY0=0; RELAY0.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    RELAY1=0; RELAY1.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     IO3=0; IO3.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     COPRO_POWER=0; COPRO_POWER.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     ENC_DDIR=0; ENC_DDIR.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);

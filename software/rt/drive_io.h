@@ -75,12 +75,14 @@ struct __attribute__ ((__packed__)) send_t:public send_base_t, public to_drive
     template <class T>
     send_t(
 	T const &skt, std::array<uint8_t,6> mac, std::array<uint8_t,4> ip,
-	std::complex<float> I
+	std::complex<float> I,
+	uint32_t dout
     ):send_base_t(skt,mac,ip,port)
     {
 	new_data++; new_data|=0x80000000;
 	Iset[0]=I.real();
 	Iset[1]=I.imag();
+	digout=dout;
 
 	finish_packet(sizeof(*this));
     }

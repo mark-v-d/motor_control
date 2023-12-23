@@ -69,13 +69,11 @@ public:
     }
 
     template <class T>
-    void send(T const &pkt) {
+    int send(T const &pkt) {
 	if(rxs<0)
-	    return;
-	if(sendto(rxs, &pkt, sizeof(pkt), 0,
-	    (struct sockaddr*)&socket_address, sizeof(socket_address) ) < 0
-	)
-	    throw(stderr,"Send failed"s);
+	    return -1;
+	return sendto(rxs, &pkt, sizeof(pkt), MSG_DONTWAIT,
+	    (struct sockaddr*)&socket_address, sizeof(socket_address) );
     }
 
     int socket() { return rxs; }

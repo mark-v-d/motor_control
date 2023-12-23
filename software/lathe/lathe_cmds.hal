@@ -42,6 +42,7 @@ loadrt scale names=rpm_rps
 loadrt etherdrive device=eth1 names=c2:00:85:0c:10:c0,c2:00:8d:11:11:c0
 #loadrt etherdrive device=eth1 names=c2:00:85:0c:10:c0
 loadrt statespace_3 count=2
+loadrt homer count=2
 
 # pin aliases
 # param aliases
@@ -102,9 +103,13 @@ setp statespace_3.1.D-0-1		-1.523841857910156e-03
 setp statespace_3.1.K-1-0		1
 setp statespace_3.1.limit-0		3
 
+setp homer.0.current-min -1.99
+
 
 # realtime thread/function links
 addf etherdrive.sync servo-thread
+addf homer.0 servo-thread
+addf homer.1 servo-thread
 addf statespace_3.compute servo-thread
 addf etherdrive.send servo-thread
 addf motion-command-handler servo-thread
@@ -122,17 +127,34 @@ setp spindle_mass.gain              .07
 setp near_speed.scale               1.1
 setp near_speed.difference          10
 
+#
+# We use encoder2 as the actual position, hence the swap between the
+# drive and the rest of the config.
+#
 net J0:pos-cmd joint.0.motor-pos-cmd  	=> statespace_3.0.setpoint
-net J0:pos-fb0 etherdrive.0.position  	=> statespace_3.0.in-1
-net J0:pos-fb1 etherdrive.0.position2 	=> statespace_3.0.in-0 
+#net J0:pos-fb0 etherdrive.0.position  	=> statespace_3.0.in-1
+#net J0:pos-fb1 etherdrive.0.position2 	=> statespace_3.0.in-0 
 net J0:pos-dro statespace_3.0.position-0 => joint.0.motor-pos-fb
-net J0:pos-current statespace_3.0.out 	=> etherdrive.0.Iset-1
+net J0:pos-current statespace_3.0.out 	=> etherdrive.0.Iset-1 homer.0.current
 net J0:enable joint.0.amp-enable-out 	=> etherdrive.0.enable statespace_3.0.enable
+net J0:index-enable joint.0.index-enable => homer.0.index-enable
+net J0:home homer.0.limit-switch 	=> joint.0.home-sw-in
+net J0:index etherdrive.0.index2	=> homer.0.index-value		# index is loaded as offset
+net J0:pos-drive-0 etherdrive.0.position2 => homer.0.position-in-0	# SWAPPED HERE
+net J0:pos-drive-1 etherdrive.0.position  => homer.0.position-in-1	# SWAPPED HERE
+net J0:pos-control-0 homer.0.position-out-0 => statespace_3.0.in-0
+net J0:pos-control-1 homer.0.position-out-1 => statespace_3.0.in-1
 
 net J1:pos-cmd joint.1.motor-pos-cmd	=> statespace_3.1.setpoint
-net J1:pos-fb0 etherdrive.1.position	=> statespace_3.1.in-1
-net J1:pos-fb1 etherdrive.1.position2	=> statespace_3.1.in-0 
+#net J1:pos-fb0 etherdrive.1.position	=> statespace_3.1.in-1
+#net J1:pos-fb1 etherdrive.1.position2	=> statespace_3.1.in-0 
 net J1:pos-dro statespace_3.1.position-0 => joint.1.motor-pos-fb
 net J1:pos-current statespace_3.1.out	=> etherdrive.1.Iset-1
 net J1:enable joint.1.amp-enable-out	=> etherdrive.1.enable statespace_3.1.enable
-
+net J1:home  etherdrive.0.digin-1 => joint.1.home-sw-in
+net J1:index etherdrive.1.index2 => homer.1.index-value
+net J1:index-enable  joint.1.index-enable homer.1.index-enable
+net J1:pos-drive-0 etherdrive.1.position2 => homer.1.position-in-0	# SWAPPED HERE
+net J1:pos-drive-1 etherdrive.1.position  => homer.1.position-in-1	# SWAPPED HERE
+net J1:pos-control-0 homer.1.position-out-0 => statespace_3.1.in-0
+net J1:pos-control-1 homer.1.position-out-1 => statespace_3.1.in-1

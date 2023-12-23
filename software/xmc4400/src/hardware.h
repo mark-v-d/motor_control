@@ -86,6 +86,9 @@ static gpio::output<3,5> IO5;
 static gpio::output<3,4> IO6;
 static gpio::output<3,3> IO7;
 
+static gpio::output<3,2> RELAY0;
+static gpio::output<3,1> RELAY1;
+
 static gpio::pin<14,0> AN_IN0;
 static gpio::pin<14,1> AN_IN1;
 static gpio::pin<14,2> AN_IN2;

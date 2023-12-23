@@ -34,6 +34,7 @@ struct comp_state {
     // input pins
     hal_float_t *Iset[2];
     hal_bit_t *enable;
+    hal_bit_t *digout[2];
 
     // output pins
     hal_s32_t *position;
@@ -49,6 +50,7 @@ struct comp_state {
     hal_u32_t *drive_rx;
     hal_s32_t *timer_delta;
     hal_s32_t *dt;
+    hal_bit_t *digin[2];
 
     bool valid;
 
@@ -86,16 +88,21 @@ struct comp_state {
 	    !pin(HAL_OUT,"valid_tx", &valid_tx) &&
 	    !pin(HAL_OUT,"drive_rx", &drive_rx) &&
 	    !pin(HAL_OUT,"timer_delta", &timer_delta) &&
+	    !pin(HAL_IN,"digout-0", &digout[0]) &&
+	    !pin(HAL_IN,"digout-1", &digout[1]) &&
+	    !pin(HAL_OUT,"digin-0", &digin[0]) &&
+	    !pin(HAL_OUT,"digin-1", &digin[1]) &&
 	    !pin(HAL_OUT,"timer_error", &dt)
 	    ;
     }
+
 
     int offset[2];
 
     void update(motion_ns::to_host &buffer){
 	if(offset[0]==0 && offset[1]==0) {
-	    offset[0]=buffer.position;
-	    offset[1]=buffer.position2;
+	   offset[0]=buffer.position;
+	   offset[1]=buffer.position2;
 	}
 	*position=buffer.position-offset[0];
 	*position2=buffer.position2-offset[1];
@@ -108,8 +115,11 @@ struct comp_state {
 	*Vservo=buffer.Vservo;
 	*invalid=buffer.valid? 0:2;
 	*timer_delta=buffer.timer_delta;
+	*digin[0]=!(buffer.digin&1);
+	*digin[1]=!((buffer.digin>>1)&1);
 	*dt=buffer.timer_error;
 	*drive_rx=buffer.counter;
+	(*valid_rx)++;
     }
 };
 
@@ -125,14 +135,15 @@ static void send(void *p, long period)
 	    float(*state[i]->Iset[0]),
 	    float(*state[i]->Iset[1])
 	};
-	skt.send(motion_ns::send_t(skt, mac[i], ip, I));
+	uint32_t dout=*state[i]->digout[0] | (*state[i]->digout[1]<<1);
+	skt.send(motion_ns::send_t(skt, mac[i], ip, I, dout));
 	(*state[i]->valid_tx)++;
     }
 }
 
 static void sync(void *p, long period)
 {
-    static struct timespec timestamp;
+    static struct timespec timestamp{0,0};
     if(!timestamp.tv_sec) {
 	if(clock_gettime(CLOCK_MONOTONIC, &timestamp)) {
 	    perror("clock_gettime");
@@ -152,14 +163,15 @@ static void sync(void *p, long period)
 	ts.tv_nsec-=1'000'000'000;
     }
 
+    outb(0,base);
     skt.send(sync_ns::send_t(skt,bcast_mac,bcast_ip,timestamp,ts));
+    outb(1,base);
+
 
     for(auto p: state)
 	*(p->invalid)=1;
 
-    outb(0,base);
     ssize_t rx_size;
-    int valid=0;
     do {
 	union rx_types {
 	    udp_t udp;
@@ -167,19 +179,14 @@ static void sync(void *p, long period)
 	    motion_ns::recv_t motion;
 	    char txt[1024];
 	} buffer;
-	rx_size=recvfrom(skt.socket(),
-	    &buffer, sizeof(buffer), MSG_DONTWAIT, NULL, NULL);
+	rx_size=recv(skt.socket(), &buffer, sizeof(buffer), MSG_DONTWAIT);
 	unsigned index=buffer.udp.src_ip[3]-1;
-	if(buffer.udp.src_port==htons(sync_ns::port)
-	    && rx_size==sizeof(buffer.sync)
-	) {
-	    //static_cast<sync_ns::to_host&>(x)=buffer.sync;
-	} else if(buffer.udp.src_port==htons(motion_ns::port)
+	if(index>=state.size())
+	    continue;
+	if(buffer.udp.src_port==htons(motion_ns::port)
 	    && rx_size==sizeof(buffer.motion) && index<state.size()
 	) {
 	    state[index]->update(buffer.motion);
-	    (*state[index]->valid_rx)++;
-	    valid++;
 	}
     } while(rx_size>0);
     outb(255,base);

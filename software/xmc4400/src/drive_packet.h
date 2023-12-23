@@ -37,13 +37,15 @@ namespace motion_ns {
 	int32_t	timer_delta;
 	int32_t	timer_error;
 	int32_t	counter;
+	uint32_t digin;
 	uint32_t rx_counter;
 	uint16_t rx_data[16];
     };
 
     struct  __attribute__ ((__packed__)) to_drive {
-	uint32_t new_data;
 	float Iset[2];
+	uint32_t digout;
+	uint32_t new_data;
     };
 };
 
