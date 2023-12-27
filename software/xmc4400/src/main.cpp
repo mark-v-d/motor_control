@@ -2,6 +2,9 @@
     PQ23,
 	30.5mH, 7.5 Ohm @ 400Hz u->v, w open
 	23.0mH, 5.2 Ohm @ 400Hz u->v+w
+
+    FIXME:
+	Allow a default state for digout when lock is lost.
 */
 #include "vadc.h"
 
@@ -264,14 +267,14 @@ extern "C" void CCU80_2_IRQHandler(void)
     report.ADC[0]=(0xffff&adc::vadc.G[0].RES[0])-report.offset;
     report.ADC[1]=(0xffff&adc::vadc.G[1].RES[0])-report.offset;
     report.digin=IO0 | (IO2<<1);
+    RELAY0=drive_io->digout&1;
+    RELAY1=drive_io->digout&2;
     if(locked && subsample==0) {
 	itm.PORT[0].u8=(trace_info|=0x80);
 	static int32_t old_pos;
 	IO3=old_pos==report.position;
 	drive_io->new_data=0;
 	drive_io.transmit(&eth0,report);
-	RELAY0=drive_io->digout&1;
-	RELAY1=drive_io->digout&2;
 	report.counter++;
 	old_pos=report.position;
     } else {
