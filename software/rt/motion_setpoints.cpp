@@ -45,12 +45,12 @@ std::vector<sync_I_t> table;
 
 std::ostream &operator<<(std::ostream &s, sync_I_t const &d) {
     s	<< sync_t(d)
-	<< " " << real(d.I) << " " << imag(d.I)			// 27,28
-	<< " " << d.setpoint(0,0) << " " << d.setpoint(1,0)	// 29,30
-	<< " " << d.error(0,0) << " " << d.error(1,0)		// 31,32
-	<< " " << d.timer_error					// 33
-	<< " " << d.counter					// 34
-	<< " " << d.timer_delta					// 35
+	<< " " << real(d.I) << " " << imag(d.I)			// 28,29
+	<< " " << d.setpoint(0,0) << " " << d.setpoint(1,0)	// 30,31
+	<< " " << d.error(0,0) << " " << d.error(1,0)		// 32,33
+	<< " " << d.timer_error					// 34
+	<< " " << d.counter					// 35
+	<< " " << d.timer_delta					// 36
 	;
     return s;
 }
@@ -131,7 +131,7 @@ void *rt_thread(void *data)
 
 	    table[i].I=1.0if*float(r(0));
 	}
-	skt.send(motion_ns::send_t(skt, mac, ip, table[i].I));
+	skt.send(motion_ns::send_t(skt, mac, ip, table[i].I,0));
 
         ////////////////////////////////////////////////////////////////////////
         // Wait and receive data

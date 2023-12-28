@@ -9,20 +9,21 @@ data.rx_counter=log(:,20);
 data.rx_data=log(:,21:24);
 data.glass_counter=log(:,25);
 data.glass_index=log(:,26);
+data.Vservo=log(:,27);
 
 data.time=log(:,1)-log(1,1)+log(:,2)*1e-9;
 data.tx_time=log(:,3)-log(:,3)+log(:,4)*1e-9;
 data.rx_time=log(:,5)-log(:,5)+log(:,6)*1e-9;
 
-if size(log,2)>26
-	data.Iset=log(:,[27,28]);
+if size(log,2)>27
+	data.Iset=log(:,[28,29]);
 end
-if size(log,2)>29
-	data.setpoint=log(:,[27,30]);
-	data.error=log(:,[31,32]);
+if size(log,2)>30
+	data.setpoint=log(:,[28,31]);
+	data.error=log(:,[32,33]);
 end
-if size(log,2)>32
-	data.timer_error=log(:,33);
-	data.counter=log(:,34);
-	data.timer_delta=log(:,35);
+if size(log,2)>33
+	data.timer_error=log(:,34);
+	data.counter=log(:,35);
+	data.timer_delta=log(:,36);
 end

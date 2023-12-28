@@ -62,6 +62,7 @@ namespace config_ns {
 	int poles;
 	float angle_offset;
 	float limit_r, limit_i;
+	float current_P, current_I, current_L;
     };
 };
 

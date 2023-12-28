@@ -12,7 +12,7 @@ gpio::pin<0,15> TXD;
 gpio::pin<2,0> I0_P;
 gpio::pin<2,11> I1_P;
 gpio::pin<2,8> I2_P;
-gpio::pin<2,9> V;
+gpio::pin<2,10> V;
 gpio::pin<0,9> RXD_TIMER;
 
 uart::full_duplex serial(TXD,RXD);

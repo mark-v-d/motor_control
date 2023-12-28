@@ -12,9 +12,9 @@ function data=current_test(A,I, old=[])
 	p; 
 	if length(old)
 		figure(1)
-		cursor_plot(data.I,";I;",old.I,";old;");
+		cursor_plot(old.I,";old;",data.I,";I;");
 		figure(2)
-		cursor_plot(data.V,";V;",old.V,";old;");
+		cursor_plot(old.V,";old;",data.V,";V;");
 	else
 		figure(1)
 		cursor_plot(data.I,";I;");

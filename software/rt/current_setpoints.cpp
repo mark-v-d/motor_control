@@ -21,9 +21,10 @@
 using namespace std::complex_literals;
 using namespace std::chrono_literals;
 
-std::array<uint8_t,6> mac{0xc2, 0x00, 0x85, 0x0c, 0x10, 0xc0}; // X
-//constexpr std::array<uint8_t,6> mac{0xc2, 0x00, 0x8d, 0x11, 0x11, 0xc0}; // Z
-//constexpr std::array<uint8_t,6> mac{0xc2, 0x00, 0x86, 0x05, 0x10, 0xc0}; // T
+std::array<uint8_t,6> mac{0xc2, 0x00, 0x03, 0x08, 0x10, 0xc0}; // SPINDLE
+//std::array<uint8_t,6> mac{0xc2, 0x00, 0x85, 0x0c, 0x10, 0xc0}; // X
+//std::array<uint8_t,6> mac{0xc2, 0x00, 0x8d, 0x11, 0x11, 0xc0}; // Z
+//std::array<uint8_t,6> mac{0xc2, 0x00, 0x86, 0x05, 0x10, 0xc0}; // T
 constexpr std::array<uint8_t,4> ip{192,168,0,6};
 
 using timebase_t=std::chrono::duration<int,std::ratio<1,4500>>;
@@ -36,7 +37,7 @@ std::vector<sync_I_t> table;
 
 std::ostream &operator<<(std::ostream &s, sync_I_t const &d) {
     s	<< sync_t(d)
-	<< " " << real(d.I) << " " << imag(d.I); // 27,28
+	<< " " << real(d.I) << " " << imag(d.I); // 28,29
     return s;
 }
 
@@ -80,7 +81,7 @@ void *rt_thread(void *data)
         ////////////////////////////////////////////////////////////////////////
         // Test specific code
         ////////////////////////////////////////////////////////////////////////
-	skt.send(motion_ns::send_t(skt, mac, ip, x.I));
+	skt.send(motion_ns::send_t(skt, mac, ip, x.I,0));
 
         ////////////////////////////////////////////////////////////////////////
         // Wait and receive data
@@ -128,7 +129,7 @@ int main(int argc, char *argv[])
 	    return 1;
 	}
 
-	for(int i=0; i<0.1s/timebase_t(1); i++) // synchronisation for 0.1s
+	for(int i=0; i<1s/timebase_t(1); i++) // synchronisation for 1s
 	    table.emplace_back(sync_I_t{.I=std::complex<float>{0,0}});
 
 	std::string s;

@@ -92,14 +92,15 @@ inline auto space_vector_mapping(C Vstator)
 
 class complex_PI {
     C limit=0;
-    C integrator;	// Deze settings z@112.5 rad/s
+    C integrator;
     float P=0.2;
     float I=5e-3;
+    float L=1;
     C output;
 public:
 
-    C compute(C error) {
-	auto result=P*error+integrator;
+    C compute(C error,float voltage) {
+	auto result=(P*error+integrator)/voltage;
 	integrator+=I*error;
 
 	C limited{
@@ -111,46 +112,16 @@ public:
 
 	if(result!=limited) {
 	    auto correction=limited-result;
-	    integrator+=correction*I/P;
+	    integrator+=correction*L;
 	}
 	return limited;
     }
 
     void set_limit(C l) { limit=l; }
+    void set_gain(float p, float i, float l) { P=p; I=i; L=l; }
 };
 
-class complex_ss_2 {
-public:
-    float a[2][2]={{1, 0},{0,0}};
-    float b[2]={0.02222, 0};
-    float c[2]={1,0};
-    float d=0.5;
-    C state[2];
-    float K[2]={0.04444,0};
-    C limit;
-
-    C compute(C error) {
-	C result=d*error+state[0]*c[0]+state[1]*c[1];
-	state[0]=a[0][0]*state[0]+a[0][1]*state[1]+b[0]*error;
-	state[1]=a[1][0]*state[0]+a[1][1]*state[1]+b[1]*error;
-
-	C limited{
-	    abs(real(result))>real(limit)?
-		std::copysign(real(limit),real(result)): real(result),
-	    abs(imag(result))>imag(limit)?
-		std::copysign(imag(limit),imag(result)): imag(result)
-	};
-
-	state[0]+=K[0]*(limited-result);
-	state[1]+=K[1]*(limited-result);
-	return limited;
-    }
-
-    void set_limit(C l) { limit=l; }
-};
-
-
-complex_ss_2 Kcurrent;
+complex_PI Kcurrent;
 
 static volatile int subsample;
 
@@ -177,6 +148,8 @@ public:
 
 float sync_Kp=4e-3;
 float sync_Ki=5e-6;
+
+constexpr float scale_Vservo=(9900.0+27)/27/4096*3.3;
 
 extern "C" void CCU80_2_IRQHandler(void)
 {
@@ -246,13 +219,14 @@ extern "C" void CCU80_2_IRQHandler(void)
 	angle=report.angle;
     }
 
+    float Vservo=rx_data[2]*scale_Vservo+1e-6;
     auto Istator=current_scale*(
 	    clarke[0]*float(rx_data[0])+
 	    clarke[1]*float(rx_data[1])+
 	    clarke[2]*float(rx_data[3]));
     auto rotate=std::polar(1.0f, angle);
     auto Irotor=rotate*Istator;
-    auto Vrotor=Kcurrent.compute(setpoint-Irotor);
+    auto Vrotor=Kcurrent.compute(setpoint-Irotor, Vservo);
     auto Vstator=conj(rotate)*Vrotor;
     hr_out=space_vector_mapping(Vstator);
 
@@ -260,6 +234,7 @@ extern "C" void CCU80_2_IRQHandler(void)
     report.Irotor[1]=imag(Irotor);
     report.Vrotor[0]=real(Vrotor);
     report.Vrotor[1]=imag(Vrotor);
+    report.Vservo=Vservo;
     report.position2=glass_scale.count();
     report.index2=glass_scale.index();
     report.tpower=(0xffff&adc::vadc.G[1].RES[1]);
@@ -468,6 +443,9 @@ int main()
 	if(drive_config->new_data) {
 	    led=drive_config->led;
 	    limit=drive_config->limit_r + 1.0if*drive_config->limit_i;
+	    Kcurrent.set_gain(drive_config->current_P, drive_config->current_I,
+		drive_config->current_L);
+	    angle_offset=drive_config->angle_offset;
 	    drive_config->new_data=0;
 	}
 	if(drive_config->encoder) {
