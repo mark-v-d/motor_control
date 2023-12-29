@@ -35,6 +35,14 @@ struct comp_state {
     hal_float_t *Iset[2];
     hal_bit_t *enable;
     hal_bit_t *digout[2];
+    hal_u32_t *encoder;
+    hal_u32_t *poles;
+    hal_float_t *angle_offset;
+    hal_float_t *limit_r;
+    hal_float_t *limit_i;
+    hal_float_t *P;
+    hal_float_t *I;
+    hal_float_t *L;
 
     // output pins
     hal_s32_t *position;
@@ -51,6 +59,7 @@ struct comp_state {
     hal_s32_t *timer_delta;
     hal_s32_t *dt;
     hal_bit_t *digin[2];
+    hal_bit_t *configured;
 
     bool valid;
 
@@ -92,7 +101,16 @@ struct comp_state {
 	    !pin(HAL_IN,"digout-1", &digout[1]) &&
 	    !pin(HAL_OUT,"digin-0", &digin[0]) &&
 	    !pin(HAL_OUT,"digin-1", &digin[1]) &&
-	    !pin(HAL_OUT,"timer_error", &dt)
+	    !pin(HAL_OUT,"configured", &configured) &&
+	    !pin(HAL_OUT,"timer_error", &dt) &&
+	    !pin(HAL_IN,"encoder", &encoder) &&
+	    !pin(HAL_IN,"poles", &poles) &&
+	    !pin(HAL_IN,"angle_offset", &angle_offset) &&
+	    !pin(HAL_IN,"limit_r", &limit_r) &&
+	    !pin(HAL_IN,"limit_i", &limit_i) &&
+	    !pin(HAL_IN,"P", &P) &&
+	    !pin(HAL_IN,"I", &I) &&
+	    !pin(HAL_IN,"L", &L)
 	    ;
     }
 
@@ -121,6 +139,10 @@ struct comp_state {
 	*drive_rx=buffer.counter;
 	(*valid_rx)++;
     }
+
+    void config_complete() {
+	*configured=1;
+    }
 };
 
 std::vector<comp_state*> state;
@@ -128,9 +150,24 @@ std::vector<comp_state*> state;
 static void send(void *p, long period)
 {
     for(int i=0; i<state.size(); i++) {
+	std::array<uint8_t,4> ip{192,168,0,uint8_t(i+1)};
+	if(!(*state[i]->configured)) {
+	    config_ns::to_drive d{
+		.led=0,
+		.encoder=int(*state[i]->encoder),
+		.poles=int(*state[i]->poles),
+		.angle_offset=float(*state[i]->angle_offset),
+		.limit_r=float(*state[i]->limit_r),
+		.limit_i=float(*state[i]->limit_i),
+		.current_P=float(*state[i]->P),
+		.current_I=float(*state[i]->I),
+		.current_L=float(*state[i]->L)
+	    };
+	    skt.send(config_ns::send_t(skt, mac[i], ip, d));
+	    continue;
+	}
 	if(!(*state[i]->enable))
 	    continue;
-	std::array<uint8_t,4> ip{192,168,0,uint8_t(i+1)};
 	std::complex<float> I{
 	    float(*state[i]->Iset[0]),
 	    float(*state[i]->Iset[1])
@@ -187,6 +224,8 @@ static void sync(void *p, long period)
 	    && rx_size==sizeof(buffer.motion) && index<state.size()
 	) {
 	    state[index]->update(buffer.motion);
+	} else if(buffer.udp.src_port==htons(config_ns::port)) {
+	    state[index]->config_complete();
 	}
     } while(rx_size>0);
     outb(255,base);

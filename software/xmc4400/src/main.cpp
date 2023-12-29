@@ -230,6 +230,17 @@ extern "C" void CCU80_2_IRQHandler(void)
     auto Vstator=conj(rotate)*Vrotor;
     hr_out=space_vector_mapping(Vstator);
 
+    if constexpr(0) {	// average for reporting
+	static C Iavg[4], Irot;
+	static int Iavg_counter=0;
+	Irot-=Iavg[Iavg_counter];
+	Iavg[Iavg_counter]=Irotor;
+	Irot+=Iavg[Iavg_counter];
+	if(++Iavg_counter>3)
+	    Iavg_counter=0;
+	Irotor=0.25f*Irot;
+    }
+
     report.Irotor[0]=real(Irotor);
     report.Irotor[1]=imag(Irotor);
     report.Vrotor[0]=real(Vrotor);
@@ -447,6 +458,7 @@ int main()
 		drive_config->current_L);
 	    angle_offset=drive_config->angle_offset;
 	    drive_config->new_data=0;
+	    drive_config.transmit(&eth0,config_ns::to_host{});
 	}
 	if(drive_config->encoder) {
 	    locker_t change_encoder(spinlock);
