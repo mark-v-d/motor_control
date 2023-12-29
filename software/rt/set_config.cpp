@@ -30,7 +30,7 @@ constexpr std::array<uint8_t,4> dst_ip{192,168,0,6};
 */
 /* X motor
     0
-    1
+    0		Restarting the encoder doesn't work (yet)
     0
     -0.04	angle_offset
     limit=0.42+0.77i
@@ -38,13 +38,8 @@ constexpr std::array<uint8_t,4> dst_ip{192,168,0,6};
 
     ./set_config c2:00:85:0c:10:c0 0 0 0 -0.04 0.42 0.77 35 1.5 1
 */
+
 /* Z motor
-    0
-    1
-    0
-    -0.04	angle_offset
-    limit=0.42+0.77i
-    P=35, I=1.5 L=1
 
     ./set_config c2:00:8d:11:11:c0 0 0 0 0.14 0.44 0.75 35 1.5 1
 */
@@ -75,6 +70,7 @@ int main(int argc, char *argv[])
 	    << "	mac	12:34:45:66:77:00\n"
 	    << "	LED	integer 0:3\n"
 	    << "	encoder	integer\n"
+	    << "		0=keep current one\n"
 	    << "		1=mitsubishi_PQ_t\n"
 	    << "		2=mitsubishi_MFS13_t\n"
 	    << "		3=AMT21_t\n"
