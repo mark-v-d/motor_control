@@ -9,7 +9,6 @@ pin io bit index_enable;
 pin out s32 position_out-# [2];
 variable float limit_sign;
 variable float offset[2];
-pin out float old_index;
 pin out s32 index_counter;
 function _;
 license "GPL";
@@ -21,12 +20,13 @@ FUNCTION(_) {
 		limit_switch=1;
 		limit_sign=current;
 	}
-	if(index_enable && old_index!=index_value) { 
+	if(index_enable && position_in(0)-index_value<=1 
+		&& position_in(0)-index_value>=-1 
+	) { 
 		offset[0]=index_value;
 		offset[1]=position_in(1);
 		index_enable=0;
 	}
-	old_index=index_value;
 	position_out(0)=position_in(0)-offset[0];
 	position_out(1)=position_in(1)-offset[1];
 }

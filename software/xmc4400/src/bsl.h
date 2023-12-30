@@ -19,10 +19,10 @@ void bsl_init(POWER_ENABLE &power_enable, TX_PIN const&,RX_PIN const&) {
     for(;;) {
 	power_enable=0;
 	itm.PORT[0].u8=1;
-	main_sleep(20ms);
+	main_sleep(100ms);
 	power_enable=1;
 	itm.PORT[0].u8=2;
-	main_sleep(20ms);
+	main_sleep(100ms);
 	for(int x=0; x<100; x++) {
 	    itm.PORT[0].u8=3;
 	    copro.tx(0);

@@ -4,20 +4,23 @@
 #        controlling halui.pause/halui.resume/halui.run
 # these are examples, edit as required:
 
-goto-zero   = halui.mdi-command-00
+#
+# Yellow button, create waypoint
+#
+goto-zero   = ""
 # synthesized per-axis buttons for goto-zero button:
-goto-zero-x = ""
+goto-zero-x = halui.mdi-command-00
 goto-zero-y = ""
-goto-zero-z = ""
+goto-zero-z = halui.mdi-command-04
 goto-zero-a = ""
 
 start-pause = std_start_pause
 rewind      = halui.program.step
 # probe-input for simulating a probe:
-probe-z     = motion.probe-input
+probe-z     = ""
 macro-3     = halui.mdi-command-03
 
-half        = halui.spindle.0.stop
+half        = halui.spindle.stop
 # synthesized per-axis buttons for half button:
 half-x      = ""
 half-y      = ""
@@ -36,7 +39,7 @@ safe-z      = halui.mdi-command-10
 home        = halui.home-all
 macro-1     = halui.mdi-command-01
 macro-2     = halui.mdi-command-02
-spindle     = halui.spindle.0.start
+spindle     = halui.spindle.start
 step        = xhc-hb04.stepsize-up
 mode        = ""
 macro-6     = halui.mdi-command-06
@@ -48,25 +51,28 @@ reset       = halui.estop.activate
 # these are examples, edit as required:
 # a halui hal pin is created for each MDI_COMMAND below
 # halui.mdi-command-00, halui.mdi-command-01,... etc
-MDI_COMMAND=G0 X0 Y0 Z0
-MDI_COMMAND=(debug, example: mdi-01)
-MDI_COMMAND=(debug, example: mdi-02)
-#03 M110: clears notifications
-MDI_COMMAND=M110
-MDI_COMMAND=(debug, example: mdi-04)
+# Gele knop, waypoint
+MDI_COMMAND=#<waypoint_x>=#<_x>
+# Macro-1
+MDI_COMMAND=o<face> call
+# Macro-2
+MDI_COMMAND=o<simple_cycle> call [#<waypoint_x>] [#<waypoint_z>]
+# Macro 3
+MDI_COMMAND=(debug, example: mdi-03)
+# mdi-04, Waypoint voor Z
+MDI_COMMAND=#<waypoint_z>=#<_z>
 MDI_COMMAND=(debug, example: mdi-05)
+# Macro 6
 MDI_COMMAND=(debug, example: mdi-06)
-#07 M101: example print to stdout
-MDI_COMMAND=M101
+#Macro 7
+MDI_COMMAND=(debug, example: mdi-07)
 MDI_COMMAND=(debug, example: mdi-08)
 MDI_COMMAND=(debug, example: mdi-09)
+# Safe-z
 MDI_COMMAND=(debug, example: mdi-10)
 MDI_COMMAND=(debug, example: mdi-11)
-#12
+
 MDI_COMMAND= G10 L20 P0 X0
-#13
 MDI_COMMAND= G10 L20 P0 Y0
-#14
 MDI_COMMAND= G10 L20 P0 Z0
-#15
 MDI_COMMAND= G10 L20 P0 C0
