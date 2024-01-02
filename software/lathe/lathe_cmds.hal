@@ -39,9 +39,8 @@ loadrt limit2 names=limit_speed
 loadrt lowpass names=spindle_mass 
 loadrt near names=near_speed 
 loadrt scale names=rpm_rps 
-loadrt etherdrive device=eth1 names=c2:00:85:0c:10:c0,c2:00:8d:11:11:c0
-#loadrt etherdrive device=eth1 names=c2:00:85:0c:10:c0
-loadrt statespace_3 count=2
+loadrt etherdrive device=eth1 names=c2:00:85:0c:10:c0,c2:00:8d:11:11:c0,c2:00:03:08:10:c0
+loadrt statespace_3 count=3
 loadrt homer count=2
 
 # pin aliases
@@ -79,6 +78,9 @@ setp spindle_mass.tmax              0
 ##################
 # Control loops
 ##################
+#
+# X
+#
 setp statespace_3.0.scale-0		-200		# 1/5um
 setp statespace_3.0.scale-1		-786432		# 3*2^20/4
 setp statespace_3.0.A-1-1		1.0
@@ -99,6 +101,9 @@ setp etherdrive.0.I			1.5
 setp etherdrive.0.L			1
 
 
+#
+# Z
+#
 setp statespace_3.1.scale-0		200		# 1/5um
 setp statespace_3.1.scale-1		629145.6	# 3*2^20/5
 setp statespace_3.1.A-1-1		1.0
@@ -118,8 +123,31 @@ setp etherdrive.1.P			35
 setp etherdrive.1.I			1.5
 setp etherdrive.1.L			1
 
-setp homer.0.current-min -1.99
+#
+# Spindle
+#
+setp statespace_3.2.scale-0		200		# 1/5um
+setp statespace_3.2.scale-1		629145.6	# 3*2^20/5
+setp statespace_3.2.A-1-1		1.0
+setp statespace_3.2.B-1-0		-0.002
+setp statespace_3.2.B-0-1		0.0015
+setp statespace_3.2.C-0-0		1
+setp statespace_3.2.C-0-1		1
+setp statespace_3.2.D-0-0		-0.075
+setp statespace_3.2.D-0-1		-1.523841857910156e-03
+setp statespace_3.2.K-1-0		1
+setp statespace_3.2.limit-0		3
 
+setp etherdrive.2.poles			4
+setp etherdrive.2.encoder		3
+setp etherdrive.2.angle_offset		0.88
+setp etherdrive.2.limit_r		0.44
+setp etherdrive.2.limit_i		0.75
+setp etherdrive.2.P			40
+setp etherdrive.2.I			0.2
+setp etherdrive.2.L			1.55
+
+setp homer.0.current-min -1.99
 
 # realtime thread/function links
 addf etherdrive.sync servo-thread
@@ -173,3 +201,6 @@ net J1:pos-drive-0 etherdrive.1.position2 => homer.1.position-in-0	# SWAPPED HER
 net J1:pos-drive-1 etherdrive.1.position  => homer.1.position-in-1	# SWAPPED HERE
 net J1:pos-control-0 homer.1.position-out-0 => statespace_3.1.in-0
 net J1:pos-control-1 homer.1.position-out-1 => statespace_3.1.in-1
+
+net spindle-on spindle.0.on => etherdrive.2.enable
+net S0:pos etherdrive.2.position => statespace_3.2.in-0

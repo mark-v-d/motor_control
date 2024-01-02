@@ -1,5 +1,5 @@
 load log
-log=log(2:end-1,:);
+log=log(4501:end-1,:);
 data.position=log(:,9);
 data.angle=log(:,10);
 data.valid=log(:,11);
@@ -18,11 +18,24 @@ data.rx_time=log(:,5)-log(:,5)+log(:,6)*1e-9;
 if size(log,2)>27
 	data.Iset=log(:,[28,29]);
 end
-if size(log,2)>30
-	data.setpoint=log(:,[28,31]);
+if size(log,2)==34
+	# voltage test
+	data.limit=log(:,[30,31]); 
+	data.Vset=log(:,32);
+	data.Imax=log(:,33);
+	data.Vdelta=log(:,34);
+elseif size(log,2)==36
+	# Speed test
+	data.Imin=log(:,30);
+	data.Imax=log(:,31);
+	data.P=log(:,32);
+	data.speed=log(:,33);
+	data.setpoint=log(:,34);
+	data.Iset=log(:,[35,36]);
+	data=rmfield(data,"error");
+elseif size(log,2)>33
+	# current test
 	data.error=log(:,[32,33]);
-end
-if size(log,2)>33
 	data.timer_error=log(:,34);
 	data.counter=log(:,35);
 	data.timer_delta=log(:,36);

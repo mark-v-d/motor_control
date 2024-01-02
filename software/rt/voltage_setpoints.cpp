@@ -21,29 +21,74 @@
 using namespace std::complex_literals;
 using namespace std::chrono_literals;
 
-//std::array<uint8_t,6> mac{0xc2, 0x00, 0x03, 0x08, 0x10, 0xc0}; // SPINDLE
-std::array<uint8_t,6> mac{0xc2, 0x00, 0x85, 0x0c, 0x10, 0xc0}; // X
+std::array<uint8_t,6> mac{0xc2, 0x00, 0x03, 0x08, 0x10, 0xc0}; // SPINDLE
+//std::array<uint8_t,6> mac{0xc2, 0x00, 0x85, 0x0c, 0x10, 0xc0}; // X
 //std::array<uint8_t,6> mac{0xc2, 0x00, 0x8d, 0x11, 0x11, 0xc0}; // Z
 //std::array<uint8_t,6> mac{0xc2, 0x00, 0x86, 0x05, 0x10, 0xc0}; // T
 constexpr std::array<uint8_t,4> ip{192,168,0,6};
-
-constexpr std::complex<float> limit{0.44,0.75};
 
 using timebase_t=std::chrono::duration<int,std::ratio<1,4500>>;
 
 std::complex<double> current=0.1i;
 struct sync_I_t:public sync_t {
-    std::complex<float> I;
+    std::complex<float> Iset{0,0};
+    std::complex<float> limit{0.44,0.75};
+    float Vset=0, Imax=0, Vdelta=0;
+    int at_speed;
 };
 std::vector<sync_I_t> table;
 
 std::ostream &operator<<(std::ostream &s, sync_I_t const &d) {
     s	<< sync_t(d)
-	<< " " << real(d.I) << " " << imag(d.I); // 28,29
+	<< " " << real(d.Iset) << " " << imag(d.Iset)	// 28, 29
+	<< " " << real(d.limit) << " " << imag(d.limit)	// 30,31
+	<< " " << d.Vset				// 32
+	<< " " << d.Imax				// 33
+	<< " " << d.Vdelta;				// 34
     return s;
 }
 
 raw_socket skt("eth1");
+
+
+class speed_voltage_t {
+    float Vcurrent;
+    float Imax;
+    float Vdelta;
+public:
+    void set(float Vd,float Im) { Imax=Im; Vdelta=Vd; }
+
+    auto compute(float Vset, float Vservo, std::complex<float> Vrotor) {
+	if(Vset>Vcurrent) {
+	    Vcurrent+=Vdelta;
+	    if(Vcurrent>Vset)
+		Vcurrent=Vset;
+	} else if(Vset<Vcurrent) {
+	    Vcurrent-=Vdelta;
+	    if(Vcurrent<Vset)
+		Vcurrent=Vset;
+	}
+
+	float duty=std::abs(Vcurrent/Vservo);
+	duty=std::min(0.75f,duty);
+	duty=std::max(0.0f,duty);
+
+	float Iset=Vcurrent<0? -Imax:Imax;
+
+	bool at_speed=std::abs(imag(Vrotor)*Vservo-Vcurrent)<1.0;
+
+	if(Imax==0)
+	    duty=0.75;
+
+	return std::make_tuple(
+	    std::complex<float>{0,Iset},
+	    std::complex<float>{0.44,duty},
+	    at_speed
+	);
+    }
+} sc;
+
+
 
 void *rt_thread(void *data)
 {
@@ -61,7 +106,8 @@ void *rt_thread(void *data)
 	return NULL;
     }
 
-    for(auto &x:table) {
+    for(size_t i=0; i<table.size(); i++) {
+	auto &x=table[i];
         ////////////////////////////////////////////////////////////////////////
 	// timebase and send synchronisation
         ////////////////////////////////////////////////////////////////////////
@@ -83,7 +129,14 @@ void *rt_thread(void *data)
         ////////////////////////////////////////////////////////////////////////
         // Test specific code
         ////////////////////////////////////////////////////////////////////////
-	skt.send(motion_ns::send_t(skt, mac, ip, x.I, limit, 0));
+        if(i>1) {
+	    sc.set(x.Vdelta, x.Imax);
+	    auto [Iset,limit,at_speed]=sc.compute(x.Vset,
+		table[i-1].Vservo, table[i-1].Vrotor[1]
+	    );
+	    x.Iset=Iset; x.limit=limit; x.at_speed=at_speed;
+	    skt.send(motion_ns::send_t(skt, mac, ip, x.Iset, x.limit, 0));
+	}
 
         ////////////////////////////////////////////////////////////////////////
         // Wait and receive data
@@ -132,19 +185,28 @@ int main(int argc, char *argv[])
 	}
 
 	for(int i=0; i<1s/timebase_t(1); i++) // synchronisation for 1s
-	    table.emplace_back(sync_I_t{.I=std::complex<float>{0,0}});
+	    table.emplace_back(sync_I_t{});
 
 	std::string s;
 	while(std::getline(setpoints,s)) {
 	    if(!s.size() || s[0]=='#')
 		continue;
-	    double r,i;
-	    sscanf(s.c_str()," %lf %lf",&r,&i);
-	    table.emplace_back(sync_I_t{.I=std::complex<float>(r,i)});
+	    double Vset,Imax,Vdelta;
+	    auto x=sscanf(s.c_str()," %lf %lf %lf",
+		&Vset, &Imax, &Vdelta
+	    );
+	    if(x!=3) {
+		std::cerr << "Wrong line: " << s << std::endl;
+		return 1;
+	    }
+	    table.emplace_back(sync_I_t{.Iset=std::complex<float>{0.0,0.0},
+		.Vset=float(Vset), .Imax=float(Imax), .Vdelta=float(Vdelta)
+	    });
 	}
 
 	for(int i=0; i<1s/timebase_t(1); i++) // lead out of 1s
-	    table.emplace_back(sync_I_t{.I=std::complex<float>{0,0}});
+	    table.emplace_back(sync_I_t{.Iset=std::complex<float>{0,0},
+		.Vset=100, .Imax=0, .Vdelta=0});
     } catch(std::string err) {
 	std::cout << err;
 	return 1;

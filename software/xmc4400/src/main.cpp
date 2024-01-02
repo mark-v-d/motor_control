@@ -191,7 +191,7 @@ extern "C" void CCU80_2_IRQHandler(void)
     else if(locked) {
 	setpoint=drive_io->Iset[0]+1if*drive_io->Iset[1];
 	ccu8::clear_trap(hr_out);	// enable outputs
-	Kcurrent.set_limit(limit);
+	Kcurrent.set_limit(drive_io->limit[0]+1.0if*drive_io->limit[1]);
     } else if(abs(override)!=0.0f) {
 	setpoint=override;
 	ccu8::clear_trap(hr_out);	// enable outputs
@@ -453,7 +453,6 @@ int main()
 	}, hr_out);
 	if(drive_config->new_data) {
 	    led=drive_config->led;
-	    limit=drive_config->limit_r + 1.0if*drive_config->limit_i;
 	    Kcurrent.set_gain(drive_config->current_P, drive_config->current_I,
 		drive_config->current_L);
 	    angle_offset=drive_config->angle_offset;

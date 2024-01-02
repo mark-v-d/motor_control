@@ -44,6 +44,7 @@ namespace motion_ns {
 
     struct  __attribute__ ((__packed__)) to_drive {
 	float Iset[2];
+	float limit[2];
 	uint32_t digout;
 	uint32_t new_data;
     };
@@ -61,7 +62,6 @@ namespace config_ns {
 	int encoder;
 	int poles;
 	float angle_offset;
-	float limit_r, limit_i;
 	float current_P, current_I, current_L;
     };
 };

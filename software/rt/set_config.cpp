@@ -23,10 +23,9 @@ constexpr std::array<uint8_t,4> dst_ip{192,168,0,6};
     4		4 pole-pairs
     0.88	angle_offset
 
-    limit=0.44+0.75i (stroom meting faalt >94% duty cycle)
     P=40, I=0.2,, L=1.55
 
-    ./set_config c2:00:03:08:10:c0 0 3 4 0.88 0.44 0.75 40 0.2 1.55
+    ./set_config c2:00:03:08:10:c0 0 3 4 0.88 40 0.2 1.55
 */
 /* X motor
     0
@@ -36,12 +35,12 @@ constexpr std::array<uint8_t,4> dst_ip{192,168,0,6};
     limit=0.42+0.77i
     P=35, I=1.5 L=1
 
-    ./set_config c2:00:85:0c:10:c0 0 0 0 -0.04 0.42 0.77 35 1.5 1
+    ./set_config c2:00:85:0c:10:c0 0 0 0 -0.04 35 1.5 1
 */
 
 /* Z motor
 
-    ./set_config c2:00:8d:11:11:c0 0 0 0 0.14 0.44 0.75 35 1.5 1
+    ./set_config c2:00:8d:11:11:c0 0 0 0 0.14 35 1.5 1
 */
 
 raw_socket skt("eth1");
@@ -65,7 +64,7 @@ auto parse_mac(char const *in)
 
 int main(int argc, char *argv[])
 {
-    if(argc<11) {
+    if(argc!=9) {
 	std::cerr << "parameters:\n"
 	    << "	mac	12:34:45:66:77:00\n"
 	    << "	LED	integer 0:3\n"
@@ -76,8 +75,6 @@ int main(int argc, char *argv[])
 	    << "		3=AMT21_t\n"
 	    << "	poles	integer>0\n"
 	    << "	angle_offset	float\n"
-	    << "	limit_r	float real part of duty cycle limiter\n"
-	    << "	limit_i	float imaginary part of duty cycle limiter\n"
 	    << "	P	float Current control proportional gain\n"
 	    << "	I	float Current control integrating gain\n"
 	    << "	L	float Current control limit recovery gain\n"
@@ -99,8 +96,7 @@ int main(int argc, char *argv[])
 	.encoder=atoi(argv[3]),
 	.poles=atoi(argv[4]),	// ignored by PQ/MFS encoders
 	.angle_offset=fl(argv[5]),
-	.limit_r=fl(argv[6]), .limit_i=fl(argv[7]),
-	.current_P=fl(argv[8]), .current_I=fl(argv[9]), .current_L=fl(argv[10])
+	.current_P=fl(argv[6]), .current_I=fl(argv[7]), .current_L=fl(argv[8])
     };
     skt.send(config_ns::send_t(skt,mac,dst_ip, d));
 }

@@ -26,6 +26,8 @@ std::array<uint8_t,6> mac{0xc2, 0x00, 0x85, 0x0c, 0x10, 0xc0}; // X
 //constexpr std::array<uint8_t,6> mac{0xc2, 0x00, 0x86, 0x05, 0x10, 0xc0}; // T
 constexpr std::array<uint8_t,4> ip{192,168,0,6};
 
+constexpr std::complex<float> limit{0.44,0.75};
+
 using timebase_t=std::chrono::duration<int,std::ratio<1,4500>>;
 
 constexpr int order=3;
@@ -131,7 +133,7 @@ void *rt_thread(void *data)
 
 	    table[i].I=1.0if*float(r(0));
 	}
-	skt.send(motion_ns::send_t(skt, mac, ip, table[i].I,0));
+	skt.send(motion_ns::send_t(skt, mac, ip, table[i].I,limit,0));
 
         ////////////////////////////////////////////////////////////////////////
         // Wait and receive data
