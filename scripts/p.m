@@ -18,12 +18,13 @@ data.rx_time=log(:,5)-log(:,5)+log(:,6)*1e-9;
 if size(log,2)>27
 	data.Iset=log(:,[28,29]);
 end
-if size(log,2)==34
+if size(log,2)==35
 	# voltage test
 	data.limit=log(:,[30,31]); 
 	data.Vset=log(:,32);
 	data.Imax=log(:,33);
 	data.Vdelta=log(:,34);
+	data.at_speed=log(:,35);
 elseif size(log,2)==36
 	# Speed test
 	data.Imin=log(:,30);

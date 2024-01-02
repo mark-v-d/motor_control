@@ -44,7 +44,8 @@ std::ostream &operator<<(std::ostream &s, sync_I_t const &d) {
 	<< " " << real(d.limit) << " " << imag(d.limit)	// 30,31
 	<< " " << d.Vset				// 32
 	<< " " << d.Imax				// 33
-	<< " " << d.Vdelta;				// 34
+	<< " " << d.Vdelta				// 34
+	<< " " << d.at_speed;				// 35
     return s;
 }
 
@@ -55,27 +56,48 @@ class speed_voltage_t {
     float Vcurrent;
     float Imax;
     float Vdelta;
+    float Vmeasured;
+    float gain=0.1;
 public:
     void set(float Vd,float Im) { Imax=Im; Vdelta=Vd; }
 
-    auto compute(float Vset, float Vservo, std::complex<float> Vrotor) {
+    auto compute(float Vset, float Vservo, float Vrotor) {
+	Vmeasured+=gain*(Vrotor*Vservo-Vmeasured);
+	float Iset=Vcurrent<0? -Imax:Imax;
+	float duty=std::abs(Vcurrent/Vservo);
 	if(Vset>Vcurrent) {
-	    Vcurrent+=Vdelta;
+	    if(Vcurrent<-1) {
+		// Decelerate
+		Vcurrent=Vmeasured;
+		Iset=0;
+		duty=0.75;
+	    } else {
+		// Accelerate
+		Vcurrent+=Vdelta;
+		Iset=Imax;
+		duty=std::abs(Vcurrent/Vservo);
+	    }
 	    if(Vcurrent>Vset)
 		Vcurrent=Vset;
 	} else if(Vset<Vcurrent) {
-	    Vcurrent-=Vdelta;
-	    if(Vcurrent<Vset)
-		Vcurrent=Vset;
+	    if(Vcurrent>1) {
+		// Decelerate
+		Vcurrent=Vmeasured;
+		Iset=0;
+		duty=0.75;
+	    } else {
+		// Accelerate
+		Vcurrent-=Vdelta;
+		Iset=-Imax;
+		duty=std::abs(Vcurrent/Vservo);
+	    }
 	}
 
-	float duty=std::abs(Vcurrent/Vservo);
 	duty=std::min(0.75f,duty);
 	duty=std::max(0.0f,duty);
 
-	float Iset=Vcurrent<0? -Imax:Imax;
 
-	bool at_speed=std::abs(imag(Vrotor)*Vservo-Vcurrent)<1.0;
+	bool at_speed=std::abs(Vmeasured-Vset)<1.0;
 
 	if(Imax==0)
 	    duty=0.75;
