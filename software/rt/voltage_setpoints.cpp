@@ -61,7 +61,15 @@ class speed_voltage_t {
 public:
     void set(float Vd,float Im) { Imax=Im; Vdelta=Vd; }
 
-    auto compute(float Vset, float Vservo, float Vrotor) {
+    auto compute(float Vset, float Vservo, float Vrotor,
+	bool valid
+    ) {
+	if(!valid)
+	    return std::make_tuple(
+		std::complex<float>{0,0}, // 0A
+		std::complex<float>{0.44,0.75}, // Make sure we can do 0A
+		false
+	    );
 	Vmeasured+=gain*(Vrotor*Vservo-Vmeasured);
 	float Iset=Vcurrent<0? -Imax:Imax;
 	float duty=std::abs(Vcurrent/Vservo);
@@ -95,7 +103,6 @@ public:
 
 	duty=std::min(0.75f,duty);
 	duty=std::max(0.0f,duty);
-
 
 	bool at_speed=std::abs(Vmeasured-Vset)<1.0;
 
@@ -152,12 +159,15 @@ void *rt_thread(void *data)
         // Test specific code
         ////////////////////////////////////////////////////////////////////////
         if(i>1) {
+	    using namespace motion_ns;
 	    sc.set(x.Vdelta, x.Imax);
 	    auto [Iset,limit,at_speed]=sc.compute(x.Vset,
-		table[i-1].Vservo, table[i-1].Vrotor[1]
+		table[i-1].Vservo, table[i-1].Vrotor[1], table[i-1].valid
 	    );
 	    x.Iset=Iset; x.limit=limit; x.at_speed=at_speed;
-	    skt.send(motion_ns::send_t(skt, mac, ip, x.Iset, x.limit, 0));
+	    skt.send(send_t(skt, mac, ip, x.Iset, x.limit,
+		to_drive::DRIVE_ENABLE
+	    ));
 	}
 
         ////////////////////////////////////////////////////////////////////////

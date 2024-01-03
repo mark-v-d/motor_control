@@ -133,7 +133,9 @@ void *rt_thread(void *data)
 
 	    table[i].I=1.0if*float(r(0));
 	}
-	skt.send(motion_ns::send_t(skt, mac, ip, table[i].I,limit,0));
+	skt.send(motion_ns::send_t(skt, mac, ip, table[i].I,limit,
+	    motion_ns::to_drive::DRIVE_ENABLE
+	));
 
         ////////////////////////////////////////////////////////////////////////
         // Wait and receive data

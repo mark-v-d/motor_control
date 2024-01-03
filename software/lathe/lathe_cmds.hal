@@ -94,8 +94,8 @@ setp statespace_3.0.K-1-0		1
 setp statespace_3.0.limit-0		2
 
 setp etherdrive.0.angle_offset		-0.04
-setp etherdrive.0.limit_r		0.42
-setp etherdrive.0.limit_i		0.77
+setp etherdrive.0.limit-0		0.42
+setp etherdrive.0.limit-1		0.77
 setp etherdrive.0.P			35
 setp etherdrive.0.I			1.5
 setp etherdrive.0.L			1
@@ -117,8 +117,8 @@ setp statespace_3.1.K-1-0		1
 setp statespace_3.1.limit-0		3
 
 setp etherdrive.1.angle_offset		0.14
-setp etherdrive.1.limit_r		0.44
-setp etherdrive.1.limit_i		0.75
+setp etherdrive.1.limit-0		0.44
+setp etherdrive.1.limit-1		0.75
 setp etherdrive.1.P			35
 setp etherdrive.1.I			1.5
 setp etherdrive.1.L			1
@@ -126,8 +126,8 @@ setp etherdrive.1.L			1
 #
 # Spindle
 #
-setp statespace_3.2.scale-0		200		# 1/5um
-setp statespace_3.2.scale-1		629145.6	# 3*2^20/5
+setp statespace_3.2.scale-0		1		# not used
+setp statespace_3.2.scale-1		1		# not used
 setp statespace_3.2.A-1-1		1.0
 setp statespace_3.2.B-1-0		-0.002
 setp statespace_3.2.B-0-1		0.0015
@@ -141,8 +141,8 @@ setp statespace_3.2.limit-0		3
 setp etherdrive.2.poles			4
 setp etherdrive.2.encoder		3
 setp etherdrive.2.angle_offset		0.88
-setp etherdrive.2.limit_r		0.44
-setp etherdrive.2.limit_i		0.75
+setp etherdrive.2.limit-0		0.44
+setp etherdrive.2.limit-1		0.75
 setp etherdrive.2.P			40
 setp etherdrive.2.I			0.2
 setp etherdrive.2.L			1.55

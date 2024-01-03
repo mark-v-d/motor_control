@@ -43,6 +43,7 @@ namespace motion_ns {
     };
 
     struct  __attribute__ ((__packed__)) to_drive {
+	static constexpr uint32_t DRIVE_ENABLE=0x80000000;
 	float Iset[2];
 	float limit[2];
 	uint32_t digout;

@@ -38,8 +38,7 @@ struct comp_state {
     hal_u32_t *encoder;
     hal_u32_t *poles;
     hal_float_t *angle_offset;
-    hal_float_t *limit_r;
-    hal_float_t *limit_i;
+    hal_float_t *limit[2];
     hal_float_t *P;
     hal_float_t *I;
     hal_float_t *L;
@@ -106,8 +105,8 @@ struct comp_state {
 	    !pin(HAL_IN,"encoder", &encoder) &&
 	    !pin(HAL_IN,"poles", &poles) &&
 	    !pin(HAL_IN,"angle_offset", &angle_offset) &&
-	    !pin(HAL_IN,"limit_r", &limit_r) &&
-	    !pin(HAL_IN,"limit_i", &limit_i) &&
+	    !pin(HAL_IN,"limit-0", &limit[0]) &&
+	    !pin(HAL_IN,"limit-1", &limit[1]) &&
 	    !pin(HAL_IN,"P", &P) &&
 	    !pin(HAL_IN,"I", &I) &&
 	    !pin(HAL_IN,"L", &L)
@@ -157,8 +156,6 @@ static void send(void *p, long period)
 		.encoder=int(*state[i]->encoder),
 		.poles=int(*state[i]->poles),
 		.angle_offset=float(*state[i]->angle_offset),
-		.limit_r=float(*state[i]->limit_r),
-		.limit_i=float(*state[i]->limit_i),
 		.current_P=float(*state[i]->P),
 		.current_I=float(*state[i]->I),
 		.current_L=float(*state[i]->L)
@@ -166,14 +163,18 @@ static void send(void *p, long period)
 	    skt.send(config_ns::send_t(skt, mac[i], ip, d));
 	    continue;
 	}
-	if(!(*state[i]->enable))
-	    continue;
 	std::complex<float> I{
 	    float(*state[i]->Iset[0]),
 	    float(*state[i]->Iset[1])
 	};
+	std::complex<float> limit{
+	    float(*state[i]->limit[0]),
+	    float(*state[i]->limit[1])
+	};
 	uint32_t dout=*state[i]->digout[0] | (*state[i]->digout[1]<<1);
-	skt.send(motion_ns::send_t(skt, mac[i], ip, I, dout));
+	if(*state[i]->enable)
+	    dout|=motion_ns::to_drive::DRIVE_ENABLE;
+	skt.send(motion_ns::send_t(skt, mac[i], ip, I, limit, dout));
 	(*state[i]->valid_tx)++;
     }
 }

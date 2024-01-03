@@ -1,8 +1,8 @@
 .PHONY: link
 
-link: etherdrive.so statespace_3.so
+link: etherdrive.so statespace_3.so speed_controller.so
 
-obj-m += etherdrive.o statespace_3.o
+obj-m += etherdrive.o statespace_3.o speed_controller.o
 
 LDFLAGS+=-L $(EMC2_HOME)/lib
 CXXFLAGS+=-Wno-ignored-attributes
@@ -14,12 +14,13 @@ CXXFLAGS+=-Wno-ignored-attributes
 include $(EMC2_HOME)/src/Makefile.modinc
 
 clean:
-	rm etherdrive.o etherdrive.so 
+	rm *.o *.so 
 
 link:
 	ln -f etherdrive.so $(EMC2_HOME)/rtlib/etherdrive.so
 	ln -f statespace_3.so $(EMC2_HOME)/rtlib/statespace_3.so
+	ln -f speed_controller.so $(EMC2_HOME)/rtlib/speed_controller.so
 
-statespace_3.o etherdrive.o: drive_io.h drive_packet.h packet.h raw_socket.h
+etherdrive.o: drive_io.h drive_packet.h packet.h raw_socket.h
 
-statespace_3: ss.h
+statespace_3.o: ss.h

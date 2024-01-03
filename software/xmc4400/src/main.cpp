@@ -188,7 +188,7 @@ extern "C" void CCU80_2_IRQHandler(void)
     bool locked=syncer.locked(&eth0) && drive_io.age(&eth0)<2ms;
     if(drive_io.age(&eth0)<0ms)
 	drive_io.clear_timestamp();
-    else if(locked) {
+    else if(locked && drive_io->digout&drive_io->DRIVE_ENABLE) {
 	setpoint=drive_io->Iset[0]+1if*drive_io->Iset[1];
 	ccu8::clear_trap(hr_out);	// enable outputs
 	Kcurrent.set_limit(drive_io->limit[0]+1.0if*drive_io->limit[1]);
