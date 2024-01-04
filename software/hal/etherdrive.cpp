@@ -60,6 +60,7 @@ struct comp_state {
     hal_s32_t *timer_delta;
     hal_s32_t *dt;
     hal_bit_t *digin[2];
+    hal_u32_t *digin_all;
     hal_bit_t *configured;
 
     bool valid;
@@ -102,6 +103,7 @@ struct comp_state {
 	    !pin(HAL_IN,"digout-1", &digout[1]) &&
 	    !pin(HAL_OUT,"digin-0", &digin[0]) &&
 	    !pin(HAL_OUT,"digin-1", &digin[1]) &&
+	    !pin(HAL_OUT,"digin-all", &digin_all) &&
 	    !pin(HAL_OUT,"configured", &configured) &&
 	    !pin(HAL_OUT,"timer_error", &dt) &&
 	    !pin(HAL_IN,"encoder", &encoder) &&
@@ -138,6 +140,7 @@ struct comp_state {
 	*timer_delta=buffer.timer_delta;
 	*digin[0]=!(buffer.digin&1);
 	*digin[1]=!((buffer.digin>>1)&1);
+	*digin_all=buffer.digin;
 	*dt=buffer.timer_error;
 	*drive_rx=buffer.counter;
 	(*valid_rx)++;

@@ -38,24 +38,16 @@ loadrt sim_spindle names=sim_spindle
 loadrt limit2 names=limit_speed 
 loadrt lowpass names=spindle_mass 
 loadrt near names=near_speed 
-loadrt scale names=rpm_rps 
 loadrt etherdrive device=eth1 names=c2:00:85:0c:10:c0,c2:00:8d:11:11:c0,c2:00:03:08:10:c0
 loadrt statespace_3 count=3
 loadrt homer count=2
+loadrt speed_controller count=1
 
 # pin aliases
 # param aliases
 # signals
 # nets
 net estop:loop iocontrol.0.user-enable-out => iocontrol.0.emc-enable-in
-net spindle-at-speed near_speed.out => spindle.0.at-speed
-net spindle-index-enable sim_spindle.index-enable <=> spindle.0.index-enable
-net spindle-orient spindle.0.orient => spindle.0.is-oriented
-net spindle-pos sim_spindle.position-fb => spindle.0.revs
-net spindle-rpm-filtered spindle_mass.out => near_speed.in2 rpm_rps.in
-net spindle-rps-filtered rpm_rps.out => spindle.0.speed-in
-net spindle-speed-cmd spindle.0.speed-out => limit_speed.in near_speed.in1
-net spindle-speed-limited limit_speed.out => sim_spindle.velocity-cmd spindle_mass.in
 net tool:change iocontrol.0.tool-change => hal_manualtoolchange.change
 net tool:changed hal_manualtoolchange.changed => iocontrol.0.tool-changed
 net tool:prep-loop iocontrol.0.tool-prepare => iocontrol.0.tool-prepared
@@ -68,7 +60,6 @@ setp motion-controller.tmax         0
 setp near_speed.difference          10
 setp near_speed.scale               1.1
 setp near_speed.tmax                0
-setp rpm_rps.tmax                   0
 setp servo-thread.tmax              0
 setp sim_spindle.scale              0.01666667
 setp sim_spindle.tmax               0
@@ -94,12 +85,12 @@ setp statespace_3.0.K-1-0		1
 setp statespace_3.0.limit-0		2
 
 setp etherdrive.0.angle_offset		-0.04
-setp etherdrive.0.limit-0		0.42
-setp etherdrive.0.limit-1		0.77
+setp etherdrive.0.limit-0		0.44
+setp etherdrive.0.limit-1		0.73
 setp etherdrive.0.P			35
 setp etherdrive.0.I			1.5
 setp etherdrive.0.L			1
-setp etherdrive.0.overvoltage		160
+setp etherdrive.0.overvoltage		180
 setp etherdrive.0.overcurrent		3
 
 
@@ -120,11 +111,11 @@ setp statespace_3.1.limit-0		3
 
 setp etherdrive.1.angle_offset		0.14
 setp etherdrive.1.limit-0		0.44
-setp etherdrive.1.limit-1		0.75
+setp etherdrive.1.limit-1		0.73
 setp etherdrive.1.P			35
 setp etherdrive.1.I			1.5
 setp etherdrive.1.L			1
-setp etherdrive.1.overvoltage		160
+setp etherdrive.1.overvoltage		180
 setp etherdrive.1.overcurrent		4
 
 #
@@ -150,8 +141,16 @@ setp etherdrive.2.limit-1		0.75
 setp etherdrive.2.P			40
 setp etherdrive.2.I			0.2
 setp etherdrive.2.L			1.55
-setp etherdrive.1.overvoltage		410
-setp etherdrive.1.overcurrent		15
+setp etherdrive.2.overvoltage		410
+setp etherdrive.2.overcurrent		15
+
+setp speed_controller.0.Imax		4
+setp speed_controller.0.V_per_speed	-20
+setp speed_controller.0.limit_max	0.74
+setp speed_controller.0.position_per_rev 49152
+setp speed_controller.0.Vdelta		3	# Speed increase V/sec
+setp speed_controller.0.filter		0.1
+
 
 setp homer.0.current-min -1.99
 
@@ -165,9 +164,9 @@ addf motion-command-handler servo-thread
 addf motion-controller servo-thread
 addf limit_speed servo-thread
 addf spindle_mass servo-thread
-addf rpm_rps servo-thread
 addf near_speed servo-thread
 addf sim_spindle servo-thread
+addf speed_controller.compute servo-thread
 
 # setp commands for unconnected input pins
 setp sim_spindle.scale              0.01666667
@@ -208,5 +207,19 @@ net J1:pos-drive-1 etherdrive.1.position  => homer.1.position-in-1	# SWAPPED HER
 net J1:pos-control-0 homer.1.position-out-0 => statespace_3.1.in-0
 net J1:pos-control-1 homer.1.position-out-1 => statespace_3.1.in-1
 
-net spindle-on spindle.0.on => etherdrive.2.enable
-net S0:pos etherdrive.2.position => statespace_3.2.in-0
+# spindle.0 <-> speed_controller.0/etherdrive.2
+net S0:enable spindle.0.on => etherdrive.2.enable
+net S0:speed spindle.0.speed-cmd-rps => speed_controller.0.speed
+net S0:revs speed_controller.0.revs => spindle.0.revs
+net S0:at_speed speed_controller.0.at_speed => spindle.0.at-speed
+net S0:speed_fb speed_controller.0.speed_fb => spindle.0.speed-in
+
+net S0:pos etherdrive.2.position => speed_controller.0.position
+
+net S0:Vrotor etherdrive.2.Vrotor-1 => speed_controller.0.Vrotor
+net S0:Vservo etherdrive.2.Vservo => speed_controller.0.Vservo
+
+net S0:limit speed_controller.0.limit => etherdrive.2.limit-1
+net S0:current speed_controller.0.Iout => etherdrive.2.Iset-1
+net S0:current-fb etherdrive.2.Irotor-1 => speed_controller.0.Irotor
+
