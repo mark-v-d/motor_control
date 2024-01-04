@@ -42,6 +42,8 @@ struct comp_state {
     hal_float_t *P;
     hal_float_t *I;
     hal_float_t *L;
+    hal_float_t *overvoltage;
+    hal_float_t *overcurrent;
 
     // output pins
     hal_s32_t *position;
@@ -109,7 +111,9 @@ struct comp_state {
 	    !pin(HAL_IN,"limit-1", &limit[1]) &&
 	    !pin(HAL_IN,"P", &P) &&
 	    !pin(HAL_IN,"I", &I) &&
-	    !pin(HAL_IN,"L", &L)
+	    !pin(HAL_IN,"L", &L) &&
+	    !pin(HAL_IN,"overvoltage", &overvoltage) &&
+	    !pin(HAL_IN,"overcurrent", &overcurrent)
 	    ;
     }
 
@@ -158,7 +162,9 @@ static void send(void *p, long period)
 		.angle_offset=float(*state[i]->angle_offset),
 		.current_P=float(*state[i]->P),
 		.current_I=float(*state[i]->I),
-		.current_L=float(*state[i]->L)
+		.current_L=float(*state[i]->L),
+		.overvoltage=float(*state[i]->overvoltage),
+		.overcurrent=float(*state[i]->overcurrent)
 	    };
 	    skt.send(config_ns::send_t(skt, mac[i], ip, d));
 	    continue;

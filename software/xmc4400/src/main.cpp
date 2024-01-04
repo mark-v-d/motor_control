@@ -155,6 +155,8 @@ extern "C" void CCU80_2_IRQHandler(void)
 {
     static_assert(std::get<0>(hr_out).UNIT==0, "Wrong interrupt handler");
     static uint8_t trace_info;
+    static bool overcurrent_latch=false;
+
     constexpr char data=0x05a;
     copro.tx(data);
     itm.PORT[0].u8=trace_info=subsample;
@@ -170,6 +172,7 @@ extern "C" void CCU80_2_IRQHandler(void)
     if(++subsample>3)
 	subsample=0;
 
+
     FCE_KE2->CFG=0;
     FCE_KE2->CRC=0xffff;
     uint16_t d;
@@ -184,11 +187,20 @@ extern "C" void CCU80_2_IRQHandler(void)
 	report.rx_counter=rxd_counter;
     }
 
+    float Vservo=rx_data[2]*scale_Vservo+1e-6;
+
+    RELAY0=drive_io->digout&1;
+    RELAY1=drive_io->digout&2;
+    bool enable=drive_io->digout&drive_io->DRIVE_ENABLE;
+    overcurrent_latch&=enable;
+    bool overvoltage=Vservo>drive_config->overvoltage;
+    enable&=!overcurrent_latch && !overvoltage;
+
     C setpoint=0;
     bool locked=syncer.locked(&eth0) && drive_io.age(&eth0)<2ms;
     if(drive_io.age(&eth0)<0ms)
 	drive_io.clear_timestamp();
-    else if(locked && drive_io->digout&drive_io->DRIVE_ENABLE) {
+    else if(locked && enable) {
 	setpoint=drive_io->Iset[0]+1if*drive_io->Iset[1];
 	ccu8::clear_trap(hr_out);	// enable outputs
 	Kcurrent.set_limit(drive_io->limit[0]+1.0if*drive_io->limit[1]);
@@ -219,11 +231,11 @@ extern "C" void CCU80_2_IRQHandler(void)
 	angle=report.angle;
     }
 
-    float Vservo=rx_data[2]*scale_Vservo+1e-6;
     auto Istator=current_scale*(
 	    clarke[0]*float(rx_data[0])+
 	    clarke[1]*float(rx_data[1])+
 	    clarke[2]*float(rx_data[3]));
+    overcurrent_latch|=abs(Istator)>drive_config->overcurrent;
     auto rotate=std::polar(1.0f, angle);
     auto Irotor=rotate*Istator;
     auto Vrotor=Kcurrent.compute(setpoint-Irotor, Vservo);
@@ -252,9 +264,10 @@ extern "C" void CCU80_2_IRQHandler(void)
     report.offset=(0xffff&adc::vadc.G[0].RES[1]);
     report.ADC[0]=(0xffff&adc::vadc.G[0].RES[0])-report.offset;
     report.ADC[1]=(0xffff&adc::vadc.G[1].RES[0])-report.offset;
-    report.digin=IO0 | (IO2<<1);
-    RELAY0=drive_io->digout&1;
-    RELAY1=drive_io->digout&2;
+    report.digin=IO0 | (IO2<<1)
+	| (enable? drive_io->DRIVE_ENABLE:0)
+	| (overvoltage? drive_io->OVERVOLTAGE:0)
+	| (overcurrent_latch? drive_io->OVERCURRENT:0);
     if(locked && subsample==0) {
 	itm.PORT[0].u8=(trace_info|=0x80);
 	static int32_t old_pos;

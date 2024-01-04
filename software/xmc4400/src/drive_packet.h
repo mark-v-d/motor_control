@@ -44,6 +44,8 @@ namespace motion_ns {
 
     struct  __attribute__ ((__packed__)) to_drive {
 	static constexpr uint32_t DRIVE_ENABLE=0x80000000;
+	static constexpr uint32_t OVERCURRENT=0x40000000;
+	static constexpr uint32_t OVERVOLTAGE=0x20000000;
 	float Iset[2];
 	float limit[2];
 	uint32_t digout;
@@ -64,6 +66,8 @@ namespace config_ns {
 	int poles;
 	float angle_offset;
 	float current_P, current_I, current_L;
+	float overvoltage;
+	float overcurrent;
     };
 };
 

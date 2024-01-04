@@ -64,7 +64,7 @@ auto parse_mac(char const *in)
 
 int main(int argc, char *argv[])
 {
-    if(argc!=9) {
+    if(argc!=11) {
 	std::cerr << "parameters:\n"
 	    << "	mac	12:34:45:66:77:00\n"
 	    << "	LED	integer 0:3\n"
@@ -78,6 +78,8 @@ int main(int argc, char *argv[])
 	    << "	P	float Current control proportional gain\n"
 	    << "	I	float Current control integrating gain\n"
 	    << "	L	float Current control limit recovery gain\n"
+	    << "	overvoltage	Drive tri-states when Vservo>overvoltage\n"
+	    << "	overcurrent	Drive is disabled when abs(Irotor)>overcurrent\n"
 	    ;
 	return 1;
     }
@@ -96,7 +98,9 @@ int main(int argc, char *argv[])
 	.encoder=atoi(argv[3]),
 	.poles=atoi(argv[4]),	// ignored by PQ/MFS encoders
 	.angle_offset=fl(argv[5]),
-	.current_P=fl(argv[6]), .current_I=fl(argv[7]), .current_L=fl(argv[8])
+	.current_P=fl(argv[6]), .current_I=fl(argv[7]), .current_L=fl(argv[8]),
+	.overvoltage=fl(argv[9]),
+	.overcurrent=fl(argv[10])
     };
     skt.send(config_ns::send_t(skt,mac,dst_ip, d));
 }

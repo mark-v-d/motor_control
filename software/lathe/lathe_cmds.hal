@@ -99,6 +99,8 @@ setp etherdrive.0.limit-1		0.77
 setp etherdrive.0.P			35
 setp etherdrive.0.I			1.5
 setp etherdrive.0.L			1
+setp etherdrive.0.overvoltage		160
+setp etherdrive.0.overcurrent		3
 
 
 #
@@ -122,6 +124,8 @@ setp etherdrive.1.limit-1		0.75
 setp etherdrive.1.P			35
 setp etherdrive.1.I			1.5
 setp etherdrive.1.L			1
+setp etherdrive.1.overvoltage		160
+setp etherdrive.1.overcurrent		4
 
 #
 # Spindle
@@ -146,6 +150,8 @@ setp etherdrive.2.limit-1		0.75
 setp etherdrive.2.P			40
 setp etherdrive.2.I			0.2
 setp etherdrive.2.L			1.55
+setp etherdrive.1.overvoltage		410
+setp etherdrive.1.overcurrent		15
 
 setp homer.0.current-min -1.99
 
