@@ -85,8 +85,8 @@ setp statespace_3.0.K-1-0		1
 setp statespace_3.0.limit-0		2
 
 setp etherdrive.0.angle_offset		-0.04
-setp etherdrive.0.limit-0		0.44
-setp etherdrive.0.limit-1		0.73
+setp etherdrive.0.limit-0		0.42
+setp etherdrive.0.limit-1		0.72
 setp etherdrive.0.P			35
 setp etherdrive.0.I			1.5
 setp etherdrive.0.L			1
@@ -107,16 +107,16 @@ setp statespace_3.1.C-0-1		1
 setp statespace_3.1.D-0-0		-0.075
 setp statespace_3.1.D-0-1		-1.523841857910156e-03
 setp statespace_3.1.K-1-0		1
-setp statespace_3.1.limit-0		3
+setp statespace_3.1.limit-0		4
 
 setp etherdrive.1.angle_offset		0.14
 setp etherdrive.1.limit-0		0.44
-setp etherdrive.1.limit-1		0.73
+setp etherdrive.1.limit-1		0.70
 setp etherdrive.1.P			35
 setp etherdrive.1.I			1.5
 setp etherdrive.1.L			1
 setp etherdrive.1.overvoltage		180
-setp etherdrive.1.overcurrent		4
+setp etherdrive.1.overcurrent		7
 
 #
 # Spindle
@@ -145,10 +145,10 @@ setp etherdrive.2.overvoltage		410
 setp etherdrive.2.overcurrent		15
 
 setp speed_controller.0.Imax		4
-setp speed_controller.0.V_per_speed	-20
+setp speed_controller.0.V_per_speed	-18.2
 setp speed_controller.0.limit_max	0.74
 setp speed_controller.0.position_per_rev 49152
-setp speed_controller.0.Vdelta		3	# Speed increase V/sec
+setp speed_controller.0.Vdelta		150	# Speed increase V/sec
 setp speed_controller.0.filter		0.1
 
 
@@ -223,3 +223,4 @@ net S0:limit speed_controller.0.limit => etherdrive.2.limit-1
 net S0:current speed_controller.0.Iout => etherdrive.2.Iset-1
 net S0:current-fb etherdrive.2.Irotor-1 => speed_controller.0.Irotor
 
+net coolant iocontrol.0.coolant-mist => etherdrive.0.digout-0 etherdrive.0.digout-1 
