@@ -20,6 +20,7 @@ MODULE_LICENSE("GPL");
 
 #include "raw_socket.h"
 #include "drive_io.h"
+#include <vector>
 
 constexpr std::array<uint8_t,6> bcast_mac{255,255,255,255,255,255};
 constexpr std::array<uint8_t,4> bcast_ip{255,255,255,255};
