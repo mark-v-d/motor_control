@@ -213,6 +213,9 @@ net S0:speed spindle.0.speed-cmd-rps => speed_controller.0.speed
 net S0:revs speed_controller.0.revs => spindle.0.revs
 net S0:at_speed speed_controller.0.at_speed => spindle.0.at-speed
 net S0:speed_fb speed_controller.0.speed_fb => spindle.0.speed-in
+net SO:index-enable spindle.0.index-enable speed_controller.0.index_enable
+net SO:index etherdrive.0.digin-0 => speed_controller.0.index
+
 
 net S0:pos etherdrive.2.position => speed_controller.0.position
 
