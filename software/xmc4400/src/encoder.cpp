@@ -468,6 +468,7 @@ void init_encoder(void)
 
 void set_encoder(int type, int poles)
 {
+    type&=0xff;
     switch(type) {
     case 1: encoder.set<mitsubishi_PQ_t>(); break;
     case 2: encoder.set<mitsubishi_MFS13_t>(); break;

@@ -92,6 +92,7 @@ setp etherdrive.0.I			1.5
 setp etherdrive.0.L			1
 setp etherdrive.0.overvoltage		180
 setp etherdrive.0.overcurrent		3
+setp etherdrive.0.encoder		0x40000000
 
 
 #
