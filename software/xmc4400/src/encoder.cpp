@@ -12,8 +12,6 @@ uart::half_duplex hd(ENC_TXD);
 constexpr auto PI=acos(-1);
 
 decltype(glass_scale) glass_scale;
-extern posif::qdi32_t<decltype(ENC_A),decltype(ENC_B),decltype(ENC_Z)>
-    glass_scale;
 
 typedef std::chrono::duration<int,std::ratio<4,int(1s/pwm_time)>> timebase_t;
 

@@ -468,6 +468,10 @@ int main()
 	    led=drive_config->led;
 	    Kcurrent.set_gain(drive_config->current_P, drive_config->current_I,
 		drive_config->current_L);
+	    if(drive_config->encoder&0x40000000)
+		glass_scale.negative_index();
+	    else
+		glass_scale.positive_index();
 	    angle_offset=drive_config->angle_offset;
 	    drive_config->new_data=0;
 	    drive_config.transmit(&eth0,config_ns::to_host{});

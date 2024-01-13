@@ -926,7 +926,7 @@
       (tstamp 38de6b29-b40b-4b06-a996-35f96204a474)
     )
     (pad "1" smd custom (at -1 -1) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 55 "/H_Bridge1/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 55 "/H_Bridge1/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -944,7 +944,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp 16378120-6be0-4711-932a-4127bf671099))
     (pad "1" smd custom (at -1 1 90) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 55 "/H_Bridge1/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 55 "/H_Bridge1/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -964,7 +964,7 @@
     (pad "1" smd circle (at 0 0) (size 8 8) (layers "F.Cu" "F.Mask")
       (net 55 "/H_Bridge1/V-") (pinfunction "Pin_1") (pintype "passive") (tstamp cb109057-201e-428d-9c9b-169691b1663b))
     (pad "1" smd custom (at 1 -1 270) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 55 "/H_Bridge1/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 55 "/H_Bridge1/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -982,7 +982,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp 0f57c20e-507b-4883-b9dc-84a3cd9ebea0))
     (pad "1" smd custom (at 1 1 180) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 55 "/H_Bridge1/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 55 "/H_Bridge1/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -1247,7 +1247,7 @@
       (tstamp 46d17f6c-d5ec-45f3-8fba-51303551dc28)
     )
     (pad "1" smd custom (at -1 -1) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 27 "/H_Bridge2/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 27 "/H_Bridge2/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -1265,7 +1265,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp 7298ceea-2918-40b5-a6ab-3666b78edbef))
     (pad "1" smd custom (at -1 1 90) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 27 "/H_Bridge2/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 27 "/H_Bridge2/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -1285,7 +1285,7 @@
     (pad "1" smd circle (at 0 0) (size 8 8) (layers "F.Cu" "F.Mask")
       (net 27 "/H_Bridge2/sw_m2") (pinfunction "Pin_1") (pintype "passive") (tstamp 48bc8fc5-eade-40aa-849d-aa0310646bb2))
     (pad "1" smd custom (at 1 -1 270) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 27 "/H_Bridge2/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 27 "/H_Bridge2/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -1303,7 +1303,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp 5e8d41fc-e619-4ac5-a101-4a8326268f6c))
     (pad "1" smd custom (at 1 1 180) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 27 "/H_Bridge2/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 27 "/H_Bridge2/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -1636,7 +1636,7 @@
       (tstamp 850fcb7f-d7a2-4e72-9179-251f1d949318)
     )
     (pad "1" smd custom (at -1 -1) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 24 "/H_Bridge1/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 24 "/H_Bridge1/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -1654,7 +1654,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp fcdf2477-f892-43dc-af6c-16995f9e1e8b))
     (pad "1" smd custom (at -1 1 90) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 24 "/H_Bridge1/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 24 "/H_Bridge1/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -1674,7 +1674,7 @@
     (pad "1" smd circle (at 0 0) (size 8 8) (layers "F.Cu" "F.Mask")
       (net 24 "/H_Bridge1/sw_m2") (pinfunction "Pin_1") (pintype "passive") (tstamp af6b6ca7-3759-427f-9ed8-77a637a33e3e))
     (pad "1" smd custom (at 1 -1 270) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 24 "/H_Bridge1/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 24 "/H_Bridge1/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -1692,7 +1692,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp 10d45a3d-0131-4c44-8d65-b1873dbd5ea0))
     (pad "1" smd custom (at 1 1 180) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 24 "/H_Bridge1/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 24 "/H_Bridge1/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -2942,7 +2942,7 @@
       (tstamp 6fd60478-fe15-48a7-991d-628f1a57a059)
     )
     (pad "1" smd custom (at -1 -1) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 56 "/H_Bridge2/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 56 "/H_Bridge2/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -2960,7 +2960,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp e49999b7-1e90-49b8-8116-276b213b4362))
     (pad "1" smd custom (at -1 1 90) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 56 "/H_Bridge2/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 56 "/H_Bridge2/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -2980,7 +2980,7 @@
     (pad "1" smd circle (at 0 0) (size 8 8) (layers "F.Cu" "F.Mask")
       (net 56 "/H_Bridge2/V-") (pinfunction "Pin_1") (pintype "passive") (tstamp 34008990-bac8-42b1-9565-e1bf346ff862))
     (pad "1" smd custom (at 1 -1 270) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 56 "/H_Bridge2/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 56 "/H_Bridge2/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -2998,7 +2998,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp e5760332-2e84-484f-a410-1e202b157c21))
     (pad "1" smd custom (at 1 1 180) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 56 "/H_Bridge2/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 56 "/H_Bridge2/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -3617,7 +3617,7 @@
       (tstamp 9ce08b1a-a35f-4b66-900d-7f340cf4f450)
     )
     (pad "1" smd custom (at -1 -1) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 23 "/H_Bridge0/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 23 "/H_Bridge0/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -3635,7 +3635,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp c1b5d3b6-8420-441a-a1f6-b6a03aef51c2))
     (pad "1" smd custom (at -1 1 90) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 23 "/H_Bridge0/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 23 "/H_Bridge0/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -3655,7 +3655,7 @@
     (pad "1" smd circle (at 0 0) (size 8 8) (layers "F.Cu" "F.Mask")
       (net 23 "/H_Bridge0/sw_m2") (pinfunction "Pin_1") (pintype "passive") (tstamp ad9d0b09-9ed3-4b97-a2f0-0274e6e69bdd))
     (pad "1" smd custom (at 1 -1 270) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 23 "/H_Bridge0/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 23 "/H_Bridge0/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -3673,7 +3673,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp 775140bf-080e-4db7-b61e-641f0efeea98))
     (pad "1" smd custom (at 1 1 180) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 23 "/H_Bridge0/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 23 "/H_Bridge0/sw_m2") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -4649,7 +4649,7 @@
       (tstamp e378cf7c-93fd-4741-a104-6261b2e3005c)
     )
     (pad "1" smd custom (at -1 -1) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 54 "/H_Bridge0/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 54 "/H_Bridge0/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -4667,7 +4667,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp 4f6c9d6d-205b-4d1f-a804-158d96bd0d58))
     (pad "1" smd custom (at -1 1 90) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 54 "/H_Bridge0/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 54 "/H_Bridge0/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -4687,7 +4687,7 @@
     (pad "1" smd circle (at 0 0) (size 8 8) (layers "F.Cu" "F.Mask")
       (net 54 "/H_Bridge0/V-") (pinfunction "Pin_1") (pintype "passive") (tstamp 0cadf2ae-f5be-4c2a-be07-5f68183f5bb3))
     (pad "1" smd custom (at 1 -1 270) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 54 "/H_Bridge0/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 54 "/H_Bridge0/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -4705,7 +4705,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp c747680f-acbe-42be-bb11-a05be1cba309))
     (pad "1" smd custom (at 1 1 180) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 54 "/H_Bridge0/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 54 "/H_Bridge0/V-") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -4838,7 +4838,7 @@
       (tstamp 8e356bda-5f5c-43f8-8d07-ba54fb3b68e8)
     )
     (pad "1" smd custom (at -1 -1) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -4856,7 +4856,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp 3090f388-1563-4c6a-93b4-cc2342091b48))
     (pad "1" smd custom (at -1 1 90) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -4876,7 +4876,7 @@
     (pad "1" smd circle (at 0 0) (size 8 8) (layers "F.Cu" "F.Mask")
       (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (tstamp 76b9a50d-d51a-48a2-a0a9-d1a558762893))
     (pad "1" smd custom (at 1 -1 270) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -4894,7 +4894,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp 346392bb-ddab-4a66-bedb-230263695835))
     (pad "1" smd custom (at 1 1 180) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -5276,7 +5276,7 @@
       (tstamp 5c149c7e-6ca7-4745-b49b-59d6c470e693)
     )
     (pad "1" smd custom (at -1 -1) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -5294,7 +5294,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp aaed9b1c-c99b-43ee-b92a-dc785f906c56))
     (pad "1" smd custom (at -1 1 90) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -5314,7 +5314,7 @@
     (pad "1" smd circle (at 0 0) (size 8 8) (layers "F.Cu" "F.Mask")
       (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (tstamp 730f1519-0fcd-4db1-ab56-2be7f916de38))
     (pad "1" smd custom (at 1 -1 270) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -5332,7 +5332,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp cfef46dc-a062-44e7-9a23-f3e2273855e8))
     (pad "1" smd custom (at 1 1 180) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -5652,7 +5652,7 @@
       (tstamp e1ed0e40-f402-4525-b9ab-c76afd6cc17a)
     )
     (pad "1" smd custom (at -1 -1) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -5670,7 +5670,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp 42718f7a-7b3b-4823-a6ec-231999e1d15d))
     (pad "1" smd custom (at -1 1 90) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -5690,7 +5690,7 @@
     (pad "1" smd circle (at 0 0) (size 8 8) (layers "F.Cu" "F.Mask")
       (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (tstamp 7f2b1d27-c78d-4b5d-b2d7-8000bd1fcb11))
     (pad "1" smd custom (at 1 -1 270) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -5708,7 +5708,7 @@
         (gr_arc (start -2.749906 0.499299) (mid -1.674866 -1.675367) (end 0.5 -2.75) (width 0.15))
       ) (tstamp 24d79722-d1f9-4a04-a941-c9f8c7e992e9))
     (pad "1" smd custom (at 1 1 180) (size 1 1) (layers "F.Cu" "F.Paste" "F.Mask")
-      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0) (thermal_bridge_angle 45)
+      (net 8 "+800V") (pinfunction "Pin_1") (pintype "passive") (zone_connect 0)
       (options (clearance outline) (anchor circle))
       (primitives
         (gr_line (start 0.5 0.5) (end -2.75 0.5) (width 0.15))
@@ -5962,6 +5962,15 @@
     (stroke (width 0.1) (type solid)) (layer "Edge.Cuts") (tstamp dcc92443-8218-4b03-aa49-61dc5f176f0a))
   (gr_line (start 140.5 27.5) (end 140.5 127.5)
     (stroke (width 0.1) (type solid)) (layer "Edge.Cuts") (tstamp f6fc5ada-4d7c-417c-b7b1-dc268b110ef1))
+  (dimension (type aligned) (layer "F.Cu") (tstamp 078608f9-9a46-467a-87cf-279320abb0b8)
+    (pts (xy 143.5 30.5) (xy 237.5 30.5))
+    (height -8.6)
+    (gr_text "94.0000 mm" (at 190.5 20.1) (layer "F.Cu") (tstamp 078608f9-9a46-467a-87cf-279320abb0b8)
+      (effects (font (size 1.5 1.5) (thickness 0.3)))
+    )
+    (format (prefix "") (suffix "") (units 3) (units_format 1) (precision 4))
+    (style (thickness 0.2) (arrow_length 1.27) (text_position_mode 0) (extension_height 0.58642) (extension_offset 0.5) keep_text_aligned)
+  )
 
   (segment (start 144.1 49.1) (end 144.6 49.1) (width 0.15) (layer "F.Cu") (net 1) (tstamp 0ba328ea-3ba6-4557-a8f5-8fbe522cfbf5))
   (segment (start 144.075001 49.124999) (end 144.075001 51.849277) (width 0.15) (layer "F.Cu") (net 1) (tstamp 0d2d7aee-285e-41f2-90f9-0d791fe3b41f))

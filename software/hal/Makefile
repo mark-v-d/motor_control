@@ -17,9 +17,9 @@ clean:
 	rm *.o *.so 
 
 link:
-	ln -f etherdrive.so $(EMC2_HOME)/rtlib/etherdrive.so
-	ln -f statespace_3.so $(EMC2_HOME)/rtlib/statespace_3.so
-	ln -f speed_controller.so $(EMC2_HOME)/rtlib/speed_controller.so
+	cp etherdrive.so $(EMC2_HOME)/rtlib/etherdrive.so
+	cp statespace_3.so $(EMC2_HOME)/rtlib/statespace_3.so
+	cp speed_controller.so $(EMC2_HOME)/rtlib/speed_controller.so
 
 etherdrive.o: drive_io.h drive_packet.h packet.h raw_socket.h
 

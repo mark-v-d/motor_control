@@ -191,6 +191,14 @@ public:
 	module->PCONF|=bitfield<POSIF_PCONF_INSEL2_Msk>(pinZ(Z));
     }
 
+    void negative_index() {
+	enc_z{}.set(XMC_GPIO_MODE_INPUT_INVERTED_TRISTATE);
+    }
+
+    void positive_index() {
+	enc_z{}.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+    }
+
     using base_t::count;
     int32_t index() {
 	cnt_l L;

@@ -62,7 +62,7 @@ namespace config_ns {
     struct  __attribute__ ((__packed__)) to_drive {
 	int new_data;
 	int led;
-	int encoder;
+	int encoder; // 0x40000000 inverted index
 	int poles;
 	float angle_offset;
 	float current_P, current_I, current_L;
