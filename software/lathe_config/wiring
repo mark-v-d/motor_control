@@ -1,0 +1,8 @@
+6 polige connector
+
+1	BR	+24 geschakeld voor solenoid.
+2	MAG	+regelaar uit voor pomp
+3	BL	+24V uit
+4	GL	Homing switch
+5	GR	spare
+6	ZW	GND

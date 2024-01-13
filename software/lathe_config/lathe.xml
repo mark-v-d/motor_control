@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pyvcp>
+	<vbox>
+		<label>
+			<text>"Spindle speed:"</text>
+		</label>
+		<bar>
+			<halpin>"spindle-speed"</halpin>
+			<min_>0</min_>
+			<max_>1500</max_>
+			<bgcolor>"grey"</bgcolor>
+			<fillcolor>"red"</fillcolor>
+		</bar>
+		<hbox>
+			<led halpin="spindle-at-speed" on_color="yellow" off_color="black"/>
+			<label text="At Speed"/>
+		</hbox>
+<meter>
+    <halpin>"Spindle_current"</halpin>
+    <text>"Spindle"</text>
+    <subtext>"Amperes"</subtext>
+    <size>250</size>
+    <min_>0</min_>
+    <max_>20</max_>
+    <majorscale>1</majorscale>
+    <minorscale>0.2</minorscale>
+    <region1>(15,20,"red")</region1>
+    <region2>(9.5,15,"yellow")</region2>
+    <region3>(0,9.5,"green")</region3>
+</meter>
+
+	</vbox>
+</pyvcp>

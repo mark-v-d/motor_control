@@ -1,0 +1,48 @@
+###################################################################
+#        moccapy_postgui.hal file from Norbert Schechner          #
+###################################################################
+
+loadrt abs names=abs_spindle_feedback
+addf abs_spindle_feedback servo-thread
+
+net spindle-speed-limited  =>  abs_spindle_feedback.in
+net spindle-abs  abs_spindle_feedback.out  =>  gmoccapy.spindle_feedback_bar
+net spindle-at-speed      gmoccapy.spindle_at_speed_led
+
+# the unlink pin commands are only used, because they are connected 
+# in core_sim.hal and we use this file to simulate
+unlinkp iocontrol.0.tool-change
+unlinkp iocontrol.0.tool-changed
+unlinkp iocontrol.0.tool-prep-number
+
+net tool-change      gmoccapy.toolchange-change   <=  iocontrol.0.tool-change 
+net tool-changed     gmoccapy.toolchange-changed  <=  iocontrol.0.tool-changed
+net tool-prep-number gmoccapy.toolchange-number   <=  iocontrol.0.tool-prep-number
+
+net tooloffset-x  gmoccapy.tooloffset-x  <=  motion.tooloffset.x
+net tooloffset-z  gmoccapy.tooloffset-z  <=  motion.tooloffset.z
+
+net v2 input.0.key-1 => gmoccapy.v-button.button-2
+net v3 input.0.key-2 => gmoccapy.v-button.button-3
+net v4 input.0.key-3 => gmoccapy.v-button.button-4
+net h0 input.0.key-5 => gmoccapy.h-button.button-0
+net h1 input.0.key-6 => gmoccapy.h-button.button-1
+net h2 input.0.key-7 => gmoccapy.h-button.button-2
+net h3 input.0.key-8 => gmoccapy.h-button.button-3
+net h4 input.0.key-9 => gmoccapy.h-button.button-4
+net h5 input.0.key-0 => gmoccapy.h-button.button-5
+net h6 input.0.key-a => gmoccapy.h-button.button-6
+net h7 input.0.key-b => gmoccapy.h-button.button-7
+net h8 input.0.key-c => gmoccapy.h-button.button-8
+net h9 input.0.key-d => gmoccapy.h-button.button-9
+
+loadrt multiswitch cfg=2
+loadrt and2 count=1
+net mist-on-off input.0.key-4 => multiswitch.0.up
+net mist-off multiswitch.0.bit-00 => and2.0.in0
+net mist-on multiswitch.0.bit-01 => halui.mist.on
+net mist-enable halui.machine.is-on => and2.0.in1
+net mist-off2 and2.0.out => halui.mist.off
+
+addf multiswitch.0 servo-thread
+addf and2.0 servo-thread

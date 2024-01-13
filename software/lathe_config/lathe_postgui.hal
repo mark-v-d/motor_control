@@ -1,0 +1,6 @@
+net Ispindle_gui  speed_controller.0.I_fb => pyvcp.Spindle_current
+net S0:at_speed pyvcp.spindle-at-speed
+net S0:speed_rpm speed_controller.0.speed_rpm => pyvcp.spindle-speed
+
+net spindle-start xhc-hb04.button-spindle => halui.spindle.0.start halui.spindle.0.stop
+#net spindle- xhc-hb04.feed-override => 
