@@ -82,6 +82,7 @@ public:
     static constexpr int UNIT=unit(enc_a{});
     using cnt_l=ccu4::slice_t<UNIT,0>;
     using cnt_h=ccu4::slice_t<UNIT,1>;
+    using cnt_i=ccu4::slice_t<UNIT,2>;
     static constexpr POSIF_PADDED_t *module=&dev[UNIT];
 
     qd32_t() {
@@ -133,28 +134,55 @@ public:
 	);
 	using namespace ccu4;
 	cnt_l l;
-	l.template set_event<0>(CCU40_IN0_POSIF0_OUT0,EDGE_RISING); // count
-	l.template set_event<1>(CCU40_IN1_POSIF0_OUT1,EDGE_RISING); // up/down
-	l.template set_event<2>(CCU40_IN2_POSIF0_OUT3,EDGE_RISING); // index
-	l->CMC=bitfield<CCU4_CC4_CMC_CNTS_Msk>(1)
-	    | bitfield<CCU4_CC4_CMC_UDS_Msk>(2)
-	    | bitfield<CCU4_CC4_CMC_CAP0S_Msk>(3);
-	l->PRS=0xffff;
-
 	cnt_h h;
-	h.template set_event<0>(CCU40_IN0_POSIF0_OUT0,EDGE_RISING); // count
-	h.template set_event<1>(CCU40_IN1_POSIF0_OUT1,EDGE_RISING); // up/down
-	h.template set_event<2>(CCU40_IN2_POSIF0_OUT3,EDGE_RISING); // index
-	h->CMC=bitfield<CCU4_CC4_CMC_CNTS_Msk>(1)
-	    | bitfield<CCU4_CC4_CMC_UDS_Msk>(2)
-	    | bitfield<CCU4_CC4_CMC_CAP0S_Msk>(3)
-	    | CCU4_CC4_CMC_TCE_Msk;
-	h->PRS=0xffff;
+	cnt_i i;
+	if constexpr(UNIT==0) {
+	    l.template set_event<0>(CCU40_IN0_POSIF0_OUT0,EDGE_RISING);
+	    l.template set_event<1>(CCU40_IN0_POSIF0_OUT1,EDGE_RISING);
+	    l.template set_event<2>(CCU40_IN0_POSIF0_OUT3,EDGE_RISING);
+	    l->CMC=bitfield<CCU4_CC4_CMC_CNTS_Msk>(1)
+		| bitfield<CCU4_CC4_CMC_UDS_Msk>(2)
+		| bitfield<CCU4_CC4_CMC_CAP0S_Msk>(3);
+	    l->PRS=0xffff;
+
+	    cnt_h h;
+	    h.template set_event<0>(CCU40_IN1_POSIF0_OUT0,EDGE_RISING);
+	    h.template set_event<1>(CCU40_IN1_POSIF0_OUT1,EDGE_RISING);
+	    h->CMC=bitfield<CCU4_CC4_CMC_CNTS_Msk>(1)
+		| bitfield<CCU4_CC4_CMC_UDS_Msk>(2)
+		| bitfield<CCU4_CC4_CMC_CAP0S_Msk>(3)
+		| CCU4_CC4_CMC_TCE_Msk;
+	    h->PRS=0xffff;
+	} else {
+	    l.template set_event<0>(CCU41_IN0_POSIF1_OUT0,EDGE_RISING);
+	    l.template set_event<1>(CCU41_IN0_POSIF1_OUT1,EDGE_RISING);
+	    //l.template set_event<2>(CCU41_IN0_POSIF1_OUT3,EDGE_RISING);
+	    l.template set_event<2>(CCU41_IN0_CCU41_ST2,EDGE_RISING);
+	    l->CMC=bitfield<CCU4_CC4_CMC_CNTS_Msk>(1)
+		| bitfield<CCU4_CC4_CMC_UDS_Msk>(2)
+		| bitfield<CCU4_CC4_CMC_CAP0S_Msk>(3);
+	    l->PRS=0xffff;
+
+	    h.template set_event<0>(CCU41_IN1_POSIF1_OUT0,EDGE_RISING);
+	    h.template set_event<1>(CCU41_IN1_POSIF1_OUT1,EDGE_RISING);
+	    h->CMC=bitfield<CCU4_CC4_CMC_CNTS_Msk>(1)
+		| bitfield<CCU4_CC4_CMC_UDS_Msk>(2)
+		| bitfield<CCU4_CC4_CMC_CAP0S_Msk>(3)
+		| CCU4_CC4_CMC_TCE_Msk;
+	    h->PRS=0xffff;
+
+	    i.template set_event<0>(CCU41_IN2_P2_3,EDGE_RISING);
+	    i->TC=CCU4_CC4_TC_TSSM_Msk;			// single shot mode
+	    i->CMC=bitfield<CCU4_CC4_CMC_STRTS_Msk>(1); // use P2.3 to start timer
+	    i->PRS=2;
+	    i->CRS=1;
+	}
 
 	h.start();
 	l.start();
-	ccu4::start(l,h);
-	ccu4::shadow_transfer(l,h);
+	i.start();
+	ccu4::start(l,h,i);
+	ccu4::shadow_transfer(l,h,i);
     }
 
     int32_t count() { return cnt_l{}->TIMER | (cnt_h{}->TIMER<<16); }
@@ -175,8 +203,8 @@ public:
     using base_t=qd32_t<enc_a,enc_b>;
     using base_t::UNIT;
     using base_t::module;
-    using cnt_l=ccu4::slice_t<UNIT,0>;
-    using cnt_h=ccu4::slice_t<UNIT,1>;
+    using typename base_t::cnt_l;
+    using typename base_t::cnt_h;
 
     qdi32_t():base_t() {
 	enc_z Z;

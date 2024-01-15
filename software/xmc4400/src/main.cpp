@@ -100,7 +100,7 @@ class complex_PI {
 public:
 
     C compute(C error,float voltage) {
-	if(voltage<=0.0f) {
+	if(voltage<=10.0f) {
 	    integrator=0;
 	    return 0;
 	}
