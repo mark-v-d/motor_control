@@ -9847,7 +9847,7 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 53b2b4b2-7fa2-4d6c-9a9a-65b017c20379)
   )
-  (text "FIXME\n\nOpto pinning\nRXD_TIMER on P0.9 of XMC1301\n100nF parallel with R27 (ook gnd beter aansluiten)\nGaten sub-d te klein\nOpto geisoleerde ingangen op XH connector toevoegen"
+  (text "FIXME\n\nOpto pinning\nRXD_TIMER on P0.9 of XMC1301\n100nF parallel with R27 (ook gnd beter aansluiten)\nGaten sub-d te klein\nOpto geisoleerde ingangen op XH connector toevoegen\nPin-4 of sub-d 9 is shield."
     (at 322.58 36.83 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 56827379-f838-4dbf-a9e9-e107f24136c3)
