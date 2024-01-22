@@ -1,0 +1,1 @@
+net S0:current-display speed_controller.0.I_fb => spindle_load.bar_spindle_load

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.22.1 -->
+<interface>
+  <requires lib="gtk+" version="3.0"/>
+  <requires lib="gladevcp" version="0.0"/>
+  <object class="EMC_Stat" id="hal_status">
+    <signal name="interp-run" handler="on_hal_status_interp_run" swapped="no"/>
+  </object>
+  <object class="GtkWindow" id="window1">
+    <property name="can_focus">False</property>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <object class="GtkFrame" id="frm_spindle_load">
+        <property name="width_request">64</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label_xalign">0.5</property>
+        <child>
+          <object class="HAL_VBar" id="bar_spindle_load">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">center</property>
+            <property name="bg_color">#808080808080</property>
+            <property name="force_width">24</property>
+            <property name="max">12</property>
+            <property name="target_color">#ffffffff0000</property>
+            <property name="target_value">10</property>
+            <property name="target_width">1</property>
+            <property name="text_template">%.1f</property>
+            <property name="value">108.15000152587891</property>
+            <property name="z0_border">0.82999998331069946</property>
+            <property name="z0_color">#000080800000</property>
+            <property name="z1_border">0</property>
+            <property name="z1_color">#ffff00000000</property>
+            <property name="z2_color">#ffff00000000</property>
+          </object>
+        </child>
+        <child type="label">
+          <object class="GtkLabel" id="lbl_frm_spindle_load">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">&lt;b&gt;Spindle
+load&lt;/b&gt;</property>
+            <property name="use_markup">True</property>
+            <property name="wrap">True</property>
+            <property name="wrap_mode">word-char</property>
+            <property name="track_visited_links">False</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
