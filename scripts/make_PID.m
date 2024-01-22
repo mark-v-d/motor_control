@@ -3,11 +3,11 @@ if 1
 	# @125V Vmax=3200mm/min 
 	# 1000 mm/s^2
 	#
-	Kp=0.04;		# Best so far
-	Kd=-0.8e-3;
-	Ki=1e-3;
+	Kp=0.043;		# Best so far
+	Kd=-0.9e-3;
+	Ki=1.0e-3;
 	f=[1e-6, 4e-3/3/2^20];	# factor between encoders
-	F=0.5;
+	F=0.27;
 elseif 1
 	# X
 	# @125V Vmax=3200mm/min 

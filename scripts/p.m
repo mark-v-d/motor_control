@@ -26,14 +26,12 @@ if size(log,2)==35
 	data.Vdelta=log(:,34);
 	data.at_speed=log(:,35);
 elseif size(log,2)==36
-	# Speed test
-	data.Imin=log(:,30);
-	data.Imax=log(:,31);
-	data.P=log(:,32);
-	data.speed=log(:,33);
-	data.setpoint=log(:,34);
-	data.Iset=log(:,[35,36]);
-	data=rmfield(data,"error");
+	# motion_test
+	data.setpoint=log(:,[30,31]);
+	data.error=log(:,[32,33]);
+	data.timer_error=log(:,34);
+	data.counter=log(:,35);
+	data.timer_delta=log(:,36);
 elseif size(log,2)>33
 	# current test
 	data.error=log(:,[32,33]);

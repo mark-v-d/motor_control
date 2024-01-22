@@ -9,8 +9,8 @@ using namespace std::chrono_literals;
 class udp_sync:public Ethernet::Transmitter, public Ethernet::Receiver {
     // static constexpr float kP=50e10;
     // static constexpr float kI=15e8;
-    static constexpr float kP=50e8;
-    static constexpr float kI=15e6;
+    static constexpr float kP=50e8*2;
+    static constexpr float kI=15e6*2;
     uint32_t addend;
     float integrator;
     std::chrono::duration<float> error;
@@ -50,12 +50,16 @@ public:
 	}
 
 	error=eth->target_time()-now-offset;
+	if(error>4us)
+	    error=4us;
+	else if(error<-4us)
+	    error=-4us;
 	itm.PORT[7].f=error/1s;
 	auto t(Kp*error+sync_integrator);
 	sync_integrator+=Ki*error;
 	auto old_t=t;
 	t=std::min(limit,std::max(-limit,t));
-	sync_integrator+=(t-old_t)*Ki/Kp;
+	sync_integrator+=(t-old_t)*Ki/Kp*1.5f;
 	itm.PORT[8].f=sync_integrator/1s;
 	if(unlocked && (error<1us || error>-1us))
 	    unlocked--;
