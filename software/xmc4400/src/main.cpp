@@ -40,6 +40,8 @@ std::tuple hr_out{
 };
 
 uart::full_duplex copro(COPRO_TXD,COPRO_RXD);
+bool copro_working=false;
+unsigned copro_retry=0;
 
 std::atomic<uint32_t> sleep_counter(0);
 
@@ -180,15 +182,21 @@ extern "C" void CCU80_2_IRQHandler(void)
     FCE_KE2->CFG=0;
     FCE_KE2->CRC=0xffff;
     uint16_t d;
-    for(int rxd_counter=0; copro->TRBSR & USIC_CH_TRBSR_RBFLVL_Msk;) {
-	d>>=8;
-	d|=copro->OUTR<<8;
-	report.rx_data[rxd_counter/2]=rx_data[rxd_counter/2]=d;
-	rxd_counter++;
-	if(!(rxd_counter&1)) {
-	    FCE_KE2->IR=std::byteswap(d);
+    if(copro_working) {
+	for(int rxd_counter=0; copro->TRBSR & USIC_CH_TRBSR_RBFLVL_Msk;) {
+	    d>>=8;
+	    d|=copro->OUTR<<8;
+	    report.rx_data[rxd_counter/2]=rx_data[rxd_counter/2]=d;
+	    rxd_counter++;
+	    if(!(rxd_counter&1)) {
+		FCE_KE2->IR=std::byteswap(d);
+	    }
+	    report.rx_counter=rxd_counter;
 	}
-	report.rx_counter=rxd_counter;
+	if(report.rx_counter!=12) {
+	    copro_working=false;
+	    copro_retry++;
+	}
     }
 
     float Vservo=rx_data[2]*scale_Vservo+1e-6;
@@ -383,6 +391,7 @@ int main()
     bsl_init(COPRO_POWER,COPRO_TXD,COPRO_RXD);
     copro.SetBaudrate(uart::Baudrate(4e6));
     uart::fifo_configure<0,16>(copro);
+    copro_working=true;
 
     HBH0_HR.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
     HBL0_HR.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
@@ -486,6 +495,13 @@ int main()
 		set_encoder(drive_config->encoder, drive_config->poles);
 		drive_config->encoder=0;
 	    }
+	}
+	if(!copro_working) {
+	    // not sure why we need to try again for the z-axis
+	    bsl_init(COPRO_POWER,COPRO_TXD,COPRO_RXD);
+	    copro.SetBaudrate(uart::Baudrate(4e6));
+	    uart::fifo_configure<0,16>(copro);
+	    copro_working=true;
 	}
     }
     return 0;
