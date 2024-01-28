@@ -40,6 +40,8 @@ class speed_voltage_t {
     hal_float_t *filter;	// filter gain
     hal_bit_t	*index_enable;	// For threading
     hal_bit_t	*index;		// For threading
+    hal_float_t *Vc;	// filter gain
+    hal_float_t *Vm;	// filter gain
 
     // Outputs
     hal_float_t *Iout;		// Motor current (imaginary part)
@@ -100,11 +102,17 @@ public:
 	    pin(HAL_OUT, "revs", &revs) ||
 	    pin(HAL_OUT, "speed_fb", &speed_fb) ||
 	    pin(HAL_OUT, "speed_rpm", &speed_rpm) ||
-	    pin(HAL_OUT, "I_fb", &I_fb)
+	    pin(HAL_OUT, "I_fb", &I_fb) ||
+	    pin(HAL_OUT, "Vcurrent", &Vc) ||
+	    pin(HAL_OUT, "Vmeasured", &Vm)
 	    ;
     }
 
     auto compute(long period) {
+	// speed=13.54, V_per_speed=-18.2 => Vset=-246.43
+	// Vcurrent=-246.58
+	// Vmeasured=-0.073
+	// Vdelta=150 => dV=0.0333333
 	double Vset=(*speed)*(*V_per_speed);
 	double dV=(*Vdelta)*period/1e9;
 
@@ -126,7 +134,7 @@ public:
 	double Iset=Vcurrent<0? -(*Imax):(*Imax);
 	double duty=std::abs(Vcurrent/(*Vservo));
 	if(Vset>Vcurrent) {
-	    if(Vcurrent<-1) {
+	    if(Vcurrent<=0) {
 		// Decelerate
 		Vcurrent=Vmeasured;
 		Iset=0;
@@ -134,13 +142,13 @@ public:
 	    } else {
 		// Accelerate
 		Vcurrent+=dV;
+		if((dV<0 && Vcurrent<Vset) || (dV>0 && Vcurrent>Vset))
+		    Vcurrent=Vset;
 		Iset=*Imax;
 		duty=std::abs(Vcurrent/(*Vservo));
 	    }
-	    if(Vcurrent>Vset)
-		Vcurrent=Vset;
 	} else if(Vset<Vcurrent) {
-	    if(Vcurrent>1) {
+	    if(Vcurrent>=0) {
 		// Decelerate
 		Vcurrent=Vmeasured;
 		Iset=0;
@@ -148,10 +156,14 @@ public:
 	    } else {
 		// Accelerate
 		Vcurrent-=dV;
+		if((dV<0 && Vcurrent>Vset) || (dV>0 && Vcurrent<Vset))
+		    Vcurrent=Vset;
 		Iset=-*Imax;
 		duty=std::abs(Vcurrent/(*Vservo));
 	    }
 	}
+	*Vc=Vcurrent;
+	*Vm=Vmeasured;
 
 	duty=std::min(double(*limit_max),duty);
 	duty=std::max(0.0,duty);

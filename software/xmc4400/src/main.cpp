@@ -40,8 +40,7 @@ std::tuple hr_out{
 };
 
 uart::full_duplex copro(COPRO_TXD,COPRO_RXD);
-bool copro_working=false;
-unsigned copro_retry=0;
+volatile bool copro_working=false;
 
 std::atomic<uint32_t> sleep_counter(0);
 
@@ -192,10 +191,6 @@ extern "C" void CCU80_2_IRQHandler(void)
 		FCE_KE2->IR=std::byteswap(d);
 	    }
 	    report.rx_counter=rxd_counter;
-	}
-	if(report.rx_counter!=12) {
-	    copro_working=false;
-	    copro_retry++;
 	}
     }
 
