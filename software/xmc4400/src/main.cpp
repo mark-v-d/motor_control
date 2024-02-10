@@ -41,6 +41,7 @@ std::tuple hr_out{
 
 uart::full_duplex copro(COPRO_TXD,COPRO_RXD);
 volatile bool copro_working=false;
+int copro_not_working=0;
 
 std::atomic<uint32_t> sleep_counter(0);
 
@@ -163,7 +164,8 @@ extern "C" void CCU80_2_IRQHandler(void)
     static bool overcurrent_latch=false;
 
     constexpr char data=0x05a;
-    copro.tx(data);
+    if(copro_working)
+	copro.tx(data);
     itm.PORT[0].u8=trace_info=subsample;
     if(subsample==1) {
 	auto t=syncer.sync(&eth0,50ns,sync_Kp,sync_Ki,20us);
@@ -192,7 +194,10 @@ extern "C" void CCU80_2_IRQHandler(void)
 	    }
 	    report.rx_counter=rxd_counter;
 	}
-    }
+	if(report.rx_counter!=12 && ++copro_not_working>10)
+	    copro_working=0;
+    } else
+	copro_not_working=0;
 
     float Vservo=rx_data[2]*scale_Vservo+1e-6;
 

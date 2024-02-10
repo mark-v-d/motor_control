@@ -137,7 +137,8 @@ setp speed_controller.0.V_per_speed	-18.2
 setp speed_controller.0.limit_max	0.74
 setp speed_controller.0.position_per_rev 49152
 setp speed_controller.0.Vdelta		150	# Speed increase V/sec
-setp speed_controller.0.filter		0.1
+setp speed_controller.0.filter		0.01
+setp speed_controller.0.R		0.01
 
 
 setp homer.0.current-min -1.99

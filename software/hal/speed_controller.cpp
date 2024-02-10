@@ -42,6 +42,7 @@ class speed_voltage_t {
     hal_bit_t	*index;		// For threading
     hal_float_t *Vc;	// filter gain
     hal_float_t *Vm;	// filter gain
+    hal_float_t *R;	// Resistance of motor
 
     // Outputs
     hal_float_t *Iout;		// Motor current (imaginary part)
@@ -103,6 +104,7 @@ public:
 	    pin(HAL_OUT, "speed_fb", &speed_fb) ||
 	    pin(HAL_OUT, "speed_rpm", &speed_rpm) ||
 	    pin(HAL_OUT, "I_fb", &I_fb) ||
+	    pin(HAL_IN, "R", &R) ||
 	    pin(HAL_OUT, "Vcurrent", &Vc) ||
 	    pin(HAL_OUT, "Vmeasured", &Vm)
 	    ;
@@ -114,7 +116,7 @@ public:
 	// Vmeasured=-0.073
 	// Vdelta=150 => dV=0.0333333
 	double Vset=(*speed)*(*V_per_speed);
-	double dV=(*Vdelta)*period/1e9;
+	double dV=std::abs(*Vdelta)*period/1e9;
 
 	double ppr=double(*position_per_rev);
 	int32_t pos=*position;
@@ -123,47 +125,52 @@ public:
 	double dr=pos-old_position;
 	old_position=pos;
 	double gain=*filter;
-	Speed_measured+=gain*(dr/ppr/period*1e9-Speed_measured);
+	double speed_unfiltered=dr/ppr/period*1e9;
+	Speed_measured+=gain*(speed_unfiltered-Speed_measured);
 	*speed_fb=Speed_measured;
 	*speed_rpm=std::abs(60*Speed_measured);
+
+	/*
+	double speed_error=*speed-speed_unfiltered;
+	double speed_correction=
+	double speed_I+=speed_error*speed_kI;
+	*/
 
 	current_measured+=gain*(std::abs(*Irotor)-current_measured);
 	*I_fb=current_measured;
 
-	Vmeasured+=gain*((*Vrotor)*(*Vservo)-Vmeasured);
+	double Vmeas=(*Vrotor)*(*Vservo);
+	Vmeasured+=gain*(Vmeas-Vmeasured);
 	double Iset=Vcurrent<0? -(*Imax):(*Imax);
 	double duty=std::abs(Vcurrent/(*Vservo));
 	if(Vset>Vcurrent) {
-	    if(Vcurrent<=0) {
-		// Decelerate
-		Vcurrent=Vmeasured;
+	    Vcurrent+=dV;
+	    if(Vcurrent>Vset)
+		Vcurrent=Vset;
+	    if(*Irotor<0) {
+		Vcurrent=Vmeasured-dV;
 		Iset=0;
-		duty=*limit_max;
 	    } else {
-		// Accelerate
-		Vcurrent+=dV;
-		if((dV<0 && Vcurrent<Vset) || (dV>0 && Vcurrent>Vset))
-		    Vcurrent=Vset;
 		Iset=*Imax;
-		duty=std::abs(Vcurrent/(*Vservo));
 	    }
 	} else if(Vset<Vcurrent) {
-	    if(Vcurrent>=0) {
-		// Decelerate
-		Vcurrent=Vmeasured;
+	    Vcurrent-=dV;
+	    if(Vcurrent<Vset)
+		Vcurrent=Vset;
+	    if(*Irotor>0) {
+		Vcurrent=Vmeasured+dV;
 		Iset=0;
-		duty=*limit_max;
 	    } else {
-		// Accelerate
-		Vcurrent-=dV;
-		if((dV<0 && Vcurrent>Vset) || (dV>0 && Vcurrent<Vset))
-		    Vcurrent=Vset;
 		Iset=-*Imax;
-		duty=std::abs(Vcurrent/(*Vservo));
 	    }
 	}
 	*Vc=Vcurrent;
 	*Vm=Vmeasured;
+
+	if(Iset!=0)
+	    duty=std::abs((Vcurrent+current_measured*(*R))/(*Vservo));
+	else
+	    duty=*limit_max;
 
 	duty=std::min(double(*limit_max),duty);
 	duty=std::max(0.0,duty);
