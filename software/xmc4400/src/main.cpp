@@ -173,8 +173,8 @@ extern "C" void CCU80_2_IRQHandler(void)
 	    std::apply([=](auto ...x) { (x.period(t+pwm_time),...);}, hr_out);
 	report.timer_delta=t/1ns;
 	report.timer_error=syncer.last_error()/1ns;
-	itm.PORT[0].u8=(trace_info|=0x40);
 	encoder->trigger();
+	itm.PORT[0].u8=(trace_info|=0x40);
     }
     if(++subsample>3)
 	subsample=0;
@@ -233,11 +233,11 @@ extern "C" void CCU80_2_IRQHandler(void)
     angle+=angle_offset;
     if(angle_override!=0.0f)
 	angle=angle_override;
+    report.valid=valid;
     if(valid) {
 	IO0=report.position==position;
 	report.position=position;
 	report.angle=angle;
-	report.valid=valid;
     } else {
 	report.invalid++;
 	angle=report.angle;

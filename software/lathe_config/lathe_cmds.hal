@@ -132,13 +132,17 @@ setp etherdrive.2.L			1.55
 setp etherdrive.2.overvoltage		410
 setp etherdrive.2.overcurrent		15
 
-setp speed_controller.0.Imax		4
 setp speed_controller.0.V_per_speed	-18.2
-setp speed_controller.0.limit_max	0.74
+#setp speed_controller.0.limit_max	0.74
+#setp speed_controller.0.Vdelta		150	# Speed increase V/sec
+#setp speed_controller.0.filter		0.01
+#setp speed_controller.0.R		0.01
 setp speed_controller.0.position_per_rev 49152
-setp speed_controller.0.Vdelta		150	# Speed increase V/sec
-setp speed_controller.0.filter		0.01
-setp speed_controller.0.R		0.01
+setp speed_controller.0.acceleration	1e-3
+setp speed_controller.0.Imax		4
+setp speed_controller.0.gain_P		-5
+setp speed_controller.0.gain_I		-0.07
+setp speed_controller.0.gain_L		1
 
 
 setp homer.0.current-min -1.99
@@ -201,7 +205,7 @@ net S0:pos etherdrive.2.position => speed_controller.0.position
 net S0:Vrotor etherdrive.2.Vrotor-1 => speed_controller.0.Vrotor
 net S0:Vservo etherdrive.2.Vservo => speed_controller.0.Vservo
 
-net S0:limit speed_controller.0.limit => etherdrive.2.limit-1
+#net S0:limit speed_controller.0.limit => etherdrive.2.limit-1
 net S0:current speed_controller.0.Iout => etherdrive.2.Iset-1
 net S0:current-fb etherdrive.2.Irotor-1 => speed_controller.0.Irotor
 

@@ -27,46 +27,47 @@ constexpr int outputs=1;
 /******************************************************************************/
 class speed_voltage_t {
     // Inputs
-    hal_float_t *speed;
-    hal_float_t *V_per_speed;
+    hal_float_t *speed;		// Setpoint for speed
+    hal_float_t *acceleration;	// Limit acceleration
+
     hal_float_t *Vservo;	// Supply voltage of motor drive
     hal_float_t *Vrotor;	// Imaginary part off rotor voltage
     hal_float_t *Imax;		// Maximum motor current
     hal_float_t *Irotor;	// Actual motor current
-    hal_float_t *Vdelta;	// Volts per second
-    hal_float_t *limit_max;	// The maximum duty cycle for the imaginary part
+
     hal_s32_t	*position;	// Encoder of spindle
     hal_u32_t	*position_per_rev;// Encoder increments per revolution
-    hal_float_t *filter;	// filter gain
     hal_bit_t	*index_enable;	// For threading
     hal_bit_t	*index;		// For threading
-    hal_float_t *Vc;	// filter gain
-    hal_float_t *Vm;	// filter gain
-    hal_float_t *R;	// Resistance of motor
+
+    hal_float_t *gain_P;	// proportional gain
+    hal_float_t *gain_I;	// integrating gain
+    hal_float_t *gain_L;	// limiting gain
+    hal_float_t *V_per_speed;	// limiting gain
 
     // Outputs
     hal_float_t *Iout;		// Motor current (imaginary part)
-    hal_float_t *limit;		// duty cycle limit (imaginary part)
     hal_bit_t	*at_speed;	// Setpoint achieved
     hal_float_t	*revs;		// Number of revolutions
     hal_float_t	*speed_fb;	// Measured speed (rps)
-    hal_float_t	*I_fb;		// Measured current
+    hal_float_t	*I_fb;		// Measured current (for display)
     hal_float_t	*speed_rpm;	// Measured speed (rpm)
 
-    double Vcurrent;		// Current motor voltage
-    double Vmeasured;		// Measured motor voltage (filtered)
+    hal_float_t *debug;
+
     int32_t old_position;	// Used for speed measurement
-    double Speed_measured=0;	// Speed measured by encoder (filtered)
-    double current_measured=0;	// Absolute measured current (for load meter)
     double revs_offset;	// by index
+    double integrator;
+    double current_speed;
+
+    std::array<int32_t,10> pos_buf;
+    std::array<double,10> I_buf;
+    int pos_idx;
+    double measured_speed;
 
 public:
     bool init(int i) {
-	Vcurrent=0;
-	Vmeasured=0;
 	old_position=0;
-	Speed_measured=0;
-	current_measured=0;
 
 	std::string prefix="speed_controller."+std::to_string(i)+".";
 	auto pin=[&](hal_pin_dir_t dir,std::string name, auto p) {
@@ -85,108 +86,99 @@ public:
 	};
 	return
 	    pin(HAL_IN, "speed", &speed) ||
-	    pin(HAL_IN, "V_per_speed", &V_per_speed) ||
+	    pin(HAL_IN, "acceleration", &acceleration) ||
+
 	    pin(HAL_IN, "Vservo", &Vservo) ||
 	    pin(HAL_IN, "Vrotor", &Vrotor) ||
 	    pin(HAL_IN, "Imax", &Imax) ||
 	    pin(HAL_IN, "Irotor", &Irotor) ||
-	    pin(HAL_IN, "Vdelta", &Vdelta) ||
-	    pin(HAL_IN, "limit_max", &limit_max) ||
+
+	    pin(HAL_IN, "gain_P", &gain_P) ||
+	    pin(HAL_IN, "gain_I", &gain_I) ||
+	    pin(HAL_IN, "gain_L", &gain_L) ||
+	    pin(HAL_IN, "V_per_speed", &V_per_speed) ||
+
 	    pin(HAL_IN, "position", &position) ||
 	    pin(HAL_IN, "position_per_rev", &position_per_rev) ||
-	    pin(HAL_IN, "filter", &filter) ||
 	    pin(HAL_IO, "index_enable", &index_enable) ||
 	    pin(HAL_IN, "index", &index) ||
+
 	    pin(HAL_OUT, "Iout", &Iout) ||
-	    pin(HAL_OUT, "limit", &limit) ||
 	    pin(HAL_OUT, "at_speed", &at_speed) ||
 	    pin(HAL_OUT, "revs", &revs) ||
 	    pin(HAL_OUT, "speed_fb", &speed_fb) ||
 	    pin(HAL_OUT, "speed_rpm", &speed_rpm) ||
 	    pin(HAL_OUT, "I_fb", &I_fb) ||
-	    pin(HAL_IN, "R", &R) ||
-	    pin(HAL_OUT, "Vcurrent", &Vc) ||
-	    pin(HAL_OUT, "Vmeasured", &Vm)
-	    ;
+	    pin(HAL_OUT, "debug", &debug) ||
+	    0;
     }
 
     auto compute(long period) {
-	// speed=13.54, V_per_speed=-18.2 => Vset=-246.43
-	// Vcurrent=-246.58
-	// Vmeasured=-0.073
-	// Vdelta=150 => dV=0.0333333
-	double Vset=(*speed)*(*V_per_speed);
-	double dV=std::abs(*Vdelta)*period/1e9;
-
 	double ppr=double(*position_per_rev);
 	int32_t pos=*position;
 	*revs=pos/ppr-revs_offset;
 
-	double dr=pos-old_position;
-	old_position=pos;
-	double gain=*filter;
-	double speed_unfiltered=dr/ppr/period*1e9;
-	Speed_measured+=gain*(speed_unfiltered-Speed_measured);
-	*speed_fb=Speed_measured;
-	*speed_rpm=std::abs(60*Speed_measured);
-
-	/*
-	double speed_error=*speed-speed_unfiltered;
-	double speed_correction=
-	double speed_I+=speed_error*speed_kI;
-	*/
-
-	current_measured+=gain*(std::abs(*Irotor)-current_measured);
-	*I_fb=current_measured;
-
+	// Determine current limits
+	double limit_max=*Imax;
+	double limit_min=-limit_max;
 	double Vmeas=(*Vrotor)*(*Vservo);
-	Vmeasured+=gain*(Vmeas-Vmeasured);
-	double Iset=Vcurrent<0? -(*Imax):(*Imax);
-	double duty=std::abs(Vcurrent/(*Vservo));
-	if(Vset>Vcurrent) {
-	    Vcurrent+=dV;
-	    if(Vcurrent>Vset)
-		Vcurrent=Vset;
-	    if(*Irotor<0) {
-		Vcurrent=Vmeasured-dV;
-		Iset=0;
-	    } else {
-		Iset=*Imax;
-	    }
-	} else if(Vset<Vcurrent) {
-	    Vcurrent-=dV;
-	    if(Vcurrent<Vset)
-		Vcurrent=Vset;
-	    if(*Irotor>0) {
-		Vcurrent=Vmeasured+dV;
-		Iset=0;
-	    } else {
-		Iset=-*Imax;
-	    }
+	if(Vmeas>5.0)
+	    limit_min=0;
+	else if(Vmeas<-5.0)
+	    limit_max=0;
+
+	// acceleration limit
+	double speed_in=*speed;
+	if(current_speed<speed_in) {
+	    current_speed+=*acceleration;
+	    current_speed=std::min(speed_in,current_speed);
+	} else if(current_speed>speed_in) {
+	    current_speed-=*acceleration;
+	    current_speed=std::max(speed_in,current_speed);
 	}
-	*Vc=Vcurrent;
-	*Vm=Vmeasured;
 
-	if(Iset!=0)
-	    duty=std::abs((Vcurrent+current_measured*(*R))/(*Vservo));
-	else
-	    duty=*limit_max;
+#if 0
+	double measured_speed=double(*position-old_position)/(*position_per_rev)
+	    *(1e9/period);
+	old_position=pos;
+#else
+	double scale=(1e9/period)/pos_buf.size()/(*position_per_rev);
+	if(old_position==pos && std::abs(measured_speed>0.1))
+	    pos+=measured_speed/scale/pos_buf.size();
+	measured_speed=double(pos-pos_buf[pos_idx])*scale;
+	*I_fb-=I_buf[pos_idx]/I_buf.size();
+	I_buf[pos_idx]=std::abs(*Irotor);
+	*I_fb+=I_buf[pos_idx]/I_buf.size();
+	pos_buf[pos_idx]=pos;
+	if(++pos_idx>=pos_buf.size())
+	    pos_idx=0;
+	old_position=pos;
+#endif
 
-	duty=std::min(double(*limit_max),duty);
-	duty=std::max(0.0,duty);
+	double kP=*gain_P;
+	double kI=*gain_I;
+	double kL=*gain_L;
+
+	double error=current_speed-measured_speed;
+	double unlimited=error*kP+integrator;
+	integrator+=kI*error;
+	*debug=pos;
+
+	double limited=std::min(limit_max,std::max(limit_min,unlimited));
+	double correction=limited-unlimited;
+	integrator+=correction*kL;
+
+	*Iout=limited;
+	*at_speed=std::abs(error)<0.1;
 
 	if(*index_enable && *index) {
 	    revs_offset=(0xffffc000&pos)/ppr;
 	    *index_enable=0;
 	}
 
-
-	if(*Imax==0)
-	    duty=*limit_max;
-
-	*Iout=Iset;
-	*limit=duty;
-	*at_speed=std::abs(Vmeasured-Vset)<1.0;
+	*speed_fb=measured_speed;
+	*speed_rpm=std::abs(60*measured_speed);
+	//*I_fb=std::abs(*Irotor);
     }
 };
 

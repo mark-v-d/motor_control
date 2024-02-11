@@ -1,44 +1,39 @@
 # Halshow settings
 # This file is generated automatically.
-wm geometry . 1250x793+392+131
+wm geometry . 1250x793+406+163
 placeFrames 0.5290697674418605
 set ::ratio 0.5290697674418605
 set ::old_w_leftf 160
 set ::watchlist {
-    pin+spindle_load.bar_spindle_load
-    pin+speed_controller.0.Irotor
-    pin+speed_controller.0.Iout
     pin+speed_controller.0.I_fb
-    sig+S0:current-fb
-    sig+S0:current
-    pin+motion.feed-mm-per-minute
-    pin+motion.feed-mm-per-second
-    pin+spindle.0.speed-in
-    pin+spindle.0.amp-fault-in
-    pin+speed_controller.0.speed
-    pin+speed_controller.0.speed_fb
+    pin+speed_controller.0.Imax
+    pin+speed_controller.0.Iout
+    pin+speed_controller.0.Irotor
+    pin+speed_controller.0.Vrotor
+    pin+speed_controller.0.Vservo
+    pin+speed_controller.0.acceleration
     pin+speed_controller.0.at_speed
-    pin+speed_controller.0.filter
+    pin+speed_controller.0.gain_I
+    pin+speed_controller.0.gain_L
+    pin+speed_controller.0.gain_P
     pin+speed_controller.0.index
     pin+speed_controller.0.index_enable
-    pin+speed_controller.0.limit
-    pin+speed_controller.0.limit_max
     pin+speed_controller.0.position
     pin+speed_controller.0.position_per_rev
     pin+speed_controller.0.revs
+    pin+speed_controller.0.speed
+    pin+speed_controller.0.speed_fb
     pin+speed_controller.0.speed_rpm
-    pin+etherdrive.2.Vservo
-    pin+etherdrive.2.Vrotor-0
-    pin+etherdrive.2.Vrotor-1
-    pin+etherdrive.2.Irotor-1
+    pin+etherdrive.2.Iset-0
+    pin+etherdrive.2.Iset-1
+    pin+speed_controller.0.debug
+    pin+etherdrive.2.overcurrent
+    pin+etherdrive.2.overvoltage
     pin+etherdrive.2.Irotor-0
-    pin+speed_controller.0.Vcurrent
-    pin+speed_controller.0.Vdelta
-    pin+speed_controller.0.Vmeasured
-    pin+speed_controller.0.Vrotor
-    pin+speed_controller.0.Vservo
-    pin+speed_controller.0.R
-    pin+speed_controller.0.V_per_speed
+    pin+etherdrive.2.Irotor-1
+    pin+etherdrive.2.invalid
+    pin+etherdrive.2.valid_rx
+    pin+etherdrive.2.valid_tx
 }
 set ::workmode watchhal
 set ::watchInterval 100
