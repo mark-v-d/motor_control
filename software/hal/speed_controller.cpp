@@ -60,8 +60,8 @@ class speed_voltage_t {
     double integrator;
     double current_speed;
 
-    std::array<int32_t,10> pos_buf;
-    std::array<double,10> I_buf;
+    std::array<int32_t,45> pos_buf;
+    std::array<double,45> I_buf;
     int pos_idx;
     double measured_speed;
 

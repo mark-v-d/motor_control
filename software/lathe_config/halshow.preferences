@@ -5,35 +5,8 @@ placeFrames 0.5290697674418605
 set ::ratio 0.5290697674418605
 set ::old_w_leftf 160
 set ::watchlist {
-    pin+speed_controller.0.I_fb
-    pin+speed_controller.0.Imax
-    pin+speed_controller.0.Iout
-    pin+speed_controller.0.Irotor
-    pin+speed_controller.0.Vrotor
-    pin+speed_controller.0.Vservo
-    pin+speed_controller.0.acceleration
-    pin+speed_controller.0.at_speed
-    pin+speed_controller.0.gain_I
-    pin+speed_controller.0.gain_L
-    pin+speed_controller.0.gain_P
-    pin+speed_controller.0.index
-    pin+speed_controller.0.index_enable
-    pin+speed_controller.0.position
-    pin+speed_controller.0.position_per_rev
-    pin+speed_controller.0.revs
-    pin+speed_controller.0.speed
-    pin+speed_controller.0.speed_fb
-    pin+speed_controller.0.speed_rpm
-    pin+etherdrive.2.Iset-0
-    pin+etherdrive.2.Iset-1
-    pin+speed_controller.0.debug
-    pin+etherdrive.2.overcurrent
-    pin+etherdrive.2.overvoltage
-    pin+etherdrive.2.Irotor-0
-    pin+etherdrive.2.Irotor-1
-    pin+etherdrive.2.invalid
-    pin+etherdrive.2.valid_rx
-    pin+etherdrive.2.valid_tx
+    pin+etherdrive.2.Vservo
+    pin+thermistor.2.temperature-c
 }
 set ::workmode watchhal
 set ::watchInterval 100

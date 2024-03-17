@@ -63,6 +63,7 @@ struct comp_state {
     hal_bit_t *digin[2];
     hal_u32_t *digin_all;
     hal_bit_t *configured;
+    hal_float_t *vthermistor;
 
     bool valid;
 
@@ -106,6 +107,7 @@ struct comp_state {
 	    !pin(HAL_OUT,"digin-1", &digin[1]) &&
 	    !pin(HAL_OUT,"digin-all", &digin_all) &&
 	    !pin(HAL_OUT,"configured", &configured) &&
+	    !pin(HAL_OUT,"vthermistor", &vthermistor) &&
 	    !pin(HAL_OUT,"timer_error", &dt) &&
 	    !pin(HAL_IN,"encoder", &encoder) &&
 	    !pin(HAL_IN,"poles", &poles) &&
@@ -144,6 +146,7 @@ struct comp_state {
 	*digin_all=buffer.digin;
 	*dt=buffer.timer_error;
 	*drive_rx=buffer.counter;
+	*vthermistor=(4095-buffer.tpower)*3.3/4095;
 	(*valid_rx)++;
     }
 

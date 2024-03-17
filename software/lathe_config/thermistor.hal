@@ -1,0 +1,19 @@
+loadusr thermistor count=3
+setp thermistor.0.t0-c 25
+setp thermistor.1.t0-c 25
+setp thermistor.2.t0-c 25
+setp thermistor.0.r0 47000
+setp thermistor.1.r0 47000
+setp thermistor.2.r0 47000
+setp thermistor.0.beta 3952
+setp thermistor.1.beta 3952
+setp thermistor.2.beta 3952
+setp thermistor.0.r-other 2000
+setp thermistor.1.r-other 2000
+setp thermistor.2.r-other 2000
+setp thermistor.0.v-total 3.3
+setp thermistor.1.v-total 3.3
+setp thermistor.2.v-total 3.3
+net Vtherm-0 etherdrive.0.vthermistor => thermistor.0.v-thermistor
+net Vtherm-1 etherdrive.1.vthermistor => thermistor.1.v-thermistor
+net Vtherm-2 etherdrive.2.vthermistor => thermistor.2.v-thermistor
