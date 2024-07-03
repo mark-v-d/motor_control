@@ -145,6 +145,8 @@ public:
 	double scale=(1e9/period)/pos_buf.size()/(*position_per_rev);
 	if(old_position==pos && std::abs(measured_speed>0.1))
 	    pos+=measured_speed/scale/pos_buf.size();
+	else
+	    old_position=pos;
 	measured_speed=double(pos-pos_buf[pos_idx])*scale;
 	*I_fb-=I_buf[pos_idx]/I_buf.size();
 	I_buf[pos_idx]=std::abs(*Irotor);
@@ -152,7 +154,6 @@ public:
 	pos_buf[pos_idx]=pos;
 	if(++pos_idx>=pos_buf.size())
 	    pos_idx=0;
-	old_position=pos;
 #endif
 
 	double kP=*gain_P;
@@ -169,7 +170,7 @@ public:
 	integrator+=correction*kL;
 
 	*Iout=limited;
-	*at_speed=std::abs(error)<0.1;
+	*at_speed=std::abs(error)<0.1 && std::abs(speed_in-measured_speed)<0.1;
 
 	if(*index_enable && *index) {
 	    revs_offset=(0xffffc000&pos)/ppr;

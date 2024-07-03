@@ -138,10 +138,10 @@ setp speed_controller.0.V_per_speed	-18.2
 #setp speed_controller.0.filter		0.01
 #setp speed_controller.0.R		0.01
 setp speed_controller.0.position_per_rev 49152
-setp speed_controller.0.acceleration	1e-3
+setp speed_controller.0.acceleration	3e-3
 setp speed_controller.0.Imax		12
-setp speed_controller.0.gain_P		-5
-setp speed_controller.0.gain_I		-0.07
+setp speed_controller.0.gain_P		-2.5
+setp speed_controller.0.gain_I		-0.035
 setp speed_controller.0.gain_L		1
 
 

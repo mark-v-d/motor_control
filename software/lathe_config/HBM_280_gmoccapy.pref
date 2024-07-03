@@ -12,7 +12,7 @@ scale_spindle_override = 1
 scale_feed_override = 1
 scale_rapid_override = 1
 spindle_bar_min = 0.0
-spindle_bar_max = 1000.0
+spindle_bar_max = 1800.0
 turtle_jog_factor = 20
 hide_turtle_jog_button = False
 unlock_code = 123
@@ -76,6 +76,7 @@ run_from_line = no_run
 unlock_way = no
 show_preview_on_offset = False
 use_keyboard_shortcuts = True
-tool_in_spindle = 2
+tool_in_spindle = 16
 offset_axis_z = 230.869
+diameter offset_axis_x = 0
 
