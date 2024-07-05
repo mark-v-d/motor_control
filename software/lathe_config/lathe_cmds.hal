@@ -53,33 +53,33 @@ net tool:prep-number iocontrol.0.tool-prep-number => hal_manualtoolchange.number
 setp motion-command-handler.tmax    0
 setp motion-controller.tmax         0
 setp servo-thread.tmax              0
-
 ##################
 # Control loops
 ##################
 #
 # X
 #
-setp statespace_3.0.scale-0		-200		# 1/5um
+setp statespace_3.0.scale-0		-1000		# 1/5um
 setp statespace_3.0.scale-1		-786432		# 3*2^20/4
 setp statespace_3.0.A-1-1		1.0
-setp statespace_3.0.B-1-0		0.005
-setp statespace_3.0.B-0-1		-8e-4
+setp statespace_3.0.B-1-0		1e-3
+setp statespace_3.0.B-0-1		-9e-4
 setp statespace_3.0.C-0-0		1
 setp statespace_3.0.C-0-1		1
-setp statespace_3.0.D-0-0		0.1
-setp statespace_3.0.D-0-1		8.2543e-04
+setp statespace_3.0.D-0-0		1.1610e-02
+setp statespace_3.0.D-0-1		9.3991e-04
 setp statespace_3.0.K-1-0		1
 setp statespace_3.0.limit-0		2
 
 setp etherdrive.0.angle_offset		-0.04
 setp etherdrive.0.limit-0		0.42
 setp etherdrive.0.limit-1		0.72
-setp etherdrive.0.P			35
-setp etherdrive.0.I			1.5
+setp etherdrive.0.P			36
+setp etherdrive.0.I			1.55
 setp etherdrive.0.L			1
 setp etherdrive.0.overvoltage		180
 setp etherdrive.0.overcurrent		3
+setp etherdrive.0.encoder		0x40000000
 
 
 #
@@ -129,15 +129,20 @@ setp etherdrive.2.limit-1		0.75
 setp etherdrive.2.P			40
 setp etherdrive.2.I			0.2
 setp etherdrive.2.L			1.55
-setp etherdrive.2.overvoltage		410
+setp etherdrive.2.overvoltage		680
 setp etherdrive.2.overcurrent		15
 
-setp speed_controller.0.Imax		4
 setp speed_controller.0.V_per_speed	-18.2
-setp speed_controller.0.limit_max	0.74
+#setp speed_controller.0.limit_max	0.74
+#setp speed_controller.0.Vdelta		150	# Speed increase V/sec
+#setp speed_controller.0.filter		0.01
+#setp speed_controller.0.R		0.01
 setp speed_controller.0.position_per_rev 49152
-setp speed_controller.0.Vdelta		150	# Speed increase V/sec
-setp speed_controller.0.filter		0.1
+setp speed_controller.0.acceleration	3e-3
+setp speed_controller.0.Imax		12
+setp speed_controller.0.gain_P		-2.5
+setp speed_controller.0.gain_I		-0.035
+setp speed_controller.0.gain_L		1
 
 
 setp homer.0.current-min -1.99
@@ -151,6 +156,7 @@ addf etherdrive.send servo-thread
 addf motion-command-handler servo-thread
 addf motion-controller servo-thread
 addf speed_controller.compute servo-thread
+
 
 #
 # We use encoder2 as the actual position, hence the swap between the
@@ -186,7 +192,7 @@ net J1:pos-control-1 homer.1.position-out-1 => statespace_3.1.in-1
 
 # spindle.0 <-> speed_controller.0/etherdrive.2
 net S0:enable spindle.0.on => etherdrive.2.enable
-net S0:speed spindle.0.speed-cmd-rps => speed_controller.0.speed
+net S0:speed spindle.0.speed-out-rps => speed_controller.0.speed
 net S0:revs speed_controller.0.revs => spindle.0.revs
 net S0:at_speed speed_controller.0.at_speed => spindle.0.at-speed
 net S0:speed_fb speed_controller.0.speed_fb => spindle.0.speed-in
@@ -199,8 +205,9 @@ net S0:pos etherdrive.2.position => speed_controller.0.position
 net S0:Vrotor etherdrive.2.Vrotor-1 => speed_controller.0.Vrotor
 net S0:Vservo etherdrive.2.Vservo => speed_controller.0.Vservo
 
-net S0:limit speed_controller.0.limit => etherdrive.2.limit-1
+#net S0:limit speed_controller.0.limit => etherdrive.2.limit-1
 net S0:current speed_controller.0.Iout => etherdrive.2.Iset-1
 net S0:current-fb etherdrive.2.Irotor-1 => speed_controller.0.Irotor
 
-net coolant iocontrol.0.coolant-mist => etherdrive.0.digout-0 etherdrive.0.digout-1
+net coolant iocontrol.0.coolant-mist => etherdrive.0.digout-0 etherdrive.0.digout-1 
+
