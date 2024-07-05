@@ -64,6 +64,12 @@
     "visible_layers": "000fffd_80000001",
     "zone_display_mode": 0
   },
+  "git": {
+    "repo_password": "",
+    "repo_type": "",
+    "repo_username": "",
+    "ssh_key": ""
+  },
   "meta": {
     "filename": "hv_power.kicad_prl",
     "version": 3

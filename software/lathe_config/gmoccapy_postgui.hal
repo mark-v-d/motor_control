@@ -2,8 +2,12 @@
 #        moccapy_postgui.hal file from Norbert Schechner          #
 ###################################################################
 
-net S0:at_speed gmoccapy.spindle_at_speed_led
-net S0:speed_rpm speed_controller.0.speed_rpm => gmoccapy.spindle_feedback_bar
+loadrt abs names=abs_spindle_feedback
+addf abs_spindle_feedback servo-thread
+
+net spindle-speed-limited  =>  abs_spindle_feedback.in
+net spindle-abs  abs_spindle_feedback.out  =>  gmoccapy.spindle_feedback_bar
+net spindle-at-speed      gmoccapy.spindle_at_speed_led
 
 # the unlink pin commands are only used, because they are connected 
 # in core_sim.hal and we use this file to simulate
@@ -18,81 +22,27 @@ net tool-prep-number gmoccapy.toolchange-number   <=  iocontrol.0.tool-prep-numb
 net tooloffset-x  gmoccapy.tooloffset-x  <=  motion.tooloffset.x
 net tooloffset-z  gmoccapy.tooloffset-z  <=  motion.tooloffset.z
 
-net v2 input.0.key-1 => gmoccapy.v-button.button-2
-net v3 input.0.key-2 => gmoccapy.v-button.button-3
-net v4 input.0.key-3 => gmoccapy.v-button.button-4
-net h0 input.0.key-5 => gmoccapy.h-button.button-0
-net h1 input.0.key-6 => gmoccapy.h-button.button-1
-net h2 input.0.key-7 => gmoccapy.h-button.button-2
-net h3 input.0.key-8 => gmoccapy.h-button.button-3
-net h4 input.0.key-9 => gmoccapy.h-button.button-4
-net h5 input.0.key-0 => gmoccapy.h-button.button-5
-net h6 input.0.key-a => gmoccapy.h-button.button-6
-net h7 input.0.key-b => gmoccapy.h-button.button-7
-net h8 input.0.key-c => gmoccapy.h-button.button-8
-net h9 input.0.key-d => gmoccapy.h-button.button-9
-
-loadrt multiswitch cfg=2
-loadrt and2 count=1
-net mist-on-off input.0.key-4 => multiswitch.0.up
-net mist-off multiswitch.0.bit-00 => and2.0.in0
-net mist-on multiswitch.0.bit-01 => halui.mist.on
-net mist-enable halui.machine.is-on => and2.0.in1
-net mist-off2 and2.0.out => halui.mist.off
-
-addf multiswitch.0 servo-thread
-addf and2.0 servo-thread
-
-################################################################################
-loadusr -W thermistor count=3
-setp thermistor.0.t0-c 25
-setp thermistor.1.t0-c 25
-setp thermistor.2.t0-c 25
-setp thermistor.0.r0 47000
-setp thermistor.1.r0 47000
-setp thermistor.2.r0 47000
-setp thermistor.0.beta 3952
-setp thermistor.1.beta 3952
-setp thermistor.2.beta 3952
-setp thermistor.0.r-other 2000
-setp thermistor.1.r-other 2000
-setp thermistor.2.r-other 2000
-setp thermistor.0.v-total 3.3
-setp thermistor.1.v-total 3.3
-setp thermistor.2.v-total 3.3
-net Vtherm-0 etherdrive.0.vthermistor => thermistor.0.v-thermistor
-net Vtherm-1 etherdrive.1.vthermistor => thermistor.1.v-thermistor
-net Vtherm-2 etherdrive.2.vthermistor => thermistor.2.v-thermistor
-
-#####################################
-# Potmeters/diy buttons
-#####################################
-net spindle_override input.1.abs-rz-position => gmoccapy.spindle.spindle-override.direct-value
-setp gmoccapy.spindle.spindle-override.analog-enable 1
-setp input.1.abs-rz-offset 0 
-setp input.1.abs-rz-scale 4000 
-setp input.1.abs-rz-fuzz 8
-
-net feed_override input.1.abs-ry-position => gmoccapy.feed.feed-override.direct-value
-setp gmoccapy.feed.feed-override.analog-enable 1
-setp input.1.abs-ry-offset 0 
-setp input.1.abs-ry-scale 4000 
-setp input.1.abs-ry-fuzz 8
-
-net rapid_override input.1.abs-rx-position => gmoccapy.rapid.rapid-override.direct-value
-setp gmoccapy.rapid.rapid-override.analog-enable 1
-setp input.1.abs-rx-offset 0 
-setp input.1.abs-rx-scale 4000 
-setp input.1.abs-rx-fuzz 8
-
-net jog_override input.1.abs-z-position => gmoccapy.jog.jog-velocity.direct-value
-setp gmoccapy.jog.jog-velocity.analog-enable 1
-setp input.1.abs-z-offset 0 
-setp input.1.abs-z-scale 4000 
-setp input.1.abs-z-fuzz 8
-
-net spindle_forward  input.1.btn-tr2 => halui.spindle.0.forward
-net spindle_stop  input.1.key-281 => halui.spindle.0.stop
-net spindle_reverse  input.1.btn-b => halui.spindle.0.reverse
-#net estop-on  input.1.btn-base4 => halui.estop.activate
-#net estop-off  input.1.btn-base4-not => halui.estop.reset
+# net v2 input.0.key-1 => gmoccapy.v-button.button-2
+# net v3 input.0.key-2 => gmoccapy.v-button.button-3
+# net v4 input.0.key-3 => gmoccapy.v-button.button-4
+# net h0 input.0.key-5 => gmoccapy.h-button.button-0
+# net h1 input.0.key-6 => gmoccapy.h-button.button-1
+# net h2 input.0.key-7 => gmoccapy.h-button.button-2
+# net h3 input.0.key-8 => gmoccapy.h-button.button-3
+# net h4 input.0.key-9 => gmoccapy.h-button.button-4
+# net h5 input.0.key-0 => gmoccapy.h-button.button-5
+# net h6 input.0.key-a => gmoccapy.h-button.button-6
+# net h7 input.0.key-b => gmoccapy.h-button.button-7
+# net h8 input.0.key-c => gmoccapy.h-button.button-8
+# net h9 input.0.key-d => gmoccapy.h-button.button-9
+# 
+# loadrt multiswitch cfg=2
+# loadrt and2 count=1
+# net mist-on-off input.0.key-4 => multiswitch.0.up
+# net mist-off multiswitch.0.bit-00 => and2.0.in0
+# net mist-on multiswitch.0.bit-01 => halui.mist.on
+# net mist-enable halui.machine.is-on => and2.0.in1
+# net mist-off2 and2.0.out => halui.mist.off
+# 
+# addf multiswitch.0 servo-thread
+# addf and2.0 servo-thread

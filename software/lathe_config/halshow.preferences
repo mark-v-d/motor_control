@@ -1,40 +1,19 @@
 # Halshow settings
 # This file is generated automatically.
-wm geometry . 1250x793+144+123
-placeFrames 0.5290697674418605
-set ::ratio 0.5290697674418605
+wm geometry . 1309x486+3490+842
+placeFrames 0.3
+set ::ratio 0.3
 set ::old_w_leftf 160
 set ::watchlist {
-    pin+etherdrive.2.Vservo
-    pin+thermistor.2.temperature-c
-    pin+etherdrive.2.Vrotor-0
-    pin+etherdrive.2.Vrotor-1
-    pin+etherdrive.2.overvoltage
-    pin+etherdrive.2.digin-0
-    pin+etherdrive.2.digin-1
-    pin+etherdrive.2.digin-all
-    pin+etherdrive.2.enable
-    pin+etherdrive.2.encoder
-    pin+etherdrive.2.angle
-    pin+etherdrive.2.index2
-    pin+etherdrive.2.invalid
-    pin+etherdrive.2.limit-0
-    pin+etherdrive.2.limit-1
-    pin+etherdrive.2.overcurrent
-    pin+etherdrive.2.poles
-    pin+etherdrive.2.position
-    pin+etherdrive.2.timer_delta
-    pin+etherdrive.2.timer_error
-    pin+etherdrive.2.valid_rx
-    pin+etherdrive.2.valid_tx
-    pin+etherdrive.2.vthermistor
-    pin+etherdrive.2.configured
-    pin+speed_controller.0.I_fb
-    pin+speed_controller.0.gain_I
-    pin+speed_controller.0.gain_L
-    pin+speed_controller.0.gain_P
-    pin+etherdrive.2.Iset-0
-    pin+etherdrive.2.Iset-1
+    pin+input.0.btn-left
+    pin+input.0.btn-middle
+    pin+input.0.btn-right
+    pin+input.0.key-300
+    pin+input.0.btn-back
+    pin+input.0.btn-base
+    pin+input.0.btn-base2
+    pin+input.0.btn-base3
+    pin+input.0.btn-base4
 }
 set ::workmode watchhal
 set ::watchInterval 100
