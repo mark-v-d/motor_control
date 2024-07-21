@@ -92,7 +92,9 @@ setp input.1.abs-z-scale 4000
 setp input.1.abs-z-fuzz 8
 
 net spindle_forward  input.1.btn-tr2 => halui.spindle.0.forward
-net spindle_stop  input.1.key-281 => halui.spindle.0.stop
+net spindle_stop  input.1.key-281 => or2.1.in1
+net stop or2.1.out => halui.program.stop
 net spindle_reverse  input.1.btn-b => halui.spindle.0.reverse
-#net estop-on  input.1.btn-base4 => halui.estop.activate
+net estop-front  input.1.btn-base4 => or2.0.in1
+net estop-on or2.0.out => halui.estop.activate
 #net estop-off  input.1.btn-base4-not => halui.estop.reset

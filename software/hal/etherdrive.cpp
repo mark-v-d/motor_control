@@ -66,6 +66,8 @@ struct comp_state {
     hal_float_t *vthermistor;
 
     bool valid;
+    double thermistor=0;
+    static constexpr double thermistor_gain=1e-3;
 
     void init(int i) {
 	std::string prefix="etherdrive."+std::to_string(i)+".";
@@ -146,7 +148,8 @@ struct comp_state {
 	*digin_all=buffer.digin;
 	*dt=buffer.timer_error;
 	*drive_rx=buffer.counter;
-	*vthermistor=(4095-buffer.tpower)*3.3/4095;
+	thermistor+=thermistor_gain*((4095-buffer.tpower)*3.3/4095-thermistor);
+	*vthermistor=thermistor;
 	(*valid_rx)++;
     }
 

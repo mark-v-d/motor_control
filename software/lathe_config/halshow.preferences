@@ -1,6 +1,6 @@
 # Halshow settings
 # This file is generated automatically.
-wm geometry . 1250x793+144+123
+wm geometry . 1250x793+330+164
 placeFrames 0.5290697674418605
 set ::ratio 0.5290697674418605
 set ::old_w_leftf 160
@@ -35,6 +35,15 @@ set ::watchlist {
     pin+speed_controller.0.gain_P
     pin+etherdrive.2.Iset-0
     pin+etherdrive.2.Iset-1
+    pin+halui.estop.activate
+    pin+halui.estop.is-activated
+    pin+halui.estop.reset
+    pin+or2.0.out
+    pin+or2.0.in1
+    pin+or2.0.in0
+    pin+input.1.btn-base4
+    pin+thermistor.0.temperature-c
+    pin+thermistor.1.temperature-c
 }
 set ::workmode watchhal
 set ::watchInterval 100
