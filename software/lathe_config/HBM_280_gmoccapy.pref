@@ -76,7 +76,7 @@ run_from_line = no_run
 unlock_way = no
 show_preview_on_offset = False
 use_keyboard_shortcuts = True
-tool_in_spindle = 2
+tool_in_spindle = 14
 offset_axis_z = 230.869
 diameter offset_axis_x = 0
 
