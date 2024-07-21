@@ -166,6 +166,8 @@ public:
 	*debug=pos;
 
 	double limited=std::min(limit_max,std::max(limit_min,unlimited));
+	if(speed_in==0)
+	    limited=0;
 	double correction=limited-unlimited;
 	integrator+=correction*kL;
 

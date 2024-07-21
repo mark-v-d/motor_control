@@ -33,17 +33,12 @@ set ::watchlist {
     pin+speed_controller.0.gain_I
     pin+speed_controller.0.gain_L
     pin+speed_controller.0.gain_P
-    pin+etherdrive.2.Iset-0
-    pin+etherdrive.2.Iset-1
-    pin+halui.estop.activate
-    pin+halui.estop.is-activated
-    pin+halui.estop.reset
-    pin+or2.0.out
-    pin+or2.0.in1
-    pin+or2.0.in0
-    pin+input.1.btn-base4
-    pin+thermistor.0.temperature-c
-    pin+thermistor.1.temperature-c
+    pin+speed_controller.0.speed
+    pin+speed_controller.0.speed_fb
+    pin+speed_controller.0.speed_rpm
+    pin+speed_controller.0.Iout
+    pin+speed_controller.0.debug
+    pin+speed_controller.0.at_speed
 }
 set ::workmode watchhal
 set ::watchInterval 100
