@@ -63,10 +63,10 @@
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="bg-color">#808080808080</property>
-            <property name="force-width">22</property>
+            <property name="force-width">28</property>
             <property name="max">15</property>
             <property name="target-color">#808000008080</property>
-            <property name="text-template">%d</property>
+            <property name="text-template">%3.1f</property>
             <property name="z0-border">0.8000000119209289</property>
             <property name="z0-color">#000080800000</property>
             <property name="z1-border">0.89999997615814209</property>
