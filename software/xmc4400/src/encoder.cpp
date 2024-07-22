@@ -113,17 +113,17 @@ void mitsubishi_MFS13_t::rx_handler(void) {
 	    crc^=d;
 	}
 	if(putp==10 && crc==0) {
-	    position=
+	    int32_t p=
 		rx_buffer[3]
 		+(1<<8)*rx_buffer[4]
 		+(1<<16)*rx_buffer[5]	// only 4 lsb
 		+(1<<20)*rx_buffer[6]
 		+(1<<28)*(rx_buffer[7]&0x0f);
-	    angle=conv*float(
+	    float a=conv*float(
 		rx_buffer[3]+(1<<8)*rx_buffer[4]+(1<<16)*(rx_buffer[5]));
-	    valid=1;
+	    new_position(p,a);
 	} else if(putp>=10)
-	    valid=0;
+	    invalidate();
     }
 }
 
@@ -185,12 +185,12 @@ void mitsubishi_PQ_t::rx_handler(void) {
 	    crc^=d;
 	}
 	if(putp==9 && crc==0) {
-	    position=((rx_buffer[2]+(1<<8)*rx_buffer[3] +(1<<12)*rx_buffer[5]
+	    int32_t p=((rx_buffer[2]+(1<<8)*rx_buffer[3] +(1<<12)*rx_buffer[5]
 		+(1<<20)*rx_buffer[6]+(1<<28)*rx_buffer[7])<<4)>>4;
-	    angle=conv*float(rx_buffer[2]+(1<<8)*rx_buffer[3]);
-	    valid=1;
+	    float a=conv*float(rx_buffer[2]+(1<<8)*rx_buffer[3]);
+	    new_position(p,a);
 	} else if(putp>=9)
-	    valid=0;
+	    invalidate();
     }
 }
 
@@ -206,6 +206,7 @@ class AMT21_t:public encoder_t
     int putp;
     std::array<uint8_t,8> rx_buffer;
     int subsample_counter;
+    int32_t pos;
 
 public:
     AMT21_t(int);
@@ -279,18 +280,16 @@ void AMT21_t::rx_handler(void) {
 		check^=o&3;
 	    }
 	    if(check==3) {
-		int32_t np=(pos&0x3fff)|(position&0xffffc000);
-		int32_t dp=np-position;
+		int32_t np=(pos&0x3fff)|(pos&0xffffc000);
+		int32_t dp=np-pos;
 		if(dp>8192)
 		    np-=0x4000;
 		else if(dp<-8192)
 		    np+=0x4000;
-
-		position=np;
-		angle=conv*float(position&0x3fff);
-		valid=1;
+		pos=np;
+		new_position(pos, conv*float(pos&0x3fff));
 	    } else
-		valid=0;
+		invalidate();
 	}
     }
 }
@@ -448,10 +447,12 @@ void hiperface_t::trigger(void)
 	    break;
 	}
     }
-    position=count();
-    constexpr float F=2.0*std::numbers::pi/1024.0f;
-    angle=float(position&0x3ff)*F;
-    valid=state==DONE;
+    if(state==DONE) {
+	constexpr float F=2.0*std::numbers::pi/1024.0f;
+	float a=float(count()&0x3ff)*F;
+	new_position(count(), a);
+    } else
+	invalidate();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
