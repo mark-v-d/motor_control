@@ -179,7 +179,6 @@ extern "C" void CCU80_2_IRQHandler(void)
     if(++subsample>3)
 	subsample=0;
 
-
     FCE_KE2->CFG=0;
     FCE_KE2->CRC=0xffff;
     uint16_t d;

@@ -200,10 +200,13 @@ class AMT21_t:public encoder_t
 {
     constexpr static int increments_per_revolution=(1<<14);
     constexpr static auto baudrate=uart::Baudrate(2.0e6);
+    constexpr static int subsample=4; // The encoder can't keep up
 
     float conv;//=2.0*PI*poles/increments_per_revolution;
     int putp;
     std::array<uint8_t,8> rx_buffer;
+    int subsample_counter;
+
 public:
     AMT21_t(int);
     virtual ~AMT21_t(void);
@@ -245,6 +248,9 @@ AMT21_t::~AMT21_t(void)
 
 void AMT21_t::trigger(void)
 {
+    if(++subsample_counter<subsample)
+	return;
+    subsample_counter=0;
     ENC_TXD.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL |uart::dout0(ENC_TXD).gpio_mode);
     ENC_DIR=1;
     hd->TBUF[0]=0x54;
