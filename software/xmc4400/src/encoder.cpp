@@ -5,7 +5,6 @@
 #include "encoder.h"
 #include "uart.h"
 
-
 uart::full_duplex fd(ENC_TXD,ENC_RXD);
 uart::half_duplex hd(ENC_TXD);
 
@@ -21,15 +20,15 @@ typedef std::chrono::duration<int,std::ratio<4,int(1s/pwm_time)>> timebase_t;
 *******************************************************************************/
 class dummy_encoder_t:public encoder_t {
 public:
-    dummy_encoder_t(void);
+    dummy_encoder_t();
 
-    virtual void trigger(void) override {}
-    virtual void rx_handler(void) override {}
-    virtual void tx_handler(void) override {}
-    virtual void protocol_handler(void) override {}
+    void trigger() override {}
+    void rx_handler() override {}
+    void tx_handler() override {}
+    void protocol_handler() override {}
 };
 
-dummy_encoder_t::dummy_encoder_t(void)
+dummy_encoder_t::dummy_encoder_t()
 {
     // Turn encoder power off
     ENC_5V=0;
@@ -50,17 +49,18 @@ class mitsubishi_MFS13_t:public encoder_t {
     uint8_t rx_buffer[16];
     uint8_t crc;
 public:
-    mitsubishi_MFS13_t(void);
-    virtual ~mitsubishi_MFS13_t(void) override;
+    mitsubishi_MFS13_t();
+    ~mitsubishi_MFS13_t() override;
 
-    virtual void trigger(void) override;
-    virtual void rx_handler(void) override;
-    virtual void tx_handler(void) override;
-    virtual void protocol_handler(void) override {}
+    void trigger() override;
+    void rx_handler() override;
+    void tx_handler() override;
+    void protocol_handler() override {}
 };
 
-mitsubishi_MFS13_t::mitsubishi_MFS13_t(void)
+mitsubishi_MFS13_t::mitsubishi_MFS13_t()
 {
+    set_angle_conversion(increments_per_revolution-1,conv);
     ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
     ENC_DIR=0;
     ENC_5V=1;
@@ -76,7 +76,7 @@ mitsubishi_MFS13_t::mitsubishi_MFS13_t(void)
     NVIC_EnableIRQ(hd.irq<rx_irq>());
 }
 
-mitsubishi_MFS13_t::~mitsubishi_MFS13_t(void)
+mitsubishi_MFS13_t::~mitsubishi_MFS13_t()
 {
     ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
     ENC_DIR=0;
@@ -86,7 +86,7 @@ mitsubishi_MFS13_t::~mitsubishi_MFS13_t(void)
     hd.disable();
 }
 
-void mitsubishi_MFS13_t::trigger(void)
+void mitsubishi_MFS13_t::trigger()
 {
     ENC_TXD.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL |uart::dout0(ENC_TXD).gpio_mode);
     ENC_DIR=1;
@@ -96,7 +96,7 @@ void mitsubishi_MFS13_t::trigger(void)
     crc=0x1a;
 }
 
-void mitsubishi_MFS13_t::tx_handler(void) {
+void mitsubishi_MFS13_t::tx_handler() {
     if(hd->PSR_ASCMode & USIC_CH_PSR_ASCMode_TSIF_Msk) {
 	hd->PSCR=USIC_CH_PSR_ASCMode_TSIF_Msk;
 	ENC_DIR=0;
@@ -104,7 +104,7 @@ void mitsubishi_MFS13_t::tx_handler(void) {
     }
 }
 
-void mitsubishi_MFS13_t::rx_handler(void) {
+void mitsubishi_MFS13_t::rx_handler() {
     if(hd->TRBSR & USIC_CH_TRBSCR_CSRBI_Msk) {
 	hd->TRBSCR=USIC_CH_TRBSCR_CSRBI_Msk;
 	int d;
@@ -119,9 +119,7 @@ void mitsubishi_MFS13_t::rx_handler(void) {
 		+(1<<16)*rx_buffer[5]	// only 4 lsb
 		+(1<<20)*rx_buffer[6]
 		+(1<<28)*(rx_buffer[7]&0x0f);
-	    float a=conv*float(
-		rx_buffer[3]+(1<<8)*rx_buffer[4]+(1<<16)*(rx_buffer[5]));
-	    new_position(p,0xfffff,conv);
+	    new_position(p);
 	} else if(putp>=10)
 	    invalidate();
     }
@@ -139,17 +137,18 @@ class mitsubishi_PQ_t:public encoder_t
     uint8_t rx_buffer[16];
     uint8_t crc;
 public:
-    mitsubishi_PQ_t(void);
-    virtual ~mitsubishi_PQ_t(void);
+    mitsubishi_PQ_t();
+    ~mitsubishi_PQ_t() override;
 
-    virtual void trigger(void) override;
-    virtual void rx_handler(void)  override;
-    virtual void tx_handler(void)  override {}
-    virtual void protocol_handler(void) override {}
+    void trigger() override;
+    void rx_handler()  override;
+    void tx_handler()  override {}
+    void protocol_handler() override {}
 };
 
-mitsubishi_PQ_t::mitsubishi_PQ_t(void)
+mitsubishi_PQ_t::mitsubishi_PQ_t()
 {
+    set_angle_conversion(increments_per_revolution-1,conv);
     ENC_DIR=1;
     ENC_5V=1;
     fd.init(baudrate);
@@ -160,7 +159,7 @@ mitsubishi_PQ_t::mitsubishi_PQ_t(void)
     NVIC_EnableIRQ(fd.irq<rx_irq>());
 }
 
-mitsubishi_PQ_t::~mitsubishi_PQ_t(void)
+mitsubishi_PQ_t::~mitsubishi_PQ_t()
 {
     ENC_DIR=0;
     ENC_5V=0;
@@ -168,7 +167,7 @@ mitsubishi_PQ_t::~mitsubishi_PQ_t(void)
     fd.disable();
 }
 
-void mitsubishi_PQ_t::trigger(void)
+void mitsubishi_PQ_t::trigger()
 {
     fd->TBUF[0]=0x1a;
     hd->TRBSCR=USIC_CH_TRBSCR_FLUSHRB_Msk;
@@ -176,7 +175,7 @@ void mitsubishi_PQ_t::trigger(void)
     crc=0;
 }
 
-void mitsubishi_PQ_t::rx_handler(void) {
+void mitsubishi_PQ_t::rx_handler() {
     if(fd->TRBSR & USIC_CH_TRBSCR_CSRBI_Msk) {
 	fd->TRBSCR=USIC_CH_TRBSCR_CSRBI_Msk;
 	int d;
@@ -187,8 +186,7 @@ void mitsubishi_PQ_t::rx_handler(void) {
 	if(putp==9 && crc==0) {
 	    int32_t p=((rx_buffer[2]+(1<<8)*rx_buffer[3] +(1<<12)*rx_buffer[5]
 		+(1<<20)*rx_buffer[6]+(1<<28)*rx_buffer[7])<<4)>>4;
-	    float a=conv*float(rx_buffer[2]+(1<<8)*rx_buffer[3]);
-	    new_position(p,0xfff,conv);
+	    new_position(p);
 	} else if(putp>=9)
 	    invalidate();
     }
@@ -202,7 +200,6 @@ class AMT21_t:public encoder_t
     constexpr static auto baudrate=uart::Baudrate(2.0e6);
     constexpr static int subsample=2; // The encoder can't keep up
 
-    float conv;//=2.0*PI*poles/increments_per_revolution;
     int putp;
     std::array<uint8_t,8> rx_buffer;
     int subsample_counter;
@@ -210,17 +207,18 @@ class AMT21_t:public encoder_t
 
 public:
     AMT21_t(int);
-    virtual ~AMT21_t(void);
+    ~AMT21_t() override;
 
-    virtual void trigger(void) override;
-    virtual void rx_handler(void)  override;
-    virtual void tx_handler(void)  override;
-    virtual void protocol_handler(void) override {}
+    void trigger() override;
+    void rx_handler()  override;
+    void tx_handler()  override;
+    void protocol_handler() override {}
 };
 
 AMT21_t::AMT21_t(int poles)
 {
-    conv=2.0*PI*poles/increments_per_revolution;
+    float conv=2.0*PI*poles/increments_per_revolution;
+    set_angle_conversion(increments_per_revolution-1,conv);
 
     ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
     ENC_DIR=0;
@@ -237,7 +235,7 @@ AMT21_t::AMT21_t(int poles)
     NVIC_EnableIRQ(hd.irq<rx_irq>());
 }
 
-AMT21_t::~AMT21_t(void)
+AMT21_t::~AMT21_t()
 {
     ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
     ENC_DIR=0;
@@ -247,7 +245,7 @@ AMT21_t::~AMT21_t(void)
     hd.disable();
 }
 
-void AMT21_t::trigger(void)
+void AMT21_t::trigger()
 {
     if(++subsample_counter<subsample)
 	return;
@@ -259,7 +257,7 @@ void AMT21_t::trigger(void)
     putp=0;
 }
 
-void AMT21_t::tx_handler(void) {
+void AMT21_t::tx_handler() {
     if(hd->PSR_ASCMode & USIC_CH_PSR_ASCMode_TSIF_Msk) {
 	hd->PSCR=USIC_CH_PSR_ASCMode_TSIF_Msk;
 	ENC_DIR=0;
@@ -267,7 +265,7 @@ void AMT21_t::tx_handler(void) {
     }
 }
 
-void AMT21_t::rx_handler(void) {
+void AMT21_t::rx_handler() {
     int d;
     while((d=hd.rx_fifo())>=0 && putp<rx_buffer.size()) {
 	rx_buffer[putp++]=d;
@@ -287,7 +285,7 @@ void AMT21_t::rx_handler(void) {
 		else if(dp<-8192)
 		    np+=0x4000;
 		prev_pos=np;
-		new_position(np, conv, 0x3fff);
+		new_position(np);
 	    } else
 		invalidate();
 	}
@@ -324,6 +322,9 @@ class hiperface_t:public encoder_t,
     enum state_t { STARTUP, STATUS, POSITION, DONE } state;
     uint32_t status;
     int tx_get, tx_len, rx_put;
+    uint8_t rx_buffer[16];
+    uint8_t tx_buffer[8];
+    uint8_t addr=0x40;
 
     void transmit(std::initializer_list<uint8_t> msg)
     {
@@ -346,18 +347,20 @@ class hiperface_t:public encoder_t,
 public:
     using qd32_t<decltype(ENC_SIN),decltype(ENC_COS)>::UNIT;
 
-    hiperface_t(void);
-    virtual ~hiperface_t(void);
+    hiperface_t();
+    ~hiperface_t() override;
 
-    virtual void trigger(void) override;
-    virtual void rx_handler(void)  override {}
-    virtual void tx_handler(void)  override;
-    virtual void protocol_handler(void) override {}
+    void trigger() override;
+    void rx_handler()  override {}
+    void tx_handler()  override;
+    void protocol_handler() override {}
 };
 
-hiperface_t::hiperface_t(void)
+hiperface_t::hiperface_t()
 {
     using namespace std::chrono_literals;
+
+    set_angle_conversion(increments_per_revolution-1,conv);
 
     static_assert(baudrate.pdiv>0 && baudrate.pdiv<=1024, "PDIV out of range");
     static_assert(baudrate.step>0 && baudrate.step<=1024, "STEP out of range");
@@ -379,7 +382,7 @@ hiperface_t::hiperface_t(void)
     poll_timer=poll_interval;
 }
 
-hiperface_t::~hiperface_t(void)
+hiperface_t::~hiperface_t()
 {
     ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
     ENC_DIR=0;
@@ -402,7 +405,7 @@ void hiperface_t::tx_handler()
     }
 }
 
-void hiperface_t::trigger(void)
+void hiperface_t::trigger()
 {
     IO0=0;
     if(poll_timer>0ms)
@@ -448,15 +451,13 @@ void hiperface_t::trigger(void)
 	}
     }
     if(state==DONE) {
-	constexpr float F=2.0*std::numbers::pi/1024.0f;
-	float a=float(count()&0x3ff)*F;
-	new_position(count(), 0x3ff, F);
+	new_position(count());
     } else
 	invalidate();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void init_encoder(void)
+void init_encoder()
 {
     static_assert(glass_scale.UNIT!=hiperface_t::UNIT, "Posif overlap");
     /* 2.2kW AB motor,
@@ -489,7 +490,7 @@ void set_encoder(int type, int poles)
 *******************************************************************************/
 
 /* Transmit buffer event */
-extern "C" void USIC0_0_IRQHandler(void)
+extern "C" void USIC0_0_IRQHandler()
 {
     static_assert(encoder_t::tx_irq==0, "Transmit should be mapped to IRQ0");
     static_assert(uart::half_duplex(ENC_TXD).UNIT==0, "Invalid unit mapping");
@@ -497,7 +498,7 @@ extern "C" void USIC0_0_IRQHandler(void)
 }
 
 /* Receive buffer event */
-extern "C" void USIC0_1_IRQHandler(void)
+extern "C" void USIC0_1_IRQHandler()
 {
     static_assert(encoder_t::rx_irq==1, "Receive should be mapped to IRQ1");
     static_assert(uart::half_duplex(ENC_TXD).UNIT==0, "Invalid unit mapping");
@@ -505,7 +506,7 @@ extern "C" void USIC0_1_IRQHandler(void)
 }
 
 /* Protocol event */
-extern "C" void USIC0_2_IRQHandler(void)
+extern "C" void USIC0_2_IRQHandler()
 {
     static_assert(encoder_t::p_irq==2, "Protocol should be mapped to IRQ2");
     static_assert(uart::half_duplex(ENC_TXD).UNIT==0, "Invalid unit mapping");

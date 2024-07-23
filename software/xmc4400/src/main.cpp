@@ -49,11 +49,6 @@ icmpProcessing icmp;
 
 Ethernet eth0;
 
-uint8_t rx_buffer[16];
-uint8_t tx_buffer[8];
-uint8_t command=0x53;
-uint8_t addr=0x40;
-
 udp_sync syncer __attribute__((section ("ETH_RAM")));
 udp_struct<motion_ns::to_drive,motion_ns::to_host> drive_io
     __attribute__((section ("ETH_RAM")));
