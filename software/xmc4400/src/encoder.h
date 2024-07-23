@@ -9,17 +9,18 @@
 
 class encoder_t {
     int32_t position[2];
-    float angle[2];
     int32_t time[2];
     int32_t now;
     int valid=0;
     int last=0;
+    int32_t mask;
+    float conv;
 public:
     virtual ~encoder_t(void) {}
     auto get_pav(void) {
-	auto c=1.0f/(time[1]-time[0])*(now-time[0])+angle[0];
-	int32_t p=std::round((position[1]-position[0])*c);
-	float a=(angle[1]-angle[0])*c;
+	auto c=1.0f/(time[1]-time[0])*(now-time[0]);
+	int32_t p=std::round((position[1]-position[0])*c+position[0]);
+	float a=conv*(p&mask);
 	now++;
 	return std::tuple{p,a,valid};
     }
@@ -33,11 +34,13 @@ public:
     static constexpr int rx_irq=1;
     static constexpr int tx_irq=0;
 protected:
-    void new_position(int32_t p, float a) {
+    void new_position(int32_t p, float c, int32_t m) {
 	last^=1;
 	position[last]=p;
-	angle[last]=a;
 	time[last]=now;
+	conv=c;
+	mask=m;
+
 	valid=1;
     }
 

@@ -121,7 +121,7 @@ void mitsubishi_MFS13_t::rx_handler(void) {
 		+(1<<28)*(rx_buffer[7]&0x0f);
 	    float a=conv*float(
 		rx_buffer[3]+(1<<8)*rx_buffer[4]+(1<<16)*(rx_buffer[5]));
-	    new_position(p,a);
+	    new_position(p,0xfffff,conv);
 	} else if(putp>=10)
 	    invalidate();
     }
@@ -188,7 +188,7 @@ void mitsubishi_PQ_t::rx_handler(void) {
 	    int32_t p=((rx_buffer[2]+(1<<8)*rx_buffer[3] +(1<<12)*rx_buffer[5]
 		+(1<<20)*rx_buffer[6]+(1<<28)*rx_buffer[7])<<4)>>4;
 	    float a=conv*float(rx_buffer[2]+(1<<8)*rx_buffer[3]);
-	    new_position(p,a);
+	    new_position(p,0xfff,conv);
 	} else if(putp>=9)
 	    invalidate();
     }
@@ -200,13 +200,13 @@ class AMT21_t:public encoder_t
 {
     constexpr static int increments_per_revolution=(1<<14);
     constexpr static auto baudrate=uart::Baudrate(2.0e6);
-    constexpr static int subsample=4; // The encoder can't keep up
+    constexpr static int subsample=2; // The encoder can't keep up
 
     float conv;//=2.0*PI*poles/increments_per_revolution;
     int putp;
     std::array<uint8_t,8> rx_buffer;
     int subsample_counter;
-    int32_t pos;
+    int32_t prev_pos;
 
 public:
     AMT21_t(int);
@@ -280,14 +280,14 @@ void AMT21_t::rx_handler(void) {
 		check^=o&3;
 	    }
 	    if(check==3) {
-		int32_t np=(pos&0x3fff)|(pos&0xffffc000);
-		int32_t dp=np-pos;
+		int32_t np=(pos&0x3fff)|(prev_pos&0xffffc000);
+		int32_t dp=np-prev_pos;
 		if(dp>8192)
 		    np-=0x4000;
 		else if(dp<-8192)
 		    np+=0x4000;
-		pos=np;
-		new_position(pos, conv*float(pos&0x3fff));
+		prev_pos=np;
+		new_position(np, conv, 0x3fff);
 	    } else
 		invalidate();
 	}
@@ -450,7 +450,7 @@ void hiperface_t::trigger(void)
     if(state==DONE) {
 	constexpr float F=2.0*std::numbers::pi/1024.0f;
 	float a=float(count()&0x3ff)*F;
-	new_position(count(), a);
+	new_position(count(), 0x3ff, F);
     } else
 	invalidate();
 }
