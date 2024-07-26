@@ -98,3 +98,4 @@ net spindle_reverse  input.1.btn-b => halui.spindle.0.reverse
 net estop-front  input.1.btn-base4 => or2.0.in1
 net estop-on or2.0.out => halui.estop.activate
 #net estop-off  input.1.btn-base4-not => halui.estop.reset
+loadusr halscope 160000
