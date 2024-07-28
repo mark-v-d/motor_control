@@ -55,14 +55,13 @@ struct comp_state {
     hal_float_t *angle;
     hal_float_t *Vservo;
     hal_u32_t *invalid;
-    hal_u32_t *valid_rx;
-    hal_u32_t *valid_tx;
+    hal_u32_t *pending;
     hal_u32_t *drive_rx;
     hal_s32_t *timer_delta;
     hal_s32_t *dt;
     hal_bit_t *digin[2];
     hal_u32_t *digin_all;
-    hal_bit_t *configured;
+    hal_bit_t *unconfigured;
     hal_float_t *vthermistor;
 
     bool valid;
@@ -99,8 +98,7 @@ struct comp_state {
 	    !pin(HAL_OUT,"angle", &angle) &&
 	    !pin(HAL_OUT,"Vservo", &Vservo) &&
 	    !pin(HAL_OUT,"invalid", &invalid) &&
-	    !pin(HAL_OUT,"valid_rx", &valid_rx) &&
-	    !pin(HAL_OUT,"valid_tx", &valid_tx) &&
+	    !pin(HAL_OUT,"pending", &pending) &&
 	    !pin(HAL_OUT,"drive_rx", &drive_rx) &&
 	    !pin(HAL_OUT,"timer_delta", &timer_delta) &&
 	    !pin(HAL_IN,"digout-0", &digout[0]) &&
@@ -108,7 +106,7 @@ struct comp_state {
 	    !pin(HAL_OUT,"digin-0", &digin[0]) &&
 	    !pin(HAL_OUT,"digin-1", &digin[1]) &&
 	    !pin(HAL_OUT,"digin-all", &digin_all) &&
-	    !pin(HAL_OUT,"configured", &configured) &&
+	    !pin(HAL_OUT,"unconfigured", &unconfigured) &&
 	    !pin(HAL_OUT,"vthermistor", &vthermistor) &&
 	    !pin(HAL_OUT,"timer_error", &dt) &&
 	    !pin(HAL_IN,"encoder", &encoder) &&
@@ -122,6 +120,8 @@ struct comp_state {
 	    !pin(HAL_IN,"overvoltage", &overvoltage) &&
 	    !pin(HAL_IN,"overcurrent", &overcurrent)
 	    ;
+	if(ok)
+	    *unconfigured=1;
     }
 
 
@@ -150,11 +150,11 @@ struct comp_state {
 	*drive_rx=buffer.counter;
 	thermistor+=thermistor_gain*((4095-buffer.tpower)*3.3/4095-thermistor);
 	*vthermistor=thermistor;
-	(*valid_rx)++;
+	(*pending)=0;
     }
 
     void config_complete() {
-	*configured=1;
+	*unconfigured=0;
     }
 };
 
@@ -164,7 +164,8 @@ static void send(void *p, long period)
 {
     for(int i=0; i<state.size(); i++) {
 	std::array<uint8_t,4> ip{192,168,0,uint8_t(i+1)};
-	if(!(*state[i]->configured)) {
+	auto s=*state[i];
+	if((*state[i]->unconfigured)) {
 	    config_ns::to_drive d{
 		.led=0,
 		.encoder=int(*state[i]->encoder),
@@ -191,7 +192,11 @@ static void send(void *p, long period)
 	if(*state[i]->enable)
 	    dout|=motion_ns::to_drive::DRIVE_ENABLE;
 	skt.send(motion_ns::send_t(skt, mac[i], ip, I, limit, dout));
-	(*state[i]->valid_tx)++;
+	if((*state[i]->pending)>10) {
+	    (*state[i]->unconfigured)=1;
+	    (*state[i]->pending)=10;
+	}
+	(*state[i]->pending)++;
     }
 }
 

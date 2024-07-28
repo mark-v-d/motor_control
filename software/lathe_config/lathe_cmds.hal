@@ -217,3 +217,11 @@ net coolant iocontrol.0.coolant-mist => etherdrive.0.digout-0 etherdrive.0.digou
 loadrt or2 count=2
 addf or2.0 servo-thread
 addf or2.1 servo-thread
+
+loadrt logic count=1 personality=0x1203
+addf logic.0 servo-thread
+net unconfigured-0 etherdrive.0.unconfigured => logic.0.in-00 halui.joint.0.unhome
+net unconfigured-1 etherdrive.1.unconfigured => logic.0.in-01 halui.joint.1.unhome
+net unconfigured-2 etherdrive.2.unconfigured => logic.0.in-02
+net estop-on  logic.0.or => halui.estop.activate
+net estop-off logic.0.nor => halui.estop.reset
