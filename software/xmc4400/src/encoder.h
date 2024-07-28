@@ -25,6 +25,9 @@ public:
 	return std::tuple{p,a,valid};
     }
 
+    auto get_age() const { return now-time[last]; }
+
+
     virtual void trigger()=0;
     virtual void rx_handler()=0;
     virtual void tx_handler()=0;

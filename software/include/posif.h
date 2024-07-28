@@ -109,24 +109,26 @@ public:
     };
     qd32_t(enc_a A, enc_b B):qd32_t() { }
 
-    void init(int reverse=0) {
+    void init(int reverse=0, int Z=0) {
 	enc_a A; A.set(XMC_GPIO_MODE_INPUT_TRISTATE); A.input_enable();
 	enc_b B; B.set(XMC_GPIO_MODE_INPUT_TRISTATE); B.input_enable();
 	XMC_SCU_CLOCK_EnableClock(XMC_SCU_CLOCK_CCU);
 	if(UNIT==0) {
-	 XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_POSIF0);
+	 XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_POSIF0);
 	 XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_POSIF0);
+	 XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_POSIF0);
 	} else {
-	 XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_POSIF1);
+	 XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_POSIF1);
 	 XMC_SCU_RESET_DeassertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_POSIF1);
+	 XMC_SCU_CLOCK_UngatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_POSIF1);
 	}
 
 	module->PCONF=bitfield<POSIF_PCONF_FSEL_Msk>(1)
 	    | bitfield<POSIF_PCONF_INSEL0_Msk>(pinA(A))
-	    | bitfield<POSIF_PCONF_INSEL1_Msk>(pinB(B));
+	    | bitfield<POSIF_PCONF_INSEL1_Msk>(pinB(B))
+	    | bitfield<POSIF_PCONF_INSEL2_Msk>(Z);
 	module->QDC=bitfield<POSIF_QDC_ICM_Msk>(2)
 	    | bitfield<POSIF_QDC_PHS_Msk>(reverse);
-	module->PRUNS=1;
 
 	ccu4::init<UNIT>(
 	    XMC_CCU4_CLOCK_SCU,
@@ -178,11 +180,14 @@ public:
 	    i->CRS=1;
 	}
 
-	h.start();
-	l.start();
-	i.start();
+	module->PRUNS=1;
+	l.start(); h.start(); i.start();
 	ccu4::start(l,h,i);
 	ccu4::shadow_transfer(l,h,i);
+	A.set(XMC_GPIO_MODE_INPUT_INVERTED_TRISTATE);
+	for(int i=0; i<100; i++)
+	    asm volatile("nop");
+	A.set(XMC_GPIO_MODE_INPUT_TRISTATE);
     }
 
     int32_t count() { return cnt_l{}->TIMER | (cnt_h{}->TIMER<<16); }
@@ -213,10 +218,9 @@ public:
     qdi32_t(enc_a A, enc_b B, enc_z Z):qdi32_t() { }
 
     void init() {
-	base_t::init();
 	enc_z Z; Z.set(XMC_GPIO_MODE_INPUT_TRISTATE);
 	Z.input_enable();
-	module->PCONF|=bitfield<POSIF_PCONF_INSEL2_Msk>(pinZ(Z));
+	base_t::init(0,pinZ(Z));
     }
 
     void negative_index() {

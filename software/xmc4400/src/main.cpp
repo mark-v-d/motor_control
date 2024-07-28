@@ -271,6 +271,7 @@ extern "C" void CCU80_2_IRQHandler(void)
     report.ADC[0]=(0xffff&adc::vadc.G[0].RES[0])-report.offset;
     report.ADC[1]=(0xffff&adc::vadc.G[1].RES[0])-report.offset;
     report.digin=IO1 | (IO2<<1)
+	| (encoder->get_age()<<2)
 	| (enable? drive_io->DRIVE_ENABLE:0)
 	| (overvoltage? drive_io->OVERVOLTAGE:0)
 	| (overcurrent_latch? drive_io->OVERCURRENT:0);

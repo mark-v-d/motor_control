@@ -1,8 +1,8 @@
 # Halshow settings
 # This file is generated automatically.
-wm geometry . 1121x953+325+10
-placeFrames 0.5290697674418605
-set ::ratio 0.5290697674418605
+wm geometry . 1121x953+482+14
+placeFrames 0.5545536519386834
+set ::ratio 0.5545536519386834
 set ::old_w_leftf 160
 set ::watchlist {
     pin+etherdrive.2.Vservo
