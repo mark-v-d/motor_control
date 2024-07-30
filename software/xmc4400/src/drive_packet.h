@@ -24,7 +24,8 @@ namespace motion_ns {
     struct  __attribute__ ((__packed__)) to_host {
 	int32_t position;
 	float angle;
-	int32_t valid;
+	int32_t encoder_missing;
+	int32_t encoder_invalid;
 	float Irotor[2];
 	float Vrotor[2];
 	int32_t position2;
@@ -33,7 +34,6 @@ namespace motion_ns {
 	int32_t tpower;
 	int32_t offset;
 	int32_t ADC[2];
-	int32_t invalid;
 	int32_t	timer_delta;
 	int32_t	timer_error;
 	int32_t	counter;

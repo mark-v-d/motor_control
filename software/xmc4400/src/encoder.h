@@ -11,22 +11,25 @@ class encoder_t {
     int32_t position[2];
     int32_t time[2];
     int32_t now;
-    int valid=0;
+    int invalid=0;
     int last=0;
     int32_t mask;
     float conv;
+protected:
+    int trigger_count=0;
 public:
     virtual ~encoder_t() {}
-    auto get_pav() {
+    auto get_position_angle() {
 	auto c=float(now-time[0])/(time[1]-time[0]);
 	int32_t p=std::round((position[1]-position[0])*c+position[0]);
 	float a=conv*(p&mask);
 	now++;
-	return std::tuple{p,a,valid};
+	return std::tuple{p,a};
     }
 
     auto get_age() const { return now-time[last]; }
-
+    int get_missing() const { return trigger_count; }
+    int get_invalid() const { return invalid; }
 
     virtual void trigger()=0;
     virtual void rx_handler()=0;
@@ -46,10 +49,9 @@ protected:
 	last^=1;
 	position[last]=p;
 	time[last]=now;
-	valid=1;
     }
 
-    void invalidate() { valid=0; }
+    void invalidate() { invalid++; }
 };
 
 extern polymorphic_t<encoder_t,80> encoder;

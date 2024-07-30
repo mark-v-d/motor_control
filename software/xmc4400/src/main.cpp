@@ -223,19 +223,15 @@ extern "C" void CCU80_2_IRQHandler(void)
     rx_data[1]-=2047;
     rx_data[3]-=2047;
 
-    auto [position, angle, valid]=encoder->get_pav();
+    auto [position, angle]=encoder->get_position_angle();
     angle+=angle_offset;
     if(angle_override!=0.0f)
 	angle=angle_override;
-    report.valid=valid;
-    if(valid) {
-	IO0=report.position==position;
-	report.position=position;
-	report.angle=angle;
-    } else {
-	report.invalid++;
-	angle=report.angle;
-    }
+    IO0=report.position==position;
+    report.position=position;
+    report.angle=angle;
+    report.encoder_missing=encoder->get_missing();
+    report.encoder_invalid=encoder->get_invalid();
 
     auto Istator=current_scale*(
 	    clarke[0]*float(rx_data[0])+

@@ -140,30 +140,30 @@ std::ostream &operator<<(std::ostream &s, sync_t const &d) {
 	<< " " << d.timer << " " << d.integrator		// 7,8
 	<< " " << d.position	// 9
 	<< " " << d.angle	// 10
-	<< " " << d.valid	// 11
-	<< " " << d.Irotor[0]	// 12
-	<< " " << d.Irotor[1]	// 13
-	<< " " << d.Vrotor[0]	// 14
-	<< " " << d.Vrotor[1]	// 15
-	<< " " << d.ADC[0]	// 16
-	<< " " << d.ADC[1]	// 17
-	<< " " << d.invalid 	// 18
+	<< " " << d.encoder_invalid	// 11
+	<< " " << d.encoder_missing	// 12
+	<< " " << d.Irotor[0]	// 13
+	<< " " << d.Irotor[1]	// 14
+	<< " " << d.Vrotor[0]	// 15
+	<< " " << d.Vrotor[1]	// 16
+	<< " " << d.ADC[0]	// 17
+	<< " " << d.ADC[1]	// 18
 	<< " " << d.timer_delta	// 19
 	<< " " << d.rx_counter	// 20
 	<< " " << d.rx_data[0]	// 21
 	<< " " << d.rx_data[1]	// 22
 	<< " " << d.rx_data[2]	// 23
-	<< " " << d.rx_data[3]	// 24
+	<< " " << d.rx_data[3]	// 23
 	<< " " << d.position2	// 25
-	<< " " << d.index2	// 26
+	<< " " << d.index2	// 25
 	<< " " << d.Vservo	// 27
 /*
-	<< " " << d.setpoint(0)	// 27
-	<< " " << real(d.I)	// 28
-	<< " " << imag(d.I)	// 29
-	<< " " << d.setpoint(1)	// 30
-	<< " " << d.error(0)	// 31
-	<< " " << d.error(1)	// 32
+	<< " " << d.setpoint(0)	// 28
+	<< " " << real(d.I)	// 29
+	<< " " << imag(d.I)	// 30
+	<< " " << d.setpoint(1)	// 31
+	<< " " << d.error(0)	// 32
+	<< " " << d.error(1)	// 33
 */
 	;
     return s;

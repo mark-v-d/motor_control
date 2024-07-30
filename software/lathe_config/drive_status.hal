@@ -1,0 +1,15 @@
+net unconfigured-0 => drive_status.ready_x
+net unconfigured-1 => drive_status.ready_z
+net unconfigured-2 => drive_status.ready_spindle
+net S0:temperature-display => drive_status.temp_spindle
+net temperature-x thermistor.0.temperature-c => drive_status.temp_x
+net temperature-z thermistor.1.temperature-c => drive_status.temp_z
+net encoder_missing-0 etherdrive.0.encoder_missing => drive_status.missing_x
+net encoder_missing-1 etherdrive.1.encoder_missing => drive_status.missing_z
+net encoder_missing-2 etherdrive.2.encoder_missing => drive_status.missing_spindle
+net encoder_invalid-0 etherdrive.0.encoder_invalid => drive_status.invalid_x
+net encoder_invalid-1 etherdrive.1.encoder_invalid => drive_status.invalid_z
+net encoder_invalid-2 etherdrive.2.encoder_invalid => drive_status.invalid_spindle
+net vservo-0 etherdrive.0.Vservo => drive_status.V_x
+net vservo-1 etherdrive.1.Vservo => drive_status.V_z
+net S0:Vservo => drive_status.V_spindle

@@ -54,7 +54,8 @@ struct comp_state {
     hal_float_t *Vrotor[2];
     hal_float_t *angle;
     hal_float_t *Vservo;
-    hal_u32_t *invalid;
+    hal_u32_t *encoder_invalid;
+    hal_u32_t *encoder_missing;
     hal_u32_t *pending;
     hal_u32_t *drive_rx;
     hal_s32_t *timer_delta;
@@ -97,7 +98,8 @@ struct comp_state {
 	    !pin(HAL_OUT,"Vrotor-1", &Vrotor[1]) &&
 	    !pin(HAL_OUT,"angle", &angle) &&
 	    !pin(HAL_OUT,"Vservo", &Vservo) &&
-	    !pin(HAL_OUT,"invalid", &invalid) &&
+	    !pin(HAL_OUT,"encoder_invalid", &encoder_invalid) &&
+	    !pin(HAL_OUT,"encoder_missing", &encoder_missing) &&
 	    !pin(HAL_OUT,"pending", &pending) &&
 	    !pin(HAL_OUT,"drive_rx", &drive_rx) &&
 	    !pin(HAL_OUT,"timer_delta", &timer_delta) &&
@@ -141,7 +143,8 @@ struct comp_state {
 	*Vrotor[1]=buffer.Vrotor[1];
 	*angle=buffer.angle;
 	*Vservo=buffer.Vservo;
-	*invalid=buffer.valid? 0:2;
+	*encoder_invalid=buffer.encoder_invalid;
+	*encoder_missing=buffer.encoder_missing;
 	*timer_delta=buffer.timer_delta;
 	*digin[0]=!(buffer.digin&1);
 	*digin[1]=!((buffer.digin>>1)&1);
@@ -225,10 +228,6 @@ static void sync(void *p, long period)
     outb(0,base);
     skt.send(sync_ns::send_t(skt,bcast_mac,bcast_ip,timestamp,ts));
     outb(1,base);
-
-
-    for(auto p: state)
-	*(p->invalid)=1;
 
     ssize_t rx_size;
     do {

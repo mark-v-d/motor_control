@@ -94,6 +94,7 @@ void mitsubishi_MFS13_t::trigger()
     hd->TRBSCR=USIC_CH_TRBSCR_FLUSHRB_Msk;
     putp=0;
     crc=0x1a;
+    trigger_count++;
 }
 
 void mitsubishi_MFS13_t::tx_handler() {
@@ -106,6 +107,7 @@ void mitsubishi_MFS13_t::tx_handler() {
 
 void mitsubishi_MFS13_t::rx_handler() {
     if(hd->TRBSR & USIC_CH_TRBSCR_CSRBI_Msk) {
+	trigger_count--;
 	hd->TRBSCR=USIC_CH_TRBSCR_CSRBI_Msk;
 	int d;
 	while((d=hd.rx_fifo())>=0) {
@@ -173,10 +175,12 @@ void mitsubishi_PQ_t::trigger()
     hd->TRBSCR=USIC_CH_TRBSCR_FLUSHRB_Msk;
     putp=0;
     crc=0;
+    trigger_count++;
 }
 
 void mitsubishi_PQ_t::rx_handler() {
     if(fd->TRBSR & USIC_CH_TRBSCR_CSRBI_Msk) {
+	trigger_count--;
 	fd->TRBSCR=USIC_CH_TRBSCR_CSRBI_Msk;
 	int d;
 	while((d=fd.rx_fifo())>=0) {
@@ -255,6 +259,7 @@ void AMT21_t::trigger()
     hd->TBUF[0]=0x54;
     hd->TRBSCR=USIC_CH_TRBSCR_FLUSHRB_Msk;
     putp=0;
+    trigger_count++;
 }
 
 void AMT21_t::tx_handler() {
@@ -270,6 +275,7 @@ void AMT21_t::rx_handler() {
     while((d=hd.rx_fifo())>=0 && putp<rx_buffer.size()) {
 	rx_buffer[putp++]=d;
 	if(putp==3 && rx_buffer[0]==0x54) {
+	    trigger_count--;
 	    uint16_t pos=(uint16_t(rx_buffer[2])<<8) | rx_buffer[1];
 	    auto check=pos;
 	    for(int i=0;i<7;i++) {

@@ -95,4 +95,4 @@ net spindle_forward  input.1.btn-tr2 => halui.spindle.0.forward
 net spindle_stop  input.1.key-281 => halui.program.stop
 net spindle_reverse  input.1.btn-b => halui.spindle.0.reverse
 
-loadusr halscope 160000
+#loadusr halscope 160000
