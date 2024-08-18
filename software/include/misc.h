@@ -76,10 +76,21 @@ template <class T>
 inline void main_sleep(T time)
 {
     std::chrono::duration<float,std::ratio<1,frequency>> ticks=time;
-    systick.LOAD=ticks.count();
-    systick.VAL=0;
-    while(!(systick.CTRL&0x10000))
-	;
+    uint32_t count=ticks.count();
+    while(count>0) {
+	if(count>0xffffff) {
+	    systick.LOAD=0xffffff;
+	    count-=0xffffff;
+
+	} else {
+	    systick.LOAD=count;
+	    count=0;
+	}
+	count-=count&0xffffff;
+	systick.VAL=0;
+	while(!(systick.CTRL&0x10000))
+	    ;
+    }
 }
 
 template <class T>

@@ -15,12 +15,15 @@ gpio::pin<2,8> I2_P;
 gpio::pin<2,10> V;
 gpio::pin<0,9> RXD_TIMER;
 
+gpio::output<0,6> DEBUG;
+
 uart::full_duplex serial(TXD,RXD);
 ccu4::edge_capture<0,3> serial_capture;
 
 extern "C" void USIC0_0_IRQHandler(void)
 {
     static_assert(serial.UNIT==0, "Wrong uart");
+    DEBUG=1;
 
     adc::queue<0>(I0_P,	adc::EXTERNAL_TRIGGER);
     adc::queue<0>(V, adc::ENSI);
@@ -32,6 +35,7 @@ extern "C" void USIC0_0_IRQHandler(void)
 
 extern "C" void VADC0_G0_0_IRQHandler(void)
 {
+    DEBUG=0;
     std::array<uint16_t,5> data;
     serial.tx_fifo(data[0]=adc::vadc.G[0].RES[0]);
     serial.tx_fifo(data[1]=adc::vadc.G[1].RES[0]);
@@ -46,6 +50,7 @@ extern "C" void VADC0_G0_0_IRQHandler(void)
 int main(int argc, char **argv)
 {
     DAC.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    DEBUG=1;DEBUG.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
 
     ////////////////////////////////////////////////////////////////////////////
     // UART
@@ -76,7 +81,7 @@ int main(int argc, char **argv)
     // ADC
     ////////////////////////////////////////////////////////////////////////////
     adc::init();
-    adc::global_class<0>(XMC_VADC_CONVMODE_12BIT,15);
+    adc::global_class<0>(XMC_VADC_CONVMODE_12BIT,8);
     adc::channel_control<0>(I0_P, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);
     adc::channel_control<0>(V,	  XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 1);
     adc::channel_control<1>(I1_P, XMC_VADC_CHANNEL_CONV_GLOBAL_CLASS0, 0);

@@ -138,9 +138,7 @@ void Ethernet::PHY_Init(void)
 	WritePhy(REG_BMCR, BMCR_DUPLEX | BMCR_ANEG_EN);
 
 	uint16_t status;
-	do {
-	    status=ReadPhy(REG_BMSR);
-	} while(!(status&BMSR_LINK_STAT));
+	//do { status=ReadPhy(REG_BMSR); } while(!(status&BMSR_LINK_STAT));
     } // else hope for the best
 }
 
