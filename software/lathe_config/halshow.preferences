@@ -57,6 +57,15 @@ set ::watchlist {
     sig+S0:temperature-display
     pin+drive_status.temp_x
     pin+drive_status.temp_z
+    sig+SO:index
+    pin+input.1.led-capsl
+    pin+input.1.led-charging
+    pin+input.1.led-compose
+    pin+input.1.led-kana
+    pin+input.1.led-misc
+    pin+input.1.led-numl
+    pin+input.1.led-scrolll
+    pin+input.1.led-suspend
 }
 set ::workmode watchhal
 set ::watchInterval 100

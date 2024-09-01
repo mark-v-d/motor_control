@@ -47,7 +47,7 @@ macro-7     = halui.mdi-command-07
 #stop        = halui.program.stop
 #reset       = halui.estop.activate
 #stop        = or2.1.in0
-reset       = or2.0.in0
+#reset       = or2.0.in0
 
 [HALUI]
 # these are examples, edit as required:

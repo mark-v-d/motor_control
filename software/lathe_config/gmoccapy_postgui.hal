@@ -40,83 +40,99 @@ net Vtherm-1 etherdrive.1.vthermistor => thermistor.1.v-thermistor
 net Vtherm-2 etherdrive.2.vthermistor => thermistor.2.v-thermistor
 
 
-################################################################################
-# Sayo keypad
-################################################################################
-net v2 input.0.key-f => gmoccapy.v-button.button-2
-net v3 input.0.key-e => gmoccapy.v-button.button-3
-net v4 input.0.key-d => gmoccapy.v-button.button-4
-net h0 input.0.key-b => gmoccapy.h-button.button-0
-net h1 input.0.key-a => gmoccapy.h-button.button-1
-net h2 input.0.key-0 => gmoccapy.h-button.button-2
-net h3 input.0.key-9 => gmoccapy.h-button.button-3
-net h4 input.0.key-8 => gmoccapy.h-button.button-4
-net h5 input.0.key-7 => gmoccapy.h-button.button-5
-net h6 input.0.key-6 => gmoccapy.h-button.button-6
-net h7 input.0.key-5 => gmoccapy.h-button.button-7
-net h8 input.0.key-4 => gmoccapy.h-button.button-8
-net h9 input.0.key-3 => gmoccapy.h-button.button-9
-
-
-#####################################
-# Potmeters/diy buttons
-#####################################
-net spindle_override input.1.abs-rz-position => gmoccapy.spindle.spindle-override.direct-value
-setp gmoccapy.spindle.spindle-override.analog-enable 1
-setp input.1.abs-rz-offset 0
-setp input.1.abs-rz-scale 4000
-setp input.1.abs-rz-fuzz 8
-
-net feed_override input.1.abs-ry-position => gmoccapy.feed.feed-override.direct-value
-setp gmoccapy.feed.feed-override.analog-enable 1
-setp input.1.abs-ry-offset 0
-setp input.1.abs-ry-scale 4000
-setp input.1.abs-ry-fuzz 8
-
-net rapid_override input.1.abs-rx-position => gmoccapy.rapid.rapid-override.direct-value
-setp gmoccapy.rapid.rapid-override.analog-enable 1
-setp input.1.abs-rx-offset 0
-setp input.1.abs-rx-scale 4000
-setp input.1.abs-rx-fuzz 8
-
-net jog_override input.1.abs-z-position => gmoccapy.jog.jog-velocity.direct-value
-setp gmoccapy.jog.jog-velocity.analog-enable 1
-setp input.1.abs-z-offset 0
-setp input.1.abs-z-scale 4000
-setp input.1.abs-z-fuzz 8
-
-net spindle_forward  input.1.btn-trigger => halui.spindle.0.forward
-net spindle_stop  input.1.btn-thumb => halui.program.stop
-net spindle_reverse  input.1.btn-thumb2 => halui.spindle.0.reverse
-
-net v1 input.1.btn-middle => gmoccapy.v-button.button-1
-net mist-on-off input.1.btn-left
-net macro1 input.1.key-282 => halui.mdi-command-01
-net button-start-pause input.1.key-281
-net z_0 input.1.key-280 => halui.mdi-command-14
-
-#### State for coolant
-loadrt multiswitch cfg=2
-loadrt and2 count=1
-net mist-on-off => multiswitch.0.up
-net mist-off multiswitch.0.bit-00 => and2.0.in0
-net mist-on multiswitch.0.bit-01 => halui.mist.on
-net mist-enable halui.machine.is-on => and2.0.in1
-net mist-off2 and2.0.out => halui.mist.off
-
-addf multiswitch.0 servo-thread
-addf and2.0 servo-thread
-
-loadrt flipflop names=flipflop_resume,flipflop_pause,flipflop_run
-addf flipflop_resume servo-thread
-addf flipflop_pause servo-thread
-addf flipflop_run servo-thread
-
-net button-start-pause  => flipflop_pause.clk flipflop_resume.clk flipflop_run.clk
-net is-paused halui.program.is-paused => flipflop_resume.data flipflop_pause.reset
-net is-running halui.program.is-running => flipflop_pause.data flipflop_run.reset flipflop_resume.reset
-net is-idle halui.program.is-idle => flipflop_run.data
-net resume flipflop_resume.out => halui.program.resume
-net pause flipflop_pause.out => halui.program.pause
-net run flipflop_run.out => halui.mode.auto halui.program.run
-#loadusr halscope 160000
+# ################################################################################
+# # Sayo keypad
+# ################################################################################
+# net v2 input.0.key-f => gmoccapy.v-button.button-2
+# net v3 input.0.key-e => gmoccapy.v-button.button-3
+# net v4 input.0.key-d => gmoccapy.v-button.button-4
+# net h0 input.0.key-b => gmoccapy.h-button.button-0
+# net h1 input.0.key-a => gmoccapy.h-button.button-1
+# net h2 input.0.key-0 => gmoccapy.h-button.button-2
+# net h3 input.0.key-9 => gmoccapy.h-button.button-3
+# net h4 input.0.key-8 => gmoccapy.h-button.button-4
+# net h5 input.0.key-7 => gmoccapy.h-button.button-5
+# net h6 input.0.key-6 => gmoccapy.h-button.button-6
+# net h7 input.0.key-5 => gmoccapy.h-button.button-7
+# net h8 input.0.key-4 => gmoccapy.h-button.button-8
+# net h9 input.0.key-3 => gmoccapy.h-button.button-9
+#
+#
+# #####################################
+# # Potmeters/diy buttons
+# #####################################
+# net spindle_override input.1.abs-rz-position => gmoccapy.spindle.spindle-override.direct-value
+# setp gmoccapy.spindle.spindle-override.analog-enable 1
+# setp input.1.abs-rz-offset 0
+# setp input.1.abs-rz-scale 4000
+# setp input.1.abs-rz-fuzz 8
+#
+# net feed_override input.1.abs-ry-position => gmoccapy.feed.feed-override.direct-value
+# setp gmoccapy.feed.feed-override.analog-enable 1
+# setp input.1.abs-ry-offset 0
+# setp input.1.abs-ry-scale 4000
+# setp input.1.abs-ry-fuzz 8
+#
+# net rapid_override input.1.abs-rx-position => gmoccapy.rapid.rapid-override.direct-value
+# setp gmoccapy.rapid.rapid-override.analog-enable 1
+# setp input.1.abs-rx-offset 0
+# setp input.1.abs-rx-scale 4000
+# setp input.1.abs-rx-fuzz 8
+#
+# net jog_override input.1.abs-z-position => gmoccapy.jog.jog-velocity.direct-value
+# setp gmoccapy.jog.jog-velocity.analog-enable 1
+# setp input.1.abs-z-offset 0
+# setp input.1.abs-z-scale 4000
+# setp input.1.abs-z-fuzz 8
+#
+# net spindle_forward  input.1.btn-trigger => halui.spindle.0.forward
+# net spindle_stop  input.1.btn-thumb => halui.program.stop
+# net spindle_reverse  input.1.btn-thumb2 => halui.spindle.0.reverse
+#
+# net v1 input.1.btn-middle => gmoccapy.v-button.button-1
+# net mist-on-off input.1.btn-left
+# net macro1 input.1.key-282 => halui.mdi-command-01
+# net button-start-pause input.1.key-281
+# net z_0 input.1.key-280 => halui.mdi-command-14
+#
+# #### State for coolant
+# loadrt multiswitch cfg=2
+# loadrt and2 count=1
+# net mist-on-off => multiswitch.0.up
+# net mist-off multiswitch.0.bit-00 => and2.0.in0
+# net mist-on multiswitch.0.bit-01 => halui.mist.on
+# net mist-enable halui.machine.is-on => and2.0.in1
+# net mist-off2 and2.0.out => halui.mist.off
+#
+# addf multiswitch.0 servo-thread
+# addf and2.0 servo-thread
+#
+# loadrt flipflop names=flipflop_resume,flipflop_pause,flipflop_run
+# addf flipflop_resume servo-thread
+# addf flipflop_pause servo-thread
+# addf flipflop_run servo-thread
+#
+# net button-start-pause  => flipflop_pause.clk flipflop_resume.clk flipflop_run.clk
+# net is-paused halui.program.is-paused => flipflop_resume.data flipflop_pause.reset
+# net is-running halui.program.is-running => flipflop_pause.data flipflop_run.reset flipflop_resume.reset
+# net is-idle halui.program.is-idle => flipflop_run.data
+# net resume flipflop_resume.out => halui.program.resume
+# net pause flipflop_pause.out => halui.program.pause
+# net run flipflop_run.out => halui.mode.auto halui.program.run
+# #loadusr halscope 160000
+#
+# net machine-is-on => input.1.led-scrolll
+# net spindle-fw halui.spindle.0.runs-forward => input.1.led-numl
+# net spindle-bw halui.spindle.0.runs-backward =>  input.1.led-capsl
+#
+# loadrt pwmgen output_type=0
+# addf pwmgen.update servo-thread
+# addf pwmgen.make-pulses servo-thread
+# setp pwmgen.0.pwm-freq 1
+# setp pwmgen.0.value 0.5
+# net is-paused => pwmgen.0.enable
+# loadrt or2 count=1
+# addf or2.0 servo-thread
+# net pause-pulse pwmgen.0.pwm => or2.0.in0
+# net is-running => or2.0.in1
+# net green-led or2.0.out => input.1.led-compose
