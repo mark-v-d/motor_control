@@ -1,71 +1,23 @@
 # Halshow settings
 # This file is generated automatically.
-wm geometry . 1121x953+-1+20
+wm geometry . 1121x953+314+19
 placeFrames 0.5545536519386834
 set ::ratio 0.5545536519386834
 set ::old_w_leftf 160
 set ::watchlist {
-    pin+etherdrive.2.Vservo
-    pin+thermistor.2.temperature-c
-    pin+etherdrive.2.Vrotor-0
-    pin+etherdrive.2.Vrotor-1
-    pin+etherdrive.2.overvoltage
-    pin+etherdrive.2.digin-0
-    pin+etherdrive.2.digin-1
-    pin+etherdrive.2.digin-all
-    pin+etherdrive.2.enable
-    pin+etherdrive.2.encoder
-    pin+etherdrive.2.angle
-    pin+etherdrive.2.index2
-    pin+etherdrive.2.limit-0
-    pin+etherdrive.2.limit-1
-    pin+etherdrive.2.overcurrent
-    pin+etherdrive.2.poles
-    pin+etherdrive.2.position
-    pin+etherdrive.2.timer_delta
-    pin+etherdrive.2.timer_error
-    pin+etherdrive.2.vthermistor
-    pin+speed_controller.0.I_fb
-    pin+speed_controller.0.gain_I
-    pin+speed_controller.0.gain_L
-    pin+speed_controller.0.gain_P
-    pin+speed_controller.0.speed
-    pin+speed_controller.0.speed_fb
-    pin+speed_controller.0.speed_rpm
-    pin+speed_controller.0.debug
-    pin+speed_controller.0.at_speed
-    pin+speed_controller.0.acceleration
-    pin+speed_controller.0.Imax
-    pin+etherdrive.2.Iset-0
-    pin+etherdrive.2.Iset-1
-    pin+speed_controller.0.emf_start
-    pin+speed_controller.0.emf_scale
-    pin+etherdrive.2.Irotor-0
-    pin+etherdrive.2.Irotor-1
-    pin+speed_controller.0.V_fb
-    pin+etherdrive.0.pending
-    pin+etherdrive.1.pending
-    pin+etherdrive.2.pending
-    pin+halui.joint.0.unhome
-    pin+etherdrive.0.unconfigured
-    pin+etherdrive.1.unconfigured
-    pin+etherdrive.2.unconfigured
-    pin+etherdrive.0.encoder_invalid
-    pin+etherdrive.0.encoder_missing
-    pin+thermistor.0.temperature-c
-    pin+thermistor.1.temperature-c
-    sig+S0:temperature-display
-    pin+drive_status.temp_x
-    pin+drive_status.temp_z
-    sig+SO:index
-    pin+input.1.led-capsl
-    pin+input.1.led-charging
-    pin+input.1.led-compose
-    pin+input.1.led-kana
-    pin+input.1.led-misc
-    pin+input.1.led-numl
-    pin+input.1.led-scrolll
-    pin+input.1.led-suspend
+    pin+input.0.abs-rx-counts
+    pin+input.0.abs-ry-counts
+    pin+input.0.abs-rz-counts
+    pin+input.0.abs-z-counts
+    pin+input.0.led-capsl
+    pin+input.0.led-charging
+    pin+input.0.led-compose
+    pin+input.0.led-kana
+    pin+input.0.led-misc
+    pin+input.0.led-numl
+    pin+input.0.led-scrolll
+    pin+input.0.led-suspend
+    pin+gmoccapy.mode_setup
 }
 set ::workmode watchhal
 set ::watchInterval 100
