@@ -82,33 +82,6 @@ public:
 	x|=m<<4*(PIN%8);
 	port[PORT].PDR[PIN/8]=x;
     }
-
-    /* REMOVE THIS !!!! */
-    // Ethernet inputs
-    operator XMC_ETH_MAC_PORT_CTRL_RXD0() {
-	static_assert(PORT==-1, "Cannot use this pin as RXD0 for ETH0");
-	return -1;
-    }
-    operator XMC_ETH_MAC_PORT_CTRL_RXD1() {
-	static_assert(PORT==-1, "Cannot use this pin as RXD1 for ETH0");
-	return -1;
-    }
-    operator XMC_ETH_MAC_PORT_CTRL_CLK_RMII() {
-	static_assert(PORT==-1, "Cannot use this pin as CLK_RMII for ETH0");
-	return -1;
-    }
-    operator XMC_ETH_MAC_PORT_CTRL_CRS_DV() {
-	static_assert(PORT==-1, "Cannot use this pin as CRS_DV for ETH0");
-	return -1;
-    }
-    operator XMC_ETH_MAC_PORT_CTRL_RXER() {
-	static_assert(PORT==-1, "Cannot use this pin as RXER for ETH0");
-	return -1;
-    }
-    operator XMC_ETH_MAC_PORT_CTRL_MDIO() {
-	static_assert(PORT==-1, "Cannot use this pin as MDIO for ETH0");
-	return -1;
-    }
 #endif
 };
 

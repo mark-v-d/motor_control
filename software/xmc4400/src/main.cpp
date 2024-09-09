@@ -16,7 +16,7 @@ constexpr float pi=acos(-1);
 #include "hardware.h"
 #include "ethernet.h"
 #include "icmp.h"
-//#include "ccu4.h"
+#include "ccu4.h"
 #include "ccu8.h"
 #include "udp_struct.h"
 #include "udp_sync.h"
@@ -93,7 +93,6 @@ class complex_PI {
     float P=0.2;
     float I=5e-3;
     float L=1;
-    C output;
 public:
 
     C compute(C error,float voltage) {
@@ -317,6 +316,8 @@ extern "C" void Default_Handler(void)
 volatile uint32_t counter, led, txd=-1, hrpwm_status;
 volatile int init_enable=0;
 
+auto fan_timer=ccu4::center_aligned(FAN);
+
 void init_adc(void);
 volatile int trap_enable=0;
 int main()
@@ -446,6 +447,14 @@ int main()
     init_encoder();
 
     std::atomic_thread_fence(std::memory_order_release);
+
+    ccu4::init<fan_timer.UNIT>(XMC_CCU4_CLOCK_SCU,
+	XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
+    fan_timer.init();
+    fan_timer.period(100us);
+    fan_timer=0.5f;
+    ccu4::start(fan_timer);
+    ccu4::shadow_transfer(fan_timer);
 
     auto old_led=led;
     for(;;) {

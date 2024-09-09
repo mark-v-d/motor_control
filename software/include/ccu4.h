@@ -21,55 +21,59 @@ struct ccu4_t:public CCU4_GLOBAL_TypeDef {
 ////////////////////////////////////////////////////////////////////////////////
 // Output pins
 ////////////////////////////////////////////////////////////////////////////////
-template <int port, int pin, int unit, int slice>
-class out:public gpio::pin<port,pin> {
-public:
-    static constexpr int PORT=port;
-    static constexpr int PIN=pin;
-    static constexpr int UNIT=unit;
-    static constexpr int SLICE=slice;
-
-    XMC_GPIO_MODE_t alt(void) {
-	static_assert(port<0, "Not a CCU4 output");
-	return XMC_GPIO_MODE_INPUT_TRISTATE;
-    }
-
-    void enable(XMC_GPIO_MODE_t i=XMC_GPIO_MODE_OUTPUT_PUSH_PULL) {
-	this->set(XMC_GPIO_MODE_t(i|alt()));
-#if (UC_DEVICE == XMC4400)
-	this->set(XMC_GPIO_HWCTRL_DISABLED);
-#endif
-    }
+struct par_t {
+    int UNIT, SLICE;
+    XMC_GPIO_MODE_t mode;
 };
+
+template <int port,int pin>
+constexpr par_t alt(void) {
+    static_assert(port<0, "Not a CCU4 output");
+    return par_t{-2,-2,XMC_GPIO_MODE_OUTPUT_ALT1};
+}
 
 #if UC_FAMILY == XMC4
 extern ccu4_t dev[4];
 
-// FIXME
+template<> constexpr par_t alt<0,12>(void){ return par_t{0,3,XMC_GPIO_MODE_OUTPUT_ALT3}; }
+template<> constexpr par_t alt<1,0>(void) { return par_t{0,3,XMC_GPIO_MODE_OUTPUT_ALT3}; }
+template<> constexpr par_t alt<1,1>(void) { return par_t{0,2,XMC_GPIO_MODE_OUTPUT_ALT3}; }
+template<> constexpr par_t alt<1,2>(void) { return par_t{0,1,XMC_GPIO_MODE_OUTPUT_ALT3}; }
+template<> constexpr par_t alt<1,3>(void) { return par_t{0,0,XMC_GPIO_MODE_OUTPUT_ALT3}; }
+template<> constexpr par_t alt<2,2>(void) { return par_t{1,3,XMC_GPIO_MODE_OUTPUT_ALT3}; }
+template<> constexpr par_t alt<2,3>(void) { return par_t{1,2,XMC_GPIO_MODE_OUTPUT_ALT3}; }
+template<> constexpr par_t alt<2,4>(void) { return par_t{1,1,XMC_GPIO_MODE_OUTPUT_ALT3}; }
+template<> constexpr par_t alt<2,5>(void) { return par_t{1,0,XMC_GPIO_MODE_OUTPUT_ALT3}; }
+template<> constexpr par_t alt<3,0>(void) { return par_t{2,0,XMC_GPIO_MODE_OUTPUT_ALT3}; }
+template<> constexpr par_t alt<3,3>(void) { return par_t{2,3,XMC_GPIO_MODE_OUTPUT_ALT3}; }
+template<> constexpr par_t alt<3,4>(void) { return par_t{2,2,XMC_GPIO_MODE_OUTPUT_ALT3}; }
+template<> constexpr par_t alt<3,5>(void) { return par_t{2,1,XMC_GPIO_MODE_OUTPUT_ALT3}; }
+template<> constexpr par_t alt<3,6>(void) { return par_t{2,0,XMC_GPIO_MODE_OUTPUT_ALT3}; }
+
 #endif
 
 #if UC_FAMILY == XMC1
 
 extern ccu4_t dev[1];
 
-template<> inline XMC_GPIO_MODE_t out<0,0,0,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,1,0,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,2,0,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,3,0,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,4,0,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,5,0,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,6,0,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,7,0,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,8,0,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<0,9,0,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT4; }
-template<> inline XMC_GPIO_MODE_t out<1,0,0,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT2; }
-template<> inline XMC_GPIO_MODE_t out<1,1,0,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT2; }
-template<> inline XMC_GPIO_MODE_t out<1,2,0,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT2; }
-template<> inline XMC_GPIO_MODE_t out<1,3,0,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT2; }
-template<> inline XMC_GPIO_MODE_t out<2,0,0,0>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT2; }
-template<> inline XMC_GPIO_MODE_t out<2,1,0,1>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT2; }
-template<> inline XMC_GPIO_MODE_t out<2,10,0,2>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT2; }
-template<> inline XMC_GPIO_MODE_t out<2,11,0,3>::alt(void) { return XMC_GPIO_MODE_OUTPUT_ALT2; }
+template<> constexpr par_t alt<0,0>(void) { return par_t{0,0,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,1>(void) { return par_t{0,1,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,2>(void) { return par_t{0,2,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,3>(void) { return par_t{0,3,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,4>(void) { return par_t{0,1,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,5>(void) { return par_t{0,0,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,6>(void) { return par_t{0,0,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,7>(void) { return par_t{0,1,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,8>(void) { return par_t{0,2,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<0,9>(void) { return par_t{0,3,XMC_GPIO_MODE_OUTPUT_ALT4}; }
+template<> constexpr par_t alt<1,0>(void) { return par_t{0,0,XMC_GPIO_MODE_OUTPUT_ALT2}; }
+template<> constexpr par_t alt<1,1>(void) { return par_t{0,1,XMC_GPIO_MODE_OUTPUT_ALT2}; }
+template<> constexpr par_t alt<1,2>(void) { return par_t{0,2,XMC_GPIO_MODE_OUTPUT_ALT2}; }
+template<> constexpr par_t alt<1,3>(void) { return par_t{0,3,XMC_GPIO_MODE_OUTPUT_ALT2}; }
+template<> constexpr par_t alt<2,0>(void) { return par_t{0,0,XMC_GPIO_MODE_OUTPUT_ALT2}; }
+template<> constexpr par_t alt<2,1>(void) { return par_t{0,1,XMC_GPIO_MODE_OUTPUT_ALT2}; }
+template<> constexpr par_t alt<2,10>(void) { return par_t{0,2,XMC_GPIO_MODE_OUTPUT_ALT2}; }
+template<> constexpr par_t alt<2,11>(void) { return par_t{0,3,XMC_GPIO_MODE_OUTPUT_ALT2}; }
 
 template <int UNIT, int INPUT, int PORT, int PIN>
 uint32_t get_event(gpio::pin<PORT,PIN>)
@@ -111,6 +115,23 @@ template <> inline uint32_t get_event<0,3,0,3>(gpio::pin<0,3>) { return CCU40_IN
 #endif
 template <> inline uint32_t get_event<0,3,0,9>(gpio::pin<0,9>) { return CCU40_IN3_P0_9; }
 #endif
+
+template <int port, int pin>
+class out:public gpio::pin<port,pin> {
+public:
+    static constexpr int PORT=port;
+    static constexpr int PIN=pin;
+    static constexpr int SLICE=alt<port,pin>().SLICE;
+    static constexpr int OUTPUT=alt<port,pin>().OUTPUT;;
+
+    void enable(XMC_GPIO_MODE_t i=XMC_GPIO_MODE_OUTPUT_PUSH_PULL) {
+	this->set(XMC_GPIO_MODE_t(i|alt<port,pin>().mode));
+#if (UC_DEVICE == XMC4400)
+	this->set(XMC_GPIO_HWCTRL_DISABLED);
+#endif
+    }
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global functions
@@ -339,15 +360,17 @@ public:
     }
 };
 
-template <int UNIT_PAR, int SLICE_PAR, int OUTPUT_PAR>
-class center_aligned:public slice_t<UNIT_PAR,SLICE_PAR> {
+template <int port, int pin>
+class center_aligned:public slice_t<alt<port,pin>().UNIT,alt<port,pin>().SLICE> {
 public:
-    static constexpr int UNIT=UNIT_PAR;
-    static constexpr int SLICE=SLICE_PAR;
-    static constexpr int OUTPUT=OUTPUT_PAR;
+    static constexpr int UNIT=alt<port,pin>().UNIT;
+    static constexpr int SLICE=alt<port,pin>().SLICE;
+
+    constexpr center_aligned(gpio::pin<port,pin> x) {}
 
     void init(void) {
 	auto &cc=dev[UNIT].cc[SLICE];
+	out<port,pin>().enable();
 
 	slice_t<UNIT,SLICE>::init();
 
