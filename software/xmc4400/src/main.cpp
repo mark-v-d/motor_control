@@ -316,7 +316,7 @@ extern "C" void Default_Handler(void)
 volatile uint32_t counter, led, txd=-1, hrpwm_status;
 volatile int init_enable=0;
 
-auto fan_timer=ccu4::center_aligned(FAN);
+auto fan_timer=hrpwm0::center_aligned(FAN);
 
 void init_adc(void);
 volatile int trap_enable=0;
@@ -453,8 +453,8 @@ int main()
     fan_timer.init();
     fan_timer.period(100us);
     fan_timer=0.5f;
-    ccu4::start(fan_timer);
-    ccu4::shadow_transfer(fan_timer);
+    ccu8::start(fan_timer);
+    ccu8::shadow_transfer(fan_timer);
 
     auto old_led=led;
     for(;;) {

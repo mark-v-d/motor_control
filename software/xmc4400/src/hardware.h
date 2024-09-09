@@ -45,7 +45,7 @@ static gpio::pin<2,9> TXD1;
 static gpio::pin<1,12> TX_EN;
 static gpio::output<2,10> ETH_RESET;
 static gpio::output<0,9> SUPPLY_VOLTAGE;
-static gpio::output<0,12> FAN;
+static hrpwm0::out<0,6> FAN;
 
 
 static hrpwm0::out<0,5> HBL0_HR;

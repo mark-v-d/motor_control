@@ -44,6 +44,9 @@ public:
     static constexpr int SLICE=alt<port,pin>().SLICE;
     static constexpr int OUTPUT=alt<port,pin>().OUTPUT;;
 
+    constexpr out() {}
+    constexpr out(gpio::pin<port,pin>) {}
+
     void enable(XMC_GPIO_MODE_t i=XMC_GPIO_MODE_OUTPUT_PUSH_PULL) {
 	this->set(XMC_GPIO_MODE_t(i|alt<port,pin>().mode));
 	this->set(XMC_GPIO_HWCTRL_DISABLED);
@@ -132,6 +135,86 @@ public:
 
 	HIGH{}.enable();
 	LOW{}.enable();
+    }
+
+    float operator=(float i) {
+	using namespace std::chrono_literals;
+
+	float b=ccu8::dev[UNIT].cc[SLICE].PRS*i+1.5f;
+	if constexpr (OUTPUT==0 || OUTPUT==1)
+	    ccu8::dev[UNIT].cc[SLICE].CR1S=std::floor(b);
+	else
+	    ccu8::dev[UNIT].cc[SLICE].CR2S=std::floor(b);
+	b-=std::floor(b);
+	constexpr int factor=ccu8::resolution_t(1)/0.15ns;
+	hrc[SLICE].SCR1=factor*b;
+	hrc[SLICE].SCR2=factor*(1.0f-b)-0.5f;
+	return i;
+    }
+    /* Met dithering,  (pagina 2198)
+	PRS_pseudo=PRS+DCV/16
+	timing iedere pwm cycle aanpassen?
+    */
+
+    void enable_trap() {
+	auto hr=&hrc[SLICE];
+	hr->GC|=HRPWM0_HRC_GC_TR0E_Msk | HRPWM0_HRC_GC_TR1E_Msk;
+    }
+
+    void disable_trap() {
+	auto hr=&hrc[SLICE];
+	hr->GC&=~(HRPWM0_HRC_GC_TR0E_Msk | HRPWM0_HRC_GC_TR1E_Msk);
+    }
+};
+
+template <typename HIGH>
+class center_aligned:public ccu8::center_aligned<0,HIGH::SLICE,0> {
+    using base_t=ccu8::center_aligned<0,HIGH::SLICE,0>;
+public:
+    static constexpr int SLICE=HIGH::SLICE;
+    static constexpr int OUTPUT=0; // ccu8 output
+    static constexpr int UNIT=0; // ccu8 unit
+
+    using base_t::set_trap;
+    using base_t::clear_trap;
+
+    constexpr center_aligned() {
+	HIGH h{};
+	static_assert(std::is_same<out<HIGH::PORT,HIGH::PIN>, HIGH>::value,
+	    "Pin must be a hrpwm0::out");
+    }
+
+    constexpr center_aligned(HIGH h):center_aligned() { }
+
+    auto operator ->(void) {
+	static all_registers_t<UNIT,SLICE,OUTPUT> x;
+	return &x;
+    }
+
+    void deadtime(ccu8::resolution_t rising, ccu8::resolution_t falling) {
+	hrc[SLICE].SDCR=rising.count();
+	hrc[SLICE].SDCF=falling.count();
+    }
+
+    void init(bool invert_h=false) {
+	ccu8::center_aligned<UNIT,SLICE,OUTPUT>::init();
+	dev.HRCCFG|=(HRPWM0_HRCCFG_HRC0E_Msk<<SLICE);
+
+	auto hr=&hrc[SLICE];
+	hr->GC|=HRPWM0_HRC_GC_STC_Msk|HRPWM0_HRC_GC_DSTC_Msk
+	    | HRPWM0_HRC_GC_DTE_Msk
+	    | bitfield<HRPWM0_HRC_GC_HRM0_Msk>(2);
+	hr->PL=invert_h? 2:0;
+	hr->GSEL=
+	    bitfield<HRPWM0_HRC_GSEL_S0M_Msk>(0) | // use timer
+	    bitfield<HRPWM0_HRC_GSEL_C0M_Msk>(0) | // use timer
+	    bitfield<HRPWM0_HRC_GSEL_S0ES_Msk>(1) | // rising edge
+	    bitfield<HRPWM0_HRC_GSEL_C0ES_Msk>(2); // falling edge
+	hr->TSEL=
+	    HRPWM0_HRC_TSEL_TS0E_Msk |
+	    bitfield<HRPWM0_HRC_TSEL_TSEL0_Msk>(SLICE);
+
+	HIGH{}.enable();
     }
 
     float operator=(float i) {
