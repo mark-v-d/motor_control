@@ -33,7 +33,8 @@ constexpr par_t alt(void) {
 }
 
 #if UC_FAMILY == XMC4
-extern ccu4_t dev[4];
+extern ccu4_t dev[3];
+extern ccu4_t dev3;
 
 template<> constexpr par_t alt<0,12>(void){ return par_t{0,3,XMC_GPIO_MODE_OUTPUT_ALT3}; }
 template<> constexpr par_t alt<1,0>(void) { return par_t{0,3,XMC_GPIO_MODE_OUTPUT_ALT3}; }
@@ -55,6 +56,7 @@ template<> constexpr par_t alt<3,6>(void) { return par_t{2,0,XMC_GPIO_MODE_OUTPU
 #if UC_FAMILY == XMC1
 
 extern ccu4_t dev[1];
+extern ccu4_t dev3;
 
 template<> constexpr par_t alt<0,0>(void) { return par_t{0,0,XMC_GPIO_MODE_OUTPUT_ALT4}; }
 template<> constexpr par_t alt<0,1>(void) { return par_t{0,1,XMC_GPIO_MODE_OUTPUT_ALT4}; }
@@ -138,9 +140,11 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 // init(XMC_CCU4_CLOCK_SCU,XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR)
 template <int UNIT>
-void init(XMC_CCU4_CLOCK_t clock_source,XMC_CCU4_SLICE_MCMS_ACTION_t shadow_transfer) {
-    static_assert(UNIT==0 || UNIT==1, "Only units 0 and 1 are valid");
-    auto module=&dev[UNIT];
+void init(XMC_CCU4_CLOCK_t clock_source,
+    XMC_CCU4_SLICE_MCMS_ACTION_t shadow_transfer
+) {
+    static_assert(UNIT<=3 || UNIT>=0, "Only units 0 to 3 are valid");
+    auto module=UNIT==3? &dev3:&dev[UNIT];
 
     auto gctrl = module->GCTRL;
     gctrl &= ~((uint32_t) CCU4_GCTRL_PCIS_Msk);
@@ -205,6 +209,10 @@ inline auto shadow_transfer=[](auto& ...x)
 	dev[0].GCSS=gcss;
     if(uint32_t gcss=((x.UNIT==1 ? (1<<(4*x.SLICE)):0) | ...))
 	dev[1].GCSS=gcss;
+    if(uint32_t gcss=((x.UNIT==2 ? (1<<(4*x.SLICE)):0) | ...))
+	dev[2].GCSS=gcss;
+    if(uint32_t gcss=((x.UNIT==3 ? (1<<(4*x.SLICE)):0) | ...))
+	dev3.GCSS=gcss;
 };
 
 inline auto start=[](auto& ... x)
@@ -214,7 +222,10 @@ inline auto start=[](auto& ... x)
 	dev[0].GIDLC=ccu40_gidlc | CCU4_GIDLC_SPRB_Msk;
     if(uint32_t ccu41_gidlc=((x.UNIT==1 ? (1<<x.SLICE):0) | ...))
 	dev[1].GIDLC=ccu41_gidlc | CCU4_GIDLC_SPRB_Msk;
-    // FIXME UNIT2 and 3
+    if(uint32_t ccu42_gidlc=((x.UNIT==2 ? (1<<x.SLICE):0) | ...))
+	dev[2].GIDLC=ccu42_gidlc | CCU4_GIDLC_SPRB_Msk;
+    if(uint32_t ccu43_gidlc=((x.UNIT==2 ? (1<<x.SLICE):0) | ...))
+	dev3.GIDLC=ccu43_gidlc | CCU4_GIDLC_SPRB_Msk;
 
 #if UC_FAMILY == XMC1
     constexpr uint32_t mask=SCU_GENERAL_CCUCON_GSC40_Msk;
@@ -229,12 +240,14 @@ inline auto start=[](auto& ... x)
 
 inline auto stop=[](auto& ... x)
 {
-    // FIXME, create combined CCU4/CCU8 start
     if(uint32_t ccu40_gidls=((x.UNIT==0 ? (1<<x.SLICE):0) | ...))
 	dev[0].GIDLS=ccu40_gidls;
     if(uint32_t ccu41_gidls=((x.UNIT==1 ? (1<<x.SLICE):0) | ...))
 	dev[1].GIDLS=ccu41_gidls;
-    // FIXME UNIT2 and 3
+    if(uint32_t ccu42_gidls=((x.UNIT==2 ? (1<<x.SLICE):0) | ...))
+	dev[2].GIDLS=ccu42_gidls;
+    if(uint32_t ccu43_gidls=((x.UNIT==3 ? (1<<x.SLICE):0) | ...))
+	dev3.GIDLS=ccu43_gidls;
 };
 
 
@@ -246,8 +259,24 @@ class slice_t {
 public:
     static constexpr int UNIT=UNIT_PAR;
     static constexpr int SLICE=SLICE_PAR;
-    static constexpr auto &cc=dev[UNIT].cc[SLICE];
-    CCU4_CC4_TypeDef *operator->(void) { return &dev[UNIT].cc[SLICE]; }
+    static constexpr int TYPE=4;
+
+    CCU4_GLOBAL_TypeDef *global() {
+	if constexpr (UNIT==3)
+	    return &dev3;
+	else
+	    return &dev[UNIT];
+    }
+    CCU4_CC4_TypeDef *addr() {
+	if constexpr (UNIT==3)
+	    return &dev3.cc[SLICE];
+	else
+	    return &dev[UNIT].cc[SLICE];
+    }
+
+    auto operator->() {
+	return addr();
+    }
 
 #if UC_FAMILY == XMC4
     template <int i> IRQn_Type irq(void) {
@@ -258,11 +287,23 @@ public:
 	    if constexpr (i==2) return CCU40_2_IRQn;
 	    if constexpr (i==3) return CCU40_3_IRQn;
 	}
-	else {
+	if constexpr(UNIT==1){
 	    if constexpr (i==0) return CCU41_0_IRQn;
 	    if constexpr (i==1) return CCU41_1_IRQn;
 	    if constexpr (i==2) return CCU41_2_IRQn;
 	    if constexpr (i==3) return CCU41_3_IRQn;
+	}
+	if constexpr(UNIT==2){
+	    if constexpr (i==0) return CCU42_0_IRQn;
+	    if constexpr (i==1) return CCU42_1_IRQn;
+	    if constexpr (i==2) return CCU42_2_IRQn;
+	    if constexpr (i==3) return CCU42_3_IRQn;
+	}
+	if constexpr(UNIT==3){
+	    if constexpr (i==0) return CCU43_0_IRQn;
+	    if constexpr (i==1) return CCU43_1_IRQn;
+	    if constexpr (i==2) return CCU43_2_IRQn;
+	    if constexpr (i==3) return CCU43_3_IRQn;
 	}
     }
 #else
@@ -279,7 +320,7 @@ public:
     }
 #endif
     void init(void) {
-	auto &cc=dev[UNIT].cc[SLICE];
+	auto &cc=*this->addr();
 
 	// Use GSC4x from SCU_GENERAL.CCUCON mapped to EVENT0 to start timer
 	cc.INS=
@@ -287,11 +328,16 @@ public:
 	    bitfield<CCU4_CC4_INS_EV0EM_Msk>(EDGE_RISING);
 	cc.CMC=bitfield<CCU4_CC4_CMC_STRTS_Msk>(1);
 	cc.TCCLR=CCU4_CC4_TCCLR_TRBC_Msk | CCU4_CC4_TCCLR_TCC_Msk;
+
+	cc.TC=
+	    CCU4_CC4_TC_TCM_Msk |
+	    CCU4_CC4_TC_CLST_Msk | // Shadow transfer on clear
+	    CCU4_CC4_TC_STRM_Msk; // external start also clears timer
     }
 
     void start() {
-	dev[UNIT].GIDLC=1<<SLICE;
-	cc.TCSET=CCU4_CC4_TCSET_TRBS_Msk;
+	global()->GIDLC=1<<SLICE;
+	addr()->TCSET=CCU4_CC4_TCSET_TRBS_Msk;
     }
 
     template <int EVENT>
@@ -299,7 +345,7 @@ public:
 	level_t level=LEVEL_HIGH, int low_pass=0
     ) {
 	static_assert(0<=EVENT && EVENT<=2, "Only events 0,1,2 exist");
-	auto ins=dev[UNIT].cc[SLICE].INS;
+	auto ins=addr()->INS;
 	constexpr uint32_t input_mask=(CCU4_CC4_INS_EV0IS_Msk<<(4*EVENT));
 	constexpr uint32_t edge_mask=(CCU4_CC4_INS_EV0EM_Msk<<(2*EVENT));
 	constexpr uint32_t level_mask=(CCU4_CC4_INS_EV0LM_Msk<<(EVENT));
@@ -309,7 +355,7 @@ public:
 	    | bitfield<edge_mask>(edge)
 	    | bitfield<level_mask>(level)
 	    | bitfield<lowpass_mask>(low_pass);
-	dev[UNIT].cc[SLICE].INS=ins;
+	addr()->INS=ins;
     }
 
     template <int EVENT, int PORT, int PIN>
@@ -321,32 +367,42 @@ public:
 
     template <int EVENT>
     void service_request_event(int request_line) {
-	auto srs=dev[UNIT].cc[SLICE].SRS;
+	auto srs=addr()->SRS;
 	srs&=~(CCU4_CC4_SRS_E0SR_Msk<<(2*EVENT));
 	srs|=bitfield<CCU4_CC4_SRS_E0SR_Msk<<(2*EVENT)>(request_line);
-	dev[UNIT].cc[SLICE].SRS=srs;
+	addr()->SRS=srs;
 	// just assume we want to enable... otherwise why configure it?
-	dev[UNIT].cc[SLICE].INTE|=(CCU4_CC4_INTE_E0AE_Msk<<EVENT);
+	addr()->INTE|=(CCU4_CC4_INTE_E0AE_Msk<<EVENT);
     }
 
     template <int EVENT>
     void disable_service_request_event(void) {
-	dev[UNIT].cc[SLICE].INTE&=~(CCU4_CC4_INTE_E0AE_Msk<<EVENT);
+	addr()->INTE&=~(CCU4_CC4_INTE_E0AE_Msk<<EVENT);
     }
 
     template <int CAPTURE>
     void enable_capture(int event) {
 	static_assert(0<=CAPTURE && CAPTURE<=1, "Only capture 0 and 1 exist");
-	auto cmc=dev[UNIT].cc[SLICE].CMC;
+	auto cmc=addr()->CMC;
 	constexpr uint32_t mask=CCU4_CC4_CMC_CAP0S_Msk<<(CAPTURE*2);
 	cmc&=~mask;
 	cmc|=bitfield<mask>(event+1);
-	dev[UNIT].cc[SLICE].CMC=cmc;
+	addr()->CMC=cmc;
     }
     template <int CAPTURE>
     void disable_capture(void) {
 	static_assert(0<=CAPTURE && CAPTURE<=1, "Only capture 0 and 1 exist");
-	dev[UNIT].cc[SLICE].CMC&=~(CCU4_CC4_CMC_CAP0S_Msk<<(CAPTURE*2));
+	addr()->CMC&=~(CCU4_CC4_CMC_CAP0S_Msk<<(CAPTURE*2));
+    }
+
+    void period(resolution_t t) {
+	addr()->PRS=t.count();
+    }
+    void operator=(float i) {
+	this->addr()->CRS=i*this->addr()->PRS;
+    }
+    void center_period(resolution_t t) {
+	addr()->PRS=t.count()/2;
     }
 };
 
@@ -355,9 +411,6 @@ class edge_capture:public slice_t<UNIT_PAR,SLICE_PAR> {
 public:
     static constexpr int UNIT=UNIT_PAR;
     static constexpr int SLICE=SLICE_PAR;
-    void period(resolution_t t) {
-	dev[UNIT].cc[SLICE].PRS=t.count()-1;
-    }
 };
 
 template <int port, int pin>
@@ -369,7 +422,7 @@ public:
     constexpr center_aligned(gpio::pin<port,pin> x) {}
 
     void init(void) {
-	auto &cc=dev[UNIT].cc[SLICE];
+	auto &cc=*this->addr();
 	out<port,pin>().enable();
 
 	slice_t<UNIT,SLICE>::init();
@@ -379,10 +432,10 @@ public:
 	    CCU4_CC4_TC_STRM_Msk; // external start also clears timer
     }
     void period(resolution_t t) {
-	dev[UNIT].cc[SLICE].PRS=t.count()/2;
+	this->addr()->PRS=t.count()/2;
     }
     void operator=(float i) {
-	dev[UNIT].cc[SLICE].CRS=i*dev[UNIT].cc[SLICE].PRS;
+	this->addr()->CRS=i*this->addr()->PRS;
     }
 };
 

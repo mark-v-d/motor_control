@@ -206,6 +206,7 @@ class slice_t {
 public:
     static constexpr int UNIT=UNIT_PAR;
     static constexpr int SLICE=SLICE_PAR;
+    static constexpr int TYPE=8;
     CCU8_CC8_TypeDef *operator->(void) { return &dev[UNIT].cc[SLICE]; }
 
 #if UC_FAMILY == XMC4

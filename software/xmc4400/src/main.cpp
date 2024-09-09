@@ -16,8 +16,7 @@ constexpr float pi=acos(-1);
 #include "hardware.h"
 #include "ethernet.h"
 #include "icmp.h"
-#include "ccu4.h"
-#include "ccu8.h"
+#include "ccux.h"
 #include "udp_struct.h"
 #include "udp_sync.h"
 #include "bitfields.h"
@@ -151,6 +150,11 @@ float sync_Ki=5e-6;
 
 constexpr float scale_Vservo=(9900.0+27)/27/4096*3.3;
 
+extern "C" void CCU43_1_IRQHandler()
+{
+
+    return;
+}
 extern "C" void CCU80_2_IRQHandler(void)
 {
     static_assert(std::get<0>(hr_out).UNIT==0, "Wrong interrupt handler");
@@ -163,8 +167,9 @@ extern "C" void CCU80_2_IRQHandler(void)
     itm.PORT[0].u8=trace_info=subsample;
     if(subsample==1) {
 	auto t=syncer.sync(&eth0,50ns,sync_Kp,sync_Ki,20us);
-	if(t!=0s)
+	if(t!=0s) {
 	    std::apply([=](auto ...x) { (x.period(t+pwm_time),...);}, hr_out);
+	}
 	report.timer_delta=t/1ns;
 	report.timer_error=syncer.last_error()/1ns;
 	encoder->trigger();
@@ -318,6 +323,18 @@ volatile int init_enable=0;
 
 auto fan_timer=hrpwm0::center_aligned(FAN);
 
+inline void start_copro()
+{
+    bsl_init(COPRO_POWER,COPRO_TXD,COPRO_RXD);
+    copro.SetBaudrate(uart::Baudrate(4e6));
+    uart::fifo_configure<0,16>(copro);
+    copro_working=true;
+    copro->BYPCR=USIC_CH_BYPCR_BDVTR_Msk |
+	bitfield<USIC_CH_BYPCR_BDEN_Msk>(2) |
+	bitfield<USIC_CH_BYPCR_BWLE_Msk>(8);
+    copro->TBUF[0]=0x05a;
+}
+
 void init_adc(void);
 volatile int trap_enable=0;
 int main()
@@ -377,13 +394,7 @@ int main()
     SysTick->CTRL&=~SysTick_CTRL_TICKINT_Msk;
     NVIC_DisableIRQ(SysTick_IRQn);
 
-    //PPB->SCR=1;
-
-    // Start XMC1300
-    bsl_init(COPRO_POWER,COPRO_TXD,COPRO_RXD);
-    copro.SetBaudrate(uart::Baudrate(4e6));
-    uart::fifo_configure<0,16>(copro);
-    copro_working=true;
+    start_copro();
 
     HBH0_HR.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
     HBL0_HR.set(XMC_GPIO_OUTPUT_STRENGTH_STRONG_SHARP_EDGE);
@@ -409,9 +420,7 @@ int main()
     NVIC_EnableIRQ(std::get<0>(hr_out).irq<2>());
 
     std::apply(ccu8::shadow_transfer,hr_out);
-    std::apply(ccu8::start,hr_out);
-
-    //std::apply([](auto& ... hr) { (hr.enable_trap(), ...); }, hr_out);
+    std::apply(ccux::start,hr_out);
 
     ////////////////////////////////////////////////////////////////////////////
     // ADC
@@ -448,13 +457,13 @@ int main()
 
     std::atomic_thread_fence(std::memory_order_release);
 
-    ccu4::init<fan_timer.UNIT>(XMC_CCU4_CLOCK_SCU,
-	XMC_CCU4_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
     fan_timer.init();
     fan_timer.period(100us);
     fan_timer=0.5f;
     ccu8::start(fan_timer);
     ccu8::shadow_transfer(fan_timer);
+
+    //eru::dev1.EXISEL
 
     auto old_led=led;
     for(;;) {
@@ -496,13 +505,8 @@ int main()
 		drive_config->encoder=0;
 	    }
 	}
-	if(!copro_working) {
-	    // not sure why we need to try again for the z-axis
-	    bsl_init(COPRO_POWER,COPRO_TXD,COPRO_RXD);
-	    copro.SetBaudrate(uart::Baudrate(4e6));
-	    uart::fifo_configure<0,16>(copro);
-	    copro_working=true;
-	}
+	if(!copro_working)
+	    start_copro();
     }
     return 0;
 }

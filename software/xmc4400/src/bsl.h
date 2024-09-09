@@ -12,6 +12,7 @@ void bsl_init(POWER_ENABLE &power_enable, TX_PIN const&,RX_PIN const&) {
     using namespace std::chrono_literals;
     uart::full_duplex copro(TX_PIN{},RX_PIN{});
     copro.init(BSL_BAUDRATE);
+    copro->BYPCR=0;
 
     uint32_t rx_data;
 
