@@ -23,6 +23,7 @@ namespace motion_ns {
 
     struct  __attribute__ ((__packed__)) to_host {
 	int32_t position;
+	int32_t index;
 	float angle;
 	int32_t encoder_missing;
 	int32_t encoder_invalid;

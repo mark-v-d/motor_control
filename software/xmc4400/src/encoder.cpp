@@ -462,6 +462,34 @@ void hiperface_t::trigger()
 	invalidate();
 }
 
+class incremental_encoder_t:public encoder_t,
+    public posif::qdi32_t<decltype(ENC_SIN),decltype(ENC_COS),
+	decltype(ENC_CLK)>
+{
+    constexpr static int poles=5;
+    constexpr static int increments_per_revolution=8192;
+    constexpr static float conv=2.0*PI*poles/increments_per_revolution;
+
+    using base_t=
+	posif::qdi32_t<decltype(ENC_SIN),decltype(ENC_COS),decltype(ENC_CLK)>;
+public:
+    incremental_encoder_t() {
+	set_angle_conversion(0xffffffff,conv);
+	init();
+	ENC_5V=1;
+	ENC_12V=0;
+	ENC_DIR=0;
+	ENC_CLK.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+	ENC_RXD.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+	// ERU0_ETL0_INPUTA_P0_1
+	skip_posif_index();
+    }
+    void trigger() override { new_position(count(),base_t::index()); }
+    void rx_handler() override {}
+    void tx_handler() override {}
+    void protocol_handler() override {}
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 void init_encoder()
 {
@@ -473,8 +501,10 @@ void init_encoder()
 	encoder.set<AMT21_t>();
     */
     //encoder.set<mitsubishi_PQ_t>();
-    encoder.set<mitsubishi_MFS13_t>();
+    //encoder.set<mitsubishi_MFS13_t>();
+    encoder.set<incremental_encoder_t>();
     glass_scale.init();
+    glass_scale.skip_posif_index();
     ccu4::slice_t<1,0> h;
     ccu4::slice_t<1,1> l;
     ccu4::start(h,l);

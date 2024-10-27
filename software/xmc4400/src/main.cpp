@@ -233,6 +233,7 @@ extern "C" void CCU80_2_IRQHandler(void)
 	angle=angle_override;
     IO0=report.position==position;
     report.position=position;
+    report.index=encoder->index();
     report.angle=angle;
     report.encoder_missing=encoder->get_missing();
     report.encoder_invalid=encoder->get_invalid();
@@ -375,6 +376,8 @@ int main()
     itm.TCR=0x0001000d;
     itm.TER=0xffffffff;
 
+    TRACESWO.set(XMC_GPIO_HWCTRL_DISABLED);
+
     eth0.init( // Hangt zonder ethernet kabel
 	0,
 	RXD0, RXD1, CLK_RMII, CRS_DV, RXER, TXD0, TXD1, TX_EN, MDC, MDIO,
@@ -414,10 +417,14 @@ int main()
 	((hr=0.25f), ...);
     }, hr_out);
 
-    std::get<0>(hr_out)->ccu8->INTE=CCU8_CC8_INTE_PME_Msk;
-    std::get<0>(hr_out)->ccu8->SRS=bitfield<CCU8_CC8_SRS_POSR_Msk>(2);
-    NVIC_SetPriority(std::get<0>(hr_out).irq<2>(), 1);
-    NVIC_EnableIRQ(std::get<0>(hr_out).irq<2>());
+    {
+	auto &c=std::get<0>(hr_out)->ccu8;
+	c->INTE=CCU8_CC8_INTE_CMU2E_Msk;
+	c->SRS=bitfield<CCU8_CC8_SRS_CM2SR_Msk>(2);
+	c->CR2S=c->PRS-200;
+	NVIC_SetPriority(c.irq<2>(), 1);
+	NVIC_EnableIRQ(c.irq<2>());
+    }
 
     std::apply(ccu8::shadow_transfer,hr_out);
     std::apply(ccux::start,hr_out);

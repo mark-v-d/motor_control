@@ -37,6 +37,7 @@ SPECIALISATION(unit, int, 2, 3, 1); 	// posif 1A
 SPECIALISATION(unit, int, 2, 4, 1);
 SPECIALISATION(unit, int, 2, 5, 1);
 
+
 BASE__FUNCTION(pinZ, int);
 BASE__FUNCTION(pinB, int);
 BASE__FUNCTION(pinA, int);
@@ -49,6 +50,24 @@ SPECIALISATION(pinA, int, 14, 7, 1);
 SPECIALISATION(pinZ, int,  2, 3, 0);	// posif 1A
 SPECIALISATION(pinB, int,  2, 4, 0);
 SPECIALISATION(pinA, int,  2, 5, 0);
+
+
+// every encoder encountered sofar, does not work with the index from posif
+SPECIALISATION(unit, int,  2, 1, 0);
+SPECIALISATION(unit, int,  2, 8, 0);
+SPECIALISATION(pinZ, int,  1, 3, 16+CCU40_IN0_P1_3);
+SPECIALISATION(pinZ, int,  2, 1, 16+CCU40_IN0_P2_1);
+SPECIALISATION(pinZ, int,  2, 8, 16+CCU40_IN0_P2_8);
+
+SPECIALISATION(unit, int,  1, 4, 1);
+SPECIALISATION(unit, int,  2, 9, 1);
+SPECIALISATION(pinZ, int,  1, 4, 16+CCU41_IN0_P1_4);
+SPECIALISATION(pinZ, int,  2, 5, 16+CCU41_IN0_P2_5);
+SPECIALISATION(pinZ, int,  2, 9, 16+CCU41_IN0_P2_9);
+
+BASE__FUNCTION(pinCaptureSlice2, int);
+SPECIALISATION(pinCaptureSlice2, int, 1, 1,  CCU40_IN2_P1_1);
+SPECIALISATION(pinCaptureSlice2, int, 2, 3,  CCU41_IN2_P2_3);
 
 template <int UNIT>
 inline void init() {
@@ -138,52 +157,31 @@ public:
 	cnt_l l;
 	cnt_h h;
 	cnt_i i;
-	if constexpr(UNIT==0) {
-	    l.template set_event<0>(CCU40_IN0_POSIF0_OUT0,EDGE_RISING);
-	    l.template set_event<1>(CCU40_IN0_POSIF0_OUT1,EDGE_RISING);
+	l.template set_event<0>(CCU40_IN0_POSIF0_OUT0,EDGE_RISING);
+	l.template set_event<1>(CCU40_IN0_POSIF0_OUT1,EDGE_RISING);
+	if(Z<16)
 	    l.template set_event<2>(CCU40_IN0_POSIF0_OUT3,EDGE_RISING);
-	    l->CMC=bitfield<CCU4_CC4_CMC_CNTS_Msk>(1)
-		| bitfield<CCU4_CC4_CMC_UDS_Msk>(2)
-		| bitfield<CCU4_CC4_CMC_CAP0S_Msk>(3);
-	    l->PRS=0xffff;
+	else
+	    l.template set_event<2>(Z-16,EDGE_RISING);
+	l->CMC=bitfield<CCU4_CC4_CMC_CNTS_Msk>(1)
+	    | bitfield<CCU4_CC4_CMC_UDS_Msk>(2)
+	    | bitfield<CCU4_CC4_CMC_CAP0S_Msk>(3);
+	l->PRS=0xffff;
 
-	    cnt_h h;
-	    h.template set_event<0>(CCU40_IN1_POSIF0_OUT0,EDGE_RISING);
-	    h.template set_event<1>(CCU40_IN1_POSIF0_OUT1,EDGE_RISING);
-	    h->CMC=bitfield<CCU4_CC4_CMC_CNTS_Msk>(1)
-		| bitfield<CCU4_CC4_CMC_UDS_Msk>(2)
-		| bitfield<CCU4_CC4_CMC_CAP0S_Msk>(3)
-		| CCU4_CC4_CMC_TCE_Msk;
-	    h->PRS=0xffff;
-	} else {
-	    l.template set_event<0>(CCU41_IN0_POSIF1_OUT0,EDGE_RISING);
-	    l.template set_event<1>(CCU41_IN0_POSIF1_OUT1,EDGE_RISING);
-	    //l.template set_event<2>(CCU41_IN0_POSIF1_OUT3,EDGE_RISING);
-	    l.template set_event<2>(CCU41_IN0_CCU41_ST2,EDGE_RISING);
-	    l->CMC=bitfield<CCU4_CC4_CMC_CNTS_Msk>(1)
-		| bitfield<CCU4_CC4_CMC_UDS_Msk>(2)
-		| bitfield<CCU4_CC4_CMC_CAP0S_Msk>(3);
-	    l->PRS=0xffff;
-
-	    h.template set_event<0>(CCU41_IN1_POSIF1_OUT0,EDGE_RISING);
-	    h.template set_event<1>(CCU41_IN1_POSIF1_OUT1,EDGE_RISING);
-	    h->CMC=bitfield<CCU4_CC4_CMC_CNTS_Msk>(1)
-		| bitfield<CCU4_CC4_CMC_UDS_Msk>(2)
-		| bitfield<CCU4_CC4_CMC_CAP0S_Msk>(3)
-		| CCU4_CC4_CMC_TCE_Msk;
-	    h->PRS=0xffff;
-
-	    i.template set_event<0>(CCU41_IN2_P2_3,EDGE_RISING);
-	    i->TC=CCU4_CC4_TC_TSSM_Msk;			// single shot mode
-	    i->CMC=bitfield<CCU4_CC4_CMC_STRTS_Msk>(1); // use P2.3 to start timer
-	    i->PRS=2;
-	    i->CRS=1;
-	}
+	h.template set_event<0>(CCU40_IN1_POSIF0_OUT0,EDGE_RISING);
+	h.template set_event<1>(CCU40_IN1_POSIF0_OUT1,EDGE_RISING);
+	h->CMC=bitfield<CCU4_CC4_CMC_CNTS_Msk>(1)
+	    | bitfield<CCU4_CC4_CMC_UDS_Msk>(2)
+	    | bitfield<CCU4_CC4_CMC_CAP0S_Msk>(3)
+	    | CCU4_CC4_CMC_TCE_Msk;
+	h->PRS=0xffff;
 
 	module->PRUNS=1;
 	l.start(); h.start(); i.start();
 	ccu4::start(l,h,i);
 	ccu4::shadow_transfer(l,h,i);
+
+	// Hack to start counting, not sure why this is necessary
 	A.set(XMC_GPIO_MODE_INPUT_INVERTED_TRISTATE);
 	for(int i=0; i<100; i++)
 	    asm volatile("nop");
@@ -210,6 +208,7 @@ public:
     using base_t::module;
     using typename base_t::cnt_l;
     using typename base_t::cnt_h;
+    using typename base_t::cnt_i;
 
     qdi32_t():base_t() {
 	enc_z Z;
@@ -229,6 +228,24 @@ public:
 
     void positive_index() {
 	enc_z{}.set(XMC_GPIO_MODE_INPUT_TRISTATE);
+    }
+
+    void skip_posif_index() {
+	static_assert(pinZ(enc_z{})<16, "POSIF already skipped");
+	using namespace ccu4;
+
+	if(UNIT==0)
+	    cnt_l{}.template set_event<2>(CCU40_IN0_CCU40_ST2,EDGE_RISING);
+	else
+	    cnt_l{}.template set_event<2>(CCU41_IN0_CCU41_ST2,EDGE_RISING);
+
+	cnt_i i;
+	i.template set_event<0>(pinCaptureSlice2(enc_z{}),EDGE_RISING);
+	i->TC=CCU4_CC4_TC_TSSM_Msk;			// single shot mode
+	i->CMC=bitfield<CCU4_CC4_CMC_STRTS_Msk>(1); // use event0 to start timer
+	i->PRS=2;
+	i->CRS=1;
+
     }
 
     using base_t::count;

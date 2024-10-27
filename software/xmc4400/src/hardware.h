@@ -46,6 +46,7 @@ static gpio::pin<1,12> TX_EN;
 static gpio::output<2,10> ETH_RESET;
 static gpio::output<0,9> SUPPLY_VOLTAGE;
 static hrpwm0::out<0,6> FAN;
+static gpio::pin<2,1> TRACESWO;
 
 
 static hrpwm0::out<0,5> HBL0_HR;
@@ -63,6 +64,7 @@ static gpio::output<1,10> ENC_DIR;
 static gpio::pin<1,5> ENC_TXD;
 static gpio::pin<1,4> ENC_RXD;
 //static gpio::pin<0,0> ENC_RXD2;
+static gpio::output<1,1> ENC_CLK;
 
 static gpio::pin<14,7> ENC_SIN;
 static gpio::pin<14,12> ENC_SIN_A;
@@ -78,14 +80,14 @@ static gpio::pin<0,0> COPRO_RXD;
 static gpio::pin<0,1> COPRO_TXD;
 static gpio::output<0,10> COPRO_POWER;
 
-static gpio::output<1,1> IO0;
+static gpio::output<1,13> IO0;
 static gpio::output<1,0> IO1;
 static gpio::output<1,9> IO2;
 static gpio::output<1,8> IO3;
 static gpio::output<1,7> IO4;
-static gpio::output<3,5> IO5;
-static gpio::output<3,4> IO6;
-static gpio::output<3,3> IO7;
+static gpio::output<1,6> IO5;
+static gpio::output<3,5> IO6;
+static gpio::output<3,4> IO7;
 
 static gpio::output<3,2> RELAY0;
 static gpio::output<3,1> RELAY1;

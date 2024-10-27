@@ -10,6 +10,7 @@
 class encoder_t {
     int32_t position[2];
     int32_t time[2];
+    int32_t last_index=0;
     int32_t now;
     int invalid=0;
     int last=0;
@@ -22,7 +23,7 @@ public:
     auto get_position_angle() {
 	auto c=float(now-time[0])/(time[1]-time[0]);
 	int32_t p=std::round((position[1]-position[0])*c+position[0]);
-	float a=conv*(p&mask);
+	float a=conv*((p-last_index)&mask);
 	now++;
 	return std::tuple{p,a};
     }
@@ -30,6 +31,7 @@ public:
     auto get_age() const { return now-time[last]; }
     int get_missing() const { return trigger_count; }
     int get_invalid() const { return invalid; }
+    int32_t index() const { return last_index; }
 
     virtual void trigger()=0;
     virtual void rx_handler()=0;
@@ -45,10 +47,11 @@ protected:
 	conv=c;
     }
 
-    void new_position(int32_t p) {
+    void new_position(int32_t p, int32_t i=0) {
 	last^=1;
 	position[last]=p;
 	time[last]=now;
+	last_index=i;
     }
 
     void invalidate() { invalid++; }
