@@ -57,7 +57,7 @@ protected:
     void invalidate() { invalid++; }
 };
 
-extern polymorphic_t<encoder_t,80> encoder;
+extern polymorphic_t<encoder_t,116> encoder;
 
 extern posif::qdi32_t<decltype(ENC_A),decltype(ENC_B),decltype(ENC_Z)>
     glass_scale;

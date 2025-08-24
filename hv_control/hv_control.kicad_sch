@@ -25867,9 +25867,9 @@
 		)
 		(uuid "53b2b4b2-7fa2-4d6c-9a9a-65b017c20379")
 	)
-	(text "FIXME\n\nOpto pinning\nRXD_TIMER on P0.9 of XMC1301\n100nF parallel with R27 (ook gnd beter aansluiten)\nGaten sub-d te klein\nOpto geisoleerde ingangen op XH connector toevoegen\nDebug pin XMC1300\nBleed resistor on 3.3v of XMC1300, to allow restart.\nENC0_RXD en ENC0_CLK zelfde net maken.\nHALL interface?\nIndex encoder(DB15) op P2.1\nDiodes + R na R44 en R45"
+	(text "FIXME\n\nOpto pinning\nRXD_TIMER on P0.9 of XMC1301\n100nF parallel with R27 (ook gnd beter aansluiten)\nGaten sub-d te klein\nOpto geisoleerde ingangen op XH connector toevoegen\nDebug pin XMC1300\nBleed resistor on 3.3v of XMC1300, to allow restart.\nENC0_RXD en ENC0_CLK zelfde net maken.\nHALL interface?\nIndex encoder(DB15) op P2.1\nDiodes + R na R44 en R45\n100nF // R48\nMetal of RJ45 to shield.\nBredere isolator"
 		(exclude_from_sim no)
-		(at 322.58 36.83 0)
+		(at 308.102 68.58 0)
 		(effects
 			(font
 				(size 1.27 1.27)

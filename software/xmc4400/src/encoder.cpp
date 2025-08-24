@@ -1,3 +1,5 @@
+/* AKM63 a.angle_offset=2*pi*20/360
+*/
 #include <atomic>
 #include <math.h>
 #include <array>
@@ -12,7 +14,7 @@ constexpr auto PI=acos(-1);
 
 decltype(glass_scale) glass_scale;
 
-typedef std::chrono::duration<int,std::ratio<4,int(1s/pwm_time)>> timebase_t;
+typedef std::chrono::duration<int,std::ratio<1,int(1s/pwm_time/4)>> timebase_t;
 
 /*******************************************************************************
     Dummy encoder, encoder is initially of this type and it does nothing
@@ -331,6 +333,8 @@ class hiperface_t:public encoder_t,
     uint8_t rx_buffer[16];
     uint8_t tx_buffer[8];
     uint8_t addr=0x40;
+    timebase_t powerup_delay=
+	std::chrono::duration_cast<timebase_t>(20.0ms);
 
     void transmit(std::initializer_list<uint8_t> msg)
     {
@@ -372,9 +376,10 @@ hiperface_t::hiperface_t()
     static_assert(baudrate.step>0 && baudrate.step<=1024, "STEP out of range");
     static_assert(baudrate.dcqt>0 && baudrate.dcqt<=32, "DCQT out of range");
 
+    SUPPLY_VOLTAGE=0;
+
     ENC_TXD.set(XMC_GPIO_MODE_INPUT_PULL_UP);
     ENC_DIR=0;
-    ENC_12V=1;
     hd.init(baudrate,XMC_USIC_CH_PARITY_MODE_EVEN);
     uart::fifo_configure<0,16>(hd);
     posif_t::init();
@@ -384,7 +389,6 @@ hiperface_t::hiperface_t()
     NVIC_EnableIRQ(hd.irq<tx_irq>());
 
     // Powerup and wait
-    ENC_12V=1;
     poll_timer=poll_interval;
 }
 
@@ -396,6 +400,7 @@ hiperface_t::~hiperface_t()
     NVIC_DisableIRQ(hd.irq<tx_irq>());
     NVIC_DisableIRQ(hd.irq<rx_irq>());
     hd.disable();
+    SUPPLY_VOLTAGE=1;
 }
 
 void hiperface_t::tx_handler()
@@ -414,6 +419,8 @@ void hiperface_t::tx_handler()
 void hiperface_t::trigger()
 {
     IO0=0;
+    if(powerup_delay>0ms && --powerup_delay==0ms)
+	ENC_12V=1;
     if(poll_timer>0ms)
 	poll_timer--;
     else {
@@ -466,6 +473,8 @@ class incremental_encoder_t:public encoder_t,
     public posif::qdi32_t<decltype(ENC_SIN),decltype(ENC_COS),
 	decltype(ENC_CLK)>
 {
+    /* AKM63B encoder requires 120 Ohm resistor on index
+    */
     constexpr static int poles=5;
     constexpr static int increments_per_revolution=8192;
     constexpr static float conv=2.0*PI*poles/increments_per_revolution;
@@ -503,6 +512,7 @@ void init_encoder()
     //encoder.set<mitsubishi_PQ_t>();
     //encoder.set<mitsubishi_MFS13_t>();
     encoder.set<incremental_encoder_t>();
+    //encoder.set<hiperface_t>();
     glass_scale.init();
     glass_scale.skip_posif_index();
     ccu4::slice_t<1,0> h;
