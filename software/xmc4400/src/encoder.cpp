@@ -499,6 +499,77 @@ public:
     void protocol_handler() override {}
 };
 
+
+uint16_t fanuc_char=0xff80;
+
+/* Fanuc***********************************************************/
+/* Seems to be 1024kb/s, positive pulse on REQ (pin-5) of 7..9us.
+ * Response is 4 frames of 1 start bit, 16 data bits and 1 stop bit.
+*/
+class fanuc_beta32b:public encoder_t
+{
+    constexpr static int poles=4;
+    constexpr static int increments_per_revolution=(1<<12);
+    constexpr static float conv=2.0*PI*poles/increments_per_revolution;
+
+    constexpr static auto baudrate=uart::Baudrate(1.0e6);
+    uint16_t rx_buffer[5];
+    int putp;
+public:
+    fanuc_beta32b();
+    ~fanuc_beta32b() override;
+
+    void trigger() override;
+    void rx_handler()  override;
+    void tx_handler()  override {}
+    void protocol_handler() override {}
+};
+
+fanuc_beta32b::fanuc_beta32b()
+{
+    set_angle_conversion(increments_per_revolution-1,conv);
+    ENC_DIR=1;
+    ENC_5V=1;
+    fd.init(baudrate,XMC_USIC_CH_PARITY_MODE_NONE,16);
+    uart::fifo_configure<0,8>(hd);
+
+    fd.enable_receive_buffer_interrupt<rx_irq>(1);
+    NVIC_SetPriority(fd.irq<rx_irq>(), 20);
+    NVIC_EnableIRQ(fd.irq<rx_irq>());
+}
+
+fanuc_beta32b::~fanuc_beta32b()
+{
+    ENC_DIR=0;
+    ENC_5V=0;
+    NVIC_DisableIRQ(fd.irq<p_irq>());
+    fd.disable();
+}
+
+void fanuc_beta32b::trigger()
+{
+    fd->TBUF[0]=fanuc_char;
+    hd->TRBSCR=USIC_CH_TRBSCR_FLUSHRB_Msk;
+    putp=0;
+    trigger_count++;
+    itm.PORT[2].u8=0;
+}
+
+void fanuc_beta32b::rx_handler() {
+    itm.PORT[2].u8=1;
+    if(fd->TRBSR & USIC_CH_TRBSCR_CSRBI_Msk) {
+	trigger_count--;
+	fd->TRBSCR=USIC_CH_TRBSCR_CSRBI_Msk;
+	int d;
+	while((d=fd.rx_fifo())>=0) {
+	    itm.PORT[0].u16=d;
+	    itm.PORT[1].u8=putp;
+	    rx_buffer[putp++]=d;
+	}
+    }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 void init_encoder()
 {
@@ -511,8 +582,9 @@ void init_encoder()
     */
     //encoder.set<mitsubishi_PQ_t>();
     //encoder.set<mitsubishi_MFS13_t>();
-    encoder.set<incremental_encoder_t>();
+    //encoder.set<incremental_encoder_t>();
     //encoder.set<hiperface_t>();
+    encoder.set<fanuc_beta32b>();
     glass_scale.init();
     glass_scale.skip_posif_index();
     ccu4::slice_t<1,0> h;

@@ -210,7 +210,6 @@ class base_t {
 protected:
     constexpr static auto channel=location(INFO);
     constexpr static int stop_bits=1;
-    constexpr static int data_bits=8;
     constexpr static XMC_USIC_CH_PARITY_MODE parity_mode=
 	XMC_USIC_CH_PARITY_MODE_NONE;
 public:
@@ -234,7 +233,8 @@ public:
     }
 
     void init(baud_t baud,
-	XMC_USIC_CH_PARITY_MODE parity_mode=XMC_USIC_CH_PARITY_MODE_NONE
+	XMC_USIC_CH_PARITY_MODE parity_mode=XMC_USIC_CH_PARITY_MODE_NONE,
+	unsigned data_bits=8
     ) {
 	/*
 	TX_PIN{}.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL |dout0(TX_PIN{}).gpio_mode);
@@ -473,7 +473,6 @@ class full_duplex:public base_t<dout0(TX_PIN{})> {
     using base=base_t<dout0(TX_PIN{})>;
     constexpr static auto channel=location(dout0(TX_PIN{}));
     constexpr static int stop_bits=1;
-    constexpr static int data_bits=8;
     constexpr static XMC_USIC_CH_PARITY_MODE parity_mode=
 	XMC_USIC_CH_PARITY_MODE_NONE;
 public:
@@ -488,13 +487,14 @@ public:
     }
 
     void init(baud_t baud,
-	XMC_USIC_CH_PARITY_MODE parity_mode=XMC_USIC_CH_PARITY_MODE_NONE
+	XMC_USIC_CH_PARITY_MODE parity_mode=XMC_USIC_CH_PARITY_MODE_NONE,
+	unsigned data_bits=8
     ) {
 	TX_PIN{}.set(XMC_GPIO_MODE_OUTPUT_PUSH_PULL |dout0(TX_PIN{}).gpio_mode);
 	TX_PIN{}.set(XMC_GPIO_HWCTRL_DISABLED);
 	RX_PIN{}.set(XMC_GPIO_MODE_INPUT_TRISTATE);
 
-	base::init(baud,parity_mode);
+	base::init(baud,parity_mode,data_bits);
 
 	XMC_UART_CH_SetInputSource(channel,
 	    XMC_UART_CH_INPUT_RXD,dx<0>(RX_PIN{}));
