@@ -186,9 +186,9 @@ constexpr auto Baudrate(unsigned rate)
 	    if(error<0)
 		error=-error;
 	    if(error<error_min) {
-		constexpr uint64_t accuracy=100000;
+		constexpr uint64_t accuracy=1000;
 
-		uint32_t brd=accuracy*frequency*NUM/
+		uint64_t brd=accuracy*frequency*NUM/
 		    (1024*(DEN/oversampling)*oversampling)/rate;
 		error_min=error;
 		step=NUM;
@@ -198,6 +198,8 @@ constexpr auto Baudrate(unsigned rate)
 		    return baud_t{.step=step,.pdiv=pdiv,.dcqt=dctq};
 	    }
 	}
+	while(NUM==num/++factor && DEN==den/factor)
+	    ;
     }
     return baud_t{.step=step,.pdiv=pdiv,.dcqt=dctq};
 }
@@ -389,6 +391,8 @@ public:
 	rbctr&=~(USIC_CH_RBCTR_LIMIT_Msk
 	    | USIC_CH_RBCTR_SRBTM_Msk
 	    | USIC_CH_RBCTR_ARBIEN_Msk
+	    | USIC_CH_RBCTR_SRBINP_Msk
+	    | USIC_CH_RBCTR_LIMIT_Msk
 	);
 	rbctr|=USIC_CH_RBCTR_LOF_Msk
 	    | USIC_CH_RBCTR_SRBIEN_Msk

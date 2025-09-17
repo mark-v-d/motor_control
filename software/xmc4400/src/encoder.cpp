@@ -500,21 +500,34 @@ public:
 };
 
 
-uint16_t fanuc_char=0xff80;
-
 /* Fanuc***********************************************************/
 /* Seems to be 1024kb/s, positive pulse on REQ (pin-5) of 7..9us.
- * Response is 4 frames of 1 start bit, 16 data bits and 1 stop bit.
+ * Response is 5 frames of 1 start bit, 16 data bits and 1 stop bit.
+
+    1st status
+	0xe000	3-msb changes, reason unknown
+	0x0100	index seen
+    2nd 16-bit counter within revolution
+    3rd revolution counter
+    4th absolute
+	0x8000	Always set?
+	0x03fc	Commutation angle? After index the same as 2nd>>4
+    5th	checksum?
+	Sometimes this word is postponed by one cycle (makes it look
+	like 5-bits)
 */
 class fanuc_beta32b:public encoder_t
 {
     constexpr static int poles=4;
-    constexpr static int increments_per_revolution=(1<<12);
+    constexpr static int increments_per_revolution=(1<<16);
     constexpr static float conv=2.0*PI*poles/increments_per_revolution;
+    constexpr static uint16_t request=0xff80;
 
-    constexpr static auto baudrate=uart::Baudrate(1.0e6);
+
+    constexpr static auto baudrate=uart::Baudrate(1.024e6);
     uint16_t rx_buffer[5];
     int putp;
+    int pattern[8];
 public:
     fanuc_beta32b();
     ~fanuc_beta32b() override;
@@ -533,7 +546,7 @@ fanuc_beta32b::fanuc_beta32b()
     fd.init(baudrate,XMC_USIC_CH_PARITY_MODE_NONE,16);
     uart::fifo_configure<0,8>(hd);
 
-    fd.enable_receive_buffer_interrupt<rx_irq>(1);
+    fd.enable_receive_buffer_interrupt<rx_irq>(4);
     NVIC_SetPriority(fd.irq<rx_irq>(), 20);
     NVIC_EnableIRQ(fd.irq<rx_irq>());
 }
@@ -548,24 +561,39 @@ fanuc_beta32b::~fanuc_beta32b()
 
 void fanuc_beta32b::trigger()
 {
-    fd->TBUF[0]=fanuc_char;
+    fd->TBUF[0]=request;
     hd->TRBSCR=USIC_CH_TRBSCR_FLUSHRB_Msk;
     putp=0;
     trigger_count++;
+    itm.PORT[0].u32=trigger_count;
     itm.PORT[2].u8=0;
 }
 
 void fanuc_beta32b::rx_handler() {
     itm.PORT[2].u8=1;
     if(fd->TRBSR & USIC_CH_TRBSCR_CSRBI_Msk) {
-	trigger_count--;
 	fd->TRBSCR=USIC_CH_TRBSCR_CSRBI_Msk;
 	int d;
 	while((d=fd.rx_fifo())>=0) {
-	    itm.PORT[0].u16=d;
+	    itm.PORT[putp].u16=d;
 	    itm.PORT[1].u8=putp;
 	    rx_buffer[putp++]=d;
 	}
+	int p=rx_buffer[0]>>13;
+	if(pattern[p]<255)
+	    pattern[p]++;
+	if(rx_buffer[0]&0x100) {
+	    trigger_count--;
+	    itm.PORT[0].u32=trigger_count;
+	    // index not yet seen
+	    new_position((rx_buffer[3]&0xfff)<<4,0);
+	} else {
+	    trigger_count--;
+	    itm.PORT[0].u32=trigger_count;
+	    uint32_t p=rx_buffer[1]+(((uint32_t)rx_buffer[2])<<16);
+	    new_position(p,p&0xffff0000);
+	}
+
     }
 }
 

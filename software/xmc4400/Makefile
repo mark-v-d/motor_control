@@ -44,7 +44,7 @@ CPPFLAGS+=-D $(DEVICE)_$(PACKAGE)x$(MEMORY)
 CPU = -g -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 CFLAGS   += $(CPU)
-CXXFLAGS += $(CPU) -std=c++20 -O2 -Wno-volatile 
+CXXFLAGS += $(CPU) -std=c++20 -O2 -Wno-volatile
 ASFLAGS  += $(CPU)
 LDFLAGS  += $(CPU)
 
