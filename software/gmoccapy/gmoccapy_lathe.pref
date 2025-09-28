@@ -23,7 +23,7 @@ x_pos = 40
 y_pos = 30
 width = 979
 height = 750
-gtk_theme = Follow System Theme
+gtk_theme = Adwaita-dark
 audio_alert = /usr/share/sounds/freedesktop/stereo/dialog-warning.oga
 audio_error = /usr/share/sounds/freedesktop/stereo/dialog-error.oga
 grid_size = 1.0
@@ -85,5 +85,5 @@ system_name_rot. = Drehung um Z
 kbd_width = 880
 kbd_set_height = False
 kbd_set_width = False
-gcode_theme = classic
+gcode_theme = oblivion
 
