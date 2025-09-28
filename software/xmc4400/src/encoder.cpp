@@ -6,6 +6,7 @@
 
 #include "encoder.h"
 #include "uart.h"
+#include "crc_lut.h"
 
 uart::full_duplex fd(ENC_TXD,ENC_RXD);
 uart::half_duplex hd(ENC_TXD);
@@ -523,6 +524,10 @@ class fanuc_beta32b:public encoder_t
     constexpr static float conv=2.0*PI*poles/increments_per_revolution;
     constexpr static uint16_t request=0xff80;
 
+    constexpr static uint8_t crc_generator=0xb;
+    constexpr static auto lut=crc_make_lut<5,8,crc_generator,uint8_t>();
+    uint8_t crc=0;
+public:
 
     constexpr static auto baudrate=uart::Baudrate(1.024e6);
     uint16_t rx_buffer[5];
@@ -537,6 +542,16 @@ public:
     void tx_handler()  override {}
     void protocol_handler() override {}
     uint16_t raw(int i) { return rx_buffer[i]; }
+
+private:
+    void add_bit(int b) {
+	crc<<=1;
+	crc|=b&1;
+	if(crc&0x20)
+	    crc^=(crc_generator|0x20);
+    }
+
+    void add_byte(uint8_t b) { crc=lut[(crc<<8)|b]; }
 };
 
 fanuc_beta32b::fanuc_beta32b()
@@ -589,7 +604,19 @@ void fanuc_beta32b::rx_handler() {
 	}
 	if(putp<5)
 	    return;
-	if(rx_buffer[0]&0x100) {
+	crc=0;
+	for(int i=0; i<4; i++) {
+	    add_bit(0);
+	    add_byte(rx_buffer[i]);
+	    add_byte(rx_buffer[i]>>8);
+	    add_bit(1);
+	}
+	for(int i=1; i<6; i++)
+	    add_bit(rx_buffer[4]>>i);
+	itm.PORT[3].u8=crc;
+	if(crc!=0)
+	    invalidate();
+	else if(rx_buffer[0]&0x100) {
 	    trigger_count--;
 	    itm.PORT[0].u32=trigger_count;
 	    // index not yet seen
