@@ -104,6 +104,7 @@ fifo_config_t fifo_configure(UART0 ch0, UART1 ch1) {
 	    if(rx0==size) {
 		ch0->RBCTR=result.rx0=
 		    bitfield<USIC_CH_RBCTR_DPTR_Msk>(base)
+		    | USIC_CH_RBCTR_RCIM_Msk
 		    | bitfield<USIC_CH_RBCTR_LIMIT_Msk>(0)
 		    | bitfield<USIC_CH_RBCTR_SIZE_Msk>(pr_size);
 		base+=size;
@@ -119,6 +120,7 @@ fifo_config_t fifo_configure(UART0 ch0, UART1 ch1) {
 	if(rx1==size) {
 	    ch1->RBCTR=result.rx1=
 		bitfield<USIC_CH_RBCTR_DPTR_Msk>(base)
+		| USIC_CH_RBCTR_RCIM_Msk
 		| bitfield<USIC_CH_RBCTR_LIMIT_Msk>(0)
 		| bitfield<USIC_CH_RBCTR_SIZE_Msk>(pr_size);
 	    base+=size;
@@ -353,7 +355,7 @@ public:
 	return -1;
     }
 
-    int rx_fifo(void) {
+    int32_t rx_fifo(void) {
 	if(channel->TRBSR & USIC_CH_TRBSR_REMPTY_Msk)
 	    return -1;
 	return channel->OUTR;
@@ -466,6 +468,13 @@ public:
 	channel->CCR=0;
 	//XMC_SCU_RESET_AssertPeripheralReset(XMC_SCU_PERIPHERAL_RESET_USIC1);
 	//XMC_SCU_CLOCK_GatePeripheralClock(XMC_SCU_PERIPHERAL_CLOCK_USIC1);
+    }
+
+    void frame_length(uint8_t l) {
+	auto x=channel->SCTR;
+	x&=~USIC_CH_SCTR_FLE_Msk;
+	x|=bitfield<USIC_CH_SCTR_FLE_Msk>(l);
+	channel->SCTR=x;
     }
 };
 

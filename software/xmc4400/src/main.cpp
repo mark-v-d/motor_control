@@ -156,7 +156,8 @@ extern "C" void CCU43_1_IRQHandler()
     return;
 }
 
-
+bool locked;
+bool enable;
 extern "C" void CCU80_2_IRQHandler(void)
 {
     static_assert(std::get<0>(hr_out).UNIT==0, "Wrong interrupt handler");
@@ -203,13 +204,13 @@ extern "C" void CCU80_2_IRQHandler(void)
 
     RELAY0=drive_io->digout&1;
     RELAY1=drive_io->digout&2;
-    bool enable=drive_io->digout&drive_io->DRIVE_ENABLE;
+    enable=drive_io->digout&drive_io->DRIVE_ENABLE;
     overcurrent_latch&=enable;
     bool overvoltage=Vservo>drive_config->overvoltage;
     enable&=!overcurrent_latch && !overvoltage;
 
     C setpoint=0;
-    bool locked=syncer.locked(&eth0) && drive_io.age(&eth0)<2ms;
+    locked=syncer.locked(&eth0) && drive_io.age(&eth0)<2ms;
     if(drive_io.age(&eth0)<0ms)
 	drive_io.clear_timestamp();
     else if(locked && enable) {
@@ -239,6 +240,7 @@ extern "C" void CCU80_2_IRQHandler(void)
     report.angle=angle;
     report.encoder_missing=encoder->get_missing();
     report.encoder_invalid=encoder->get_invalid();
+    itm.PORT[3].u32=report.encoder_missing;
 
     auto Istator=current_scale*(
 	    clarke[0]*float(rx_data[0])+
@@ -261,6 +263,9 @@ extern "C" void CCU80_2_IRQHandler(void)
 	    Iavg_counter=0;
 	Irotor=0.25f*Irot;
     }
+
+    for(int i=0; i<5; i++)
+	report.rx_data[8+i]=encoder->raw(i);
 
     report.Irotor[0]=real(Irotor);
     report.Irotor[1]=imag(Irotor);

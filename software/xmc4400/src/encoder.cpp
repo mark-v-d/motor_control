@@ -536,6 +536,7 @@ public:
     void rx_handler()  override;
     void tx_handler()  override {}
     void protocol_handler() override {}
+    uint16_t raw(int i) { return rx_buffer[i]; }
 };
 
 fanuc_beta32b::fanuc_beta32b()
@@ -546,8 +547,7 @@ fanuc_beta32b::fanuc_beta32b()
     fd.init(baudrate,XMC_USIC_CH_PARITY_MODE_NONE,16);
     uart::fifo_configure<0,8>(hd);
 
-    fd.enable_receive_buffer_interrupt<rx_irq>(4);
-    NVIC_SetPriority(fd.irq<rx_irq>(), 20);
+    NVIC_SetPriority(fd.irq<rx_irq>(), 0);
     NVIC_EnableIRQ(fd.irq<rx_irq>());
 }
 
@@ -561,6 +561,9 @@ fanuc_beta32b::~fanuc_beta32b()
 
 void fanuc_beta32b::trigger()
 {
+    fd.enable_receive_buffer_interrupt<rx_irq>(2);
+    NVIC_SetPriority(fd.irq<rx_irq>(), 0);
+    fd.frame_length(15);
     fd->TBUF[0]=request;
     hd->TRBSCR=USIC_CH_TRBSCR_FLUSHRB_Msk;
     putp=0;
@@ -573,15 +576,19 @@ void fanuc_beta32b::rx_handler() {
     itm.PORT[2].u8=1;
     if(fd->TRBSR & USIC_CH_TRBSCR_CSRBI_Msk) {
 	fd->TRBSCR=USIC_CH_TRBSCR_CSRBI_Msk;
-	int d;
+	int32_t d;
 	while((d=fd.rx_fifo())>=0) {
 	    itm.PORT[putp].u16=d;
 	    itm.PORT[1].u8=putp;
 	    rx_buffer[putp++]=d;
 	}
-	int p=rx_buffer[0]>>13;
-	if(pattern[p]<255)
-	    pattern[p]++;
+	if(putp==3) {
+	    fd.frame_length(21);
+	    fd.enable_receive_buffer_interrupt<rx_irq>(1);
+	    NVIC_SetPriority(fd.irq<rx_irq>(), 20);
+	}
+	if(putp<5)
+	    return;
 	if(rx_buffer[0]&0x100) {
 	    trigger_count--;
 	    itm.PORT[0].u32=trigger_count;
