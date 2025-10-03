@@ -541,7 +541,6 @@ public:
     void rx_handler()  override;
     void tx_handler()  override {}
     void protocol_handler() override {}
-    uint16_t raw(int i) { return rx_buffer[i]; }
 
 private:
     void add_bit(int b) {
@@ -584,23 +583,19 @@ void fanuc_beta32b::trigger()
     putp=0;
     trigger_count++;
     itm.PORT[0].u32=trigger_count;
-    itm.PORT[2].u8=0;
 }
 
 void fanuc_beta32b::rx_handler() {
-    itm.PORT[2].u8=1;
     if(fd->TRBSR & USIC_CH_TRBSCR_CSRBI_Msk) {
+	fd.frame_length(21);
+	fd.enable_receive_buffer_interrupt<rx_irq>(1);
+	NVIC_SetPriority(fd.irq<rx_irq>(), 20);
 	fd->TRBSCR=USIC_CH_TRBSCR_CSRBI_Msk;
 	int32_t d;
 	while((d=fd.rx_fifo())>=0) {
 	    itm.PORT[putp].u16=d;
 	    itm.PORT[1].u8=putp;
 	    rx_buffer[putp++]=d;
-	}
-	if(putp==3) {
-	    fd.frame_length(21);
-	    fd.enable_receive_buffer_interrupt<rx_irq>(1);
-	    NVIC_SetPriority(fd.irq<rx_irq>(), 20);
 	}
 	if(putp<5)
 	    return;

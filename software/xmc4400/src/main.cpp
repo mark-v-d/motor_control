@@ -247,6 +247,7 @@ extern "C" void CCU80_2_IRQHandler(void)
 	    clarke[1]*float(rx_data[1])+
 	    clarke[2]*float(rx_data[3]));
     overcurrent_latch|=abs(Istator)>drive_config->overcurrent;
+    IO7=overcurrent_latch;
     auto rotate=std::polar(1.0f, angle);
     auto Irotor=rotate*Istator;
     auto Vrotor=Kcurrent.compute(setpoint-Irotor, Vservo);
@@ -263,9 +264,6 @@ extern "C" void CCU80_2_IRQHandler(void)
 	    Iavg_counter=0;
 	Irotor=0.25f*Irot;
     }
-
-    for(int i=0; i<5; i++)
-	report.rx_data[8+i]=encoder->raw(i);
 
     report.Irotor[0]=real(Irotor);
     report.Irotor[1]=imag(Irotor);

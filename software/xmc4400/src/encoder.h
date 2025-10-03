@@ -37,7 +37,6 @@ public:
     virtual void rx_handler()=0;
     virtual void tx_handler()=0;
     virtual void protocol_handler()=0;
-    virtual uint16_t raw(int) { return 0; }
 
     static constexpr int p_irq=2;
     static constexpr int rx_irq=1;
