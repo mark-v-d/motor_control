@@ -576,7 +576,6 @@ fanuc_beta32b::~fanuc_beta32b()
 void fanuc_beta32b::trigger()
 {
     fd.enable_receive_buffer_interrupt<rx_irq>(2);
-    NVIC_SetPriority(fd.irq<rx_irq>(), 0);
     fd.frame_length(15);
     fd->TBUF[0]=request;
     hd->TRBSCR=USIC_CH_TRBSCR_FLUSHRB_Msk;
@@ -589,7 +588,6 @@ void fanuc_beta32b::rx_handler() {
     if(fd->TRBSR & USIC_CH_TRBSCR_CSRBI_Msk) {
 	fd.frame_length(21);
 	fd.enable_receive_buffer_interrupt<rx_irq>(1);
-	NVIC_SetPriority(fd.irq<rx_irq>(), 20);
 	fd->TRBSCR=USIC_CH_TRBSCR_CSRBI_Msk;
 	int32_t d;
 	while((d=fd.rx_fifo())>=0) {
@@ -657,6 +655,7 @@ void set_encoder(int type, int poles)
     case 2: encoder.set<mitsubishi_MFS13_t>(); break;
     case 3: encoder.set<AMT21_t>(poles); break;
     //case 4: encoder.set<hiperface_t>(poles); break;
+    case 5: encoder.set<fanuc_beta32b>(); break;
     }
 }
 

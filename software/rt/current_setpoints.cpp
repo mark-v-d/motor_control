@@ -56,11 +56,16 @@ void *rt_thread(void *data)
     }
 
     // Use printerport to trigger the scope
-    uint16_t base=0xec00;
+    uint16_t base=0xb100;
     if(ioperm(base, 8, 1)) {
 	perror("request_region failed\n");
 	return NULL;
     }
+
+    int overcurrent=0;
+    int speed=0;
+    int position=0;
+    int position_error=0;
 
     for(auto &x:table) {
         ////////////////////////////////////////////////////////////////////////
@@ -85,15 +90,15 @@ void *rt_thread(void *data)
         // Test specific code
         ////////////////////////////////////////////////////////////////////////
 	skt.send(motion_ns::send_t(skt, mac, ip, x.I, limit,
-	    motion_ns::to_drive::DRIVE_ENABLE
+	    time>900ms? motion_ns::to_drive::DRIVE_ENABLE:0
 	));
 
         ////////////////////////////////////////////////////////////////////////
         // Wait and receive data
         ////////////////////////////////////////////////////////////////////////
-	outb(0,base);
+	outb(overcurrent|position_error,base);
 	clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, nullptr);
-	outb(0xff,base);
+	outb(overcurrent|position_error|0xfe,base);
 
 	ssize_t rx_size;
 	do{
@@ -113,6 +118,14 @@ void *rt_thread(void *data)
 		&& rx_size==sizeof(buffer.motion)
 	    ) {
 		static_cast<motion_ns::to_host&>(x)=buffer.motion;
+		overcurrent=buffer.motion.digin&motion_ns::to_drive::OVERCURRENT? 1:0;
+		int old_speed=speed;
+		speed=position-buffer.motion.position;
+		if(std::abs(old_speed)>10 && speed*old_speed<0)
+		    position_error=1;
+		else
+		    position_error=0;
+		position=buffer.motion.position;
 	    }
 	} while(rx_size>0);
 

@@ -157,11 +157,12 @@ std::ostream &operator<<(std::ostream &s, sync_t const &d) {
 	<< " " << d.position2	// 25
 	<< " " << d.index2	// 25
 	<< " " << d.Vservo	// 27
-	<< " " << d.rx_data[8]	// 27
-	<< " " << d.rx_data[9]	// 28
-	<< " " << d.rx_data[10]	// 29
-	<< " " << d.rx_data[11]	// 30
-	<< " " << d.rx_data[12]	// 31
+	<< " " << d.rx_data[8]	// 28
+	<< " " << d.rx_data[9]	// 29
+	<< " " << d.rx_data[10]	// 30
+	<< " " << d.rx_data[11]	// 31
+	<< " " << d.rx_data[12]	// 32
+	<< " " << d.timer_error	// 33
 /*
 	<< " " << d.setpoint(0)	// 28
 	<< " " << real(d.I)	// 29
