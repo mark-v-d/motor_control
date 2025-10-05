@@ -23,23 +23,31 @@ function r=mp(p)
 		if p(i,3)!=0
 			Alimit=p(i,3);
 		end
-		while direction*L<direction*p(i,1)
-			if ++iterations>9000
-				return;
+		if Slimit<0
+			p(i,:)
+			Slimit
+			r(end+1:end-Slimit,1)=r(end,1);
+			A=0;
+			S=0;
+		else
+			while direction*L<direction*p(i,1)
+				if ++iterations>9000
+					return;
+				end
+				r(end+1,:)=[L,S,A];
+				# travel remaining= Alimit/2*steps^2
+				# steps=S/Alimit
+				remaining=direction*S^2/2/Alimit;
+				if direction*(L+remaining)>direction*p(i,1)
+					A=-direction*Alimit;
+				elseif direction*S<Slimit
+					A=direction*Alimit;
+				else
+					A=0;
+				end
+				S+=A; 
+				L+=S;
 			end
-			r(end+1,:)=[L,S,A];
-			# travel remaining= Alimit/2*steps^2
-			# steps=S/Alimit
-			remaining=direction*S^2/2/Alimit;
-			if direction*(L+remaining)>direction*p(i,1)
-				A=-direction*Alimit;
-			elseif direction*S<Slimit
-				A=direction*Alimit;
-			else
-				A=0;
-			end
-			S+=A; 
-			L+=S;
 		end
 	end
 	r(end+1,:)=[L,S,A];
