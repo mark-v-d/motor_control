@@ -1,3 +1,4 @@
+#{ HBM280
 if 1
 	# X
 	# @125V Vmax=3200mm/min 
@@ -34,6 +35,8 @@ else
 	f=[5e-6, 5e-3/3/2^20];	# factor between encoders
 	F=0.0;
 end
+#}
+
 PID=ss(
 	[0 0;
 	 0 1],

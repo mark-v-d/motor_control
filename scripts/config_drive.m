@@ -7,7 +7,7 @@
  settings.P=0.2;
  settings.I=5e-3;
  settings.L=1;
- settings.overvoltage=70;
+ settings.overvoltage=90;
  settings.overcurrent=5;
 #}
 function result=config_drive(settings)

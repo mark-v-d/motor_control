@@ -10,7 +10,6 @@ function r=mp(p)
 	S=0; Slimit=p(1,2);
 	A=0; Alimit=p(1,3);
 	r=[];
-	iterations=0;
 	for i=2:size(p,1)
 		if p(i,1)>L
 			direction=1;
@@ -31,9 +30,6 @@ function r=mp(p)
 			S=0;
 		else
 			while direction*L<direction*p(i,1)
-				if ++iterations>9000
-					return;
-				end
 				r(end+1,:)=[L,S,A];
 				# travel remaining= Alimit/2*steps^2
 				# steps=S/Alimit

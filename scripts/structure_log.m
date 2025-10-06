@@ -18,4 +18,11 @@ function ret=structure_log(t)
 	ret.timer_error=(t(:,33));
 	s=find(ret.position==0)(end)+1;
 	ret.position(1:s)=ret.position(s);
+
+	if(size(t,2)==42)
+		printf("motion log\n");
+		ret.Isetpoint=t(:,34:35);
+		ret.setpoint=t(:,36:37);
+		ret.error=t(:,38:39);
+	end
 end

@@ -47,12 +47,12 @@ std::vector<sync_I_t> table;
 
 std::ostream &operator<<(std::ostream &s, sync_I_t const &d) {
     s	<< sync_t(d)
-	<< " " << real(d.I) << " " << imag(d.I)			// 28,29
-	<< " " << d.setpoint(0,0) << " " << d.setpoint(1,0)	// 30,31
-	<< " " << d.error(0,0) << " " << d.error(1,0)		// 32,33
-	<< " " << d.timer_error					// 34
-	<< " " << d.counter					// 35
-	<< " " << d.timer_delta					// 36
+	<< " " << real(d.I) << " " << imag(d.I)			// 34,35
+	<< " " << d.setpoint(0,0) << " " << d.setpoint(1,0)	// 36,37
+	<< " " << d.error(0,0) << " " << d.error(1,0)		// 38,39
+	<< " " << d.timer_error					// 40
+	<< " " << d.counter					// 41
+	<< " " << d.timer_delta					// 42
 	;
     return s;
 }
@@ -69,13 +69,16 @@ void *rt_thread(void *data)
     }
 
     // Use printerport to trigger the scope
-    uint16_t base=0xec00;
+    uint16_t base=0xb100;
     if(ioperm(base, 8, 1)) {
 	perror("request_region failed\n");
 	return NULL;
     }
 
-    decltype(controller)::input_t offset;
+    int locked=450;
+
+    //decltype(controller)::input_t offset;
+    Eigen::Matrix<double,2,1> offset;
     for(size_t i=0; i<table.size(); i++) {
         ////////////////////////////////////////////////////////////////////////
 	// timebase and send synchronisation
@@ -94,7 +97,6 @@ void *rt_thread(void *data)
 	}
 
 	skt.send(sync_ns::send_t(skt,mac,ip,table[i].timestamp,ts));
-
 
 	ssize_t rx_size;
 	do{
@@ -124,27 +126,29 @@ void *rt_thread(void *data)
 		table[i-1].position2*scale[0],
 		table[i-1].position*scale[1]
 	    };
-	    if(i<=2000)
+
+	    if(std::abs(table[i].timer_error)>250) {
+		i=1;
+		locked=450;
+	    } else if(locked>0) {
+		locked--;
 		offset=inputs;
-
-	    table[i].error=table[i].setpoint-(inputs-offset);
-
-	    auto r=controller.compute(table[i].error);
-
-	    table[i].I=1.0if*float(r(0));
+	    } else {
+		table[i].error=table[i].setpoint-(inputs-offset);
+		auto r=controller.compute(table[i].error);
+		table[i].I=1.0if*float(r(0));
+	    }
 	}
 	skt.send(motion_ns::send_t(skt, mac, ip, table[i].I,limit,
-	    motion_ns::to_drive::DRIVE_ENABLE
+	    locked>0? 0:motion_ns::to_drive::DRIVE_ENABLE
 	));
 
         ////////////////////////////////////////////////////////////////////////
         // Wait and receive data
         ////////////////////////////////////////////////////////////////////////
-	if(table[i].valid)
-	    outb(255,base);
+	outb(0,base);
 	clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, nullptr);
-	if(i>4500)
-	    outb(0,base);
+	outb(0xff,base);
 
     }
     return NULL;
