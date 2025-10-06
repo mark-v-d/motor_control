@@ -502,8 +502,11 @@ public:
 
 
 /* Fanuc***********************************************************/
-/* Seems to be 1024kb/s, positive pulse on REQ (pin-5) of 7..9us.
- * Response is 5 frames of 1 start bit, 16 data bits and 1 stop bit.
+   Datarate is 1024kb/s. Send a positive pulse on REQ (pin-5) of 7..9us
+   to get a response.  The response is 4 frames of 1 start bit, 16 data
+   bits and 1 stop bit.  After the 4th frame the CRC is transmitted,
+   without a preceding startbit.  The way to capture it, is to change
+   the word length of the 4th frame to 16+1+5 bits.
 
     1st status
 	0xe000	3-msb changes, reason unknown
@@ -513,9 +516,7 @@ public:
     4th absolute
 	0x8000	Always set?
 	0x03fc	Commutation angle? After index the same as 2nd>>4
-    5th	checksum?
-	Sometimes this word is postponed by one cycle (makes it look
-	like 5-bits)
+    5th	5-bit CRC
 */
 class fanuc_beta32b:public encoder_t
 {
