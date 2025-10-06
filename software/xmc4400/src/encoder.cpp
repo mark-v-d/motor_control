@@ -525,8 +525,6 @@ class fanuc_beta32b:public encoder_t
     constexpr static uint16_t request=0xff80;
 
     constexpr static uint8_t crc_generator=0xb;
-    constexpr static auto lut=crc_make_lut<5,8,crc_generator,uint8_t>();
-    uint8_t crc=0;
 public:
 
     constexpr static auto baudrate=uart::Baudrate(1.024e6);
@@ -541,16 +539,6 @@ public:
     void rx_handler()  override;
     void tx_handler()  override {}
     void protocol_handler() override {}
-
-private:
-    void add_bit(int b) {
-	crc<<=1;
-	crc|=b&1;
-	if(crc&0x20)
-	    crc^=(crc_generator|0x20);
-    }
-
-    void add_byte(uint8_t b) { crc=lut[(crc<<8)|b]; }
 };
 
 fanuc_beta32b::fanuc_beta32b()
@@ -597,15 +585,15 @@ void fanuc_beta32b::rx_handler() {
 	}
 	if(putp<5)
 	    return;
-	crc=0;
+	crc_lut_t<5,crc_generator,uint8_t> crc;
 	for(int i=0; i<4; i++) {
-	    add_bit(0);
-	    add_byte(rx_buffer[i]);
-	    add_byte(rx_buffer[i]>>8);
-	    add_bit(1);
+	    crc.add_bit(0);
+	    crc.add_byte(rx_buffer[i]);
+	    crc.add_byte(rx_buffer[i]>>8);
+	    crc.add_bit(1);
 	}
 	for(int i=1; i<6; i++)
-	    add_bit(rx_buffer[4]>>i);
+	    crc.add_bit(rx_buffer[4]>>i);
 	itm.PORT[3].u8=crc;
 	if(crc!=0)
 	    invalidate();
