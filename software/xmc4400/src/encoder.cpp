@@ -501,7 +501,7 @@ public:
 };
 
 
-/* Fanuc***********************************************************/
+/* Fanuc***********************************************************
    Datarate is 1024kb/s. Send a positive pulse on REQ (pin-5) of 7..9us
    to get a response.  The response is 4 frames of 1 start bit, 16 data
    bits and 1 stop bit.  After the 4th frame the CRC is transmitted,

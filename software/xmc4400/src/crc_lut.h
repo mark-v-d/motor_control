@@ -34,8 +34,8 @@ public:
     void add_bit(int b) {
 	crc<<=1;
 	crc|=b&1;
-	if(crc&0x20)
-	    crc^=(generator|0x20);
+	if(crc&(1<<crc_bits))
+	    crc^=(generator|(1<<crc_bits));
     }
 
     void add_byte(uint8_t b) { crc=lut[(crc<<byte_bits)|b]; }
