@@ -8,7 +8,11 @@ function [Klimiting x0 n nev]=speedup_limiter(K,Kinit=[])
 		attempts++
 		fflush(stdout);
 		if isempty(Kinit)
-			Kk=100*(rand(size(K.a,1),size(K,1))-0.5);
+			if attempts==1
+				Kk=K.B/K.d;
+			else
+				Kk=100*(rand(size(K.a,1),size(K,1))-0.5);
+			end
 		else
 			Kk=Kinit;
 		end

@@ -118,6 +118,7 @@ public:
 
     void set_limit(C l) { limit=l; }
     void set_gain(float p, float i, float l) { P=p; I=i; L=l; }
+    void reset() { integrator=0; }
 };
 
 complex_PI Kcurrent;
@@ -224,6 +225,7 @@ extern "C" void CCU80_2_IRQHandler(void)
     } else {
 	ccu8::set_trap(hr_out);	// disable outputs
 	Kcurrent.set_limit(0.0f);
+	Kcurrent.reset();
     }
 
     rx_data[0]-=2047;

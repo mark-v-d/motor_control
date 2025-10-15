@@ -531,7 +531,8 @@ public:
     constexpr static auto baudrate=uart::Baudrate(1.024e6);
     uint16_t rx_buffer[5];
     int putp;
-    int pattern[8];
+    timebase_t powerup_delay=
+	std::chrono::duration_cast<timebase_t>(200.0ms);
 public:
     fanuc_beta32b();
     ~fanuc_beta32b() override;
@@ -545,8 +546,8 @@ public:
 fanuc_beta32b::fanuc_beta32b()
 {
     set_angle_conversion(increments_per_revolution-1,conv);
-    ENC_DIR=1;
     ENC_5V=1;
+    ENC_DIR=0;
     fd.init(baudrate,XMC_USIC_CH_PARITY_MODE_NONE,16);
     uart::fifo_configure<0,8>(hd);
 
@@ -564,6 +565,11 @@ fanuc_beta32b::~fanuc_beta32b()
 
 void fanuc_beta32b::trigger()
 {
+    if(powerup_delay>0ms) {
+	delay--;
+	return;
+    }
+    ENC_DIR=1;
     fd.enable_receive_buffer_interrupt<rx_irq>(2);
     fd.frame_length(15);
     fd->TBUF[0]=request;

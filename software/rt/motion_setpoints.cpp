@@ -123,8 +123,8 @@ void *rt_thread(void *data)
         ////////////////////////////////////////////////////////////////////////
 	if(i>0) {
 	    decltype(controller)::input_t inputs{
-		table[i-1].position2*scale[0],
-		table[i-1].position*scale[1]
+		table[i-1].position/scale[0],
+		table[i-1].position2/scale[1]
 	    };
 
 	    if(std::abs(table[i].timer_error)>250) {
@@ -138,6 +138,10 @@ void *rt_thread(void *data)
 		auto r=controller.compute(table[i].error);
 		table[i].I=1.0if*float(r(0));
 	    }
+	}
+	if(table.size()-i<4500) {
+	    table[i].I=0;
+	    table[i-1].error=0*offset;
 	}
 	skt.send(motion_ns::send_t(skt, mac, ip, table[i].I,limit,
 	    locked>0? 0:motion_ns::to_drive::DRIVE_ENABLE

@@ -17,7 +17,10 @@ function ret=structure_log(t)
 	ret.Vservo=t(:,27);
 	ret.timer_error=(t(:,33));
 	s=find(ret.position==0)(end)+1;
-	ret.position(1:s)=ret.position(s);
+	try
+		ret.position(1:s)=ret.position(s);
+	catch
+	end
 
 	if(size(t,2)==42)
 		printf("motion log\n");
