@@ -50,5 +50,22 @@ PID=ss(
 	[Kd/2+Kp 0],1/4500
 )
 
-TYPE3=[ss(c2d(zpk([-150 -150],[0 -1500 -1500],4e6),1/4500)*tf('z',1/4500)),0];
+
+
+center=1080
+boost=30
+f1=center/sqrt(boost)
+f2=center*sqrt(boost)
+
+TYPE3=[ss(c2d(
+	zpk([-f1 -f1],[0 -f2 -f2],1.1e5*boost^2),
+	1/4500)*tf('z',1/4500)),0];
+TYPE3.A=(abs(TYPE3.A)>1e-6).*TYPE3.A;
+
+#{
+P=[0 30/4500 1/4500/10;30 0 0;0 0 0];
+traj=mp(P);
+m=motion(traj(:,1)*[1 0],TYPE3,scale,6);
+plot(m.error(1:end-1,1),";new;",ref.error(1:end-1,1),";ref;");
+#}
 end

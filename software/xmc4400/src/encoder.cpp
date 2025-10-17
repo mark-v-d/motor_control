@@ -532,7 +532,7 @@ public:
     uint16_t rx_buffer[5];
     int putp;
     timebase_t powerup_delay=
-	std::chrono::duration_cast<timebase_t>(200.0ms);
+	std::chrono::duration_cast<timebase_t>(500.0ms);
 public:
     fanuc_beta32b();
     ~fanuc_beta32b() override;
@@ -566,7 +566,7 @@ fanuc_beta32b::~fanuc_beta32b()
 void fanuc_beta32b::trigger()
 {
     if(powerup_delay>0ms) {
-	delay--;
+	powerup_delay--;
 	return;
     }
     ENC_DIR=1;
