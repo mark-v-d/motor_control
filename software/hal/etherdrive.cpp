@@ -49,6 +49,7 @@ struct comp_state {
     // output pins
     hal_s32_t *position;
     hal_s32_t *position2;
+    hal_s32_t *index;
     hal_s32_t *index2;
     hal_float_t *Irotor[2];
     hal_float_t *Vrotor[2];
@@ -91,6 +92,7 @@ struct comp_state {
 	    !pin(HAL_IN, "enable", &enable) &&
 	    !pin(HAL_OUT,"position", &position) &&
 	    !pin(HAL_OUT,"position2", &position2) &&
+	    !pin(HAL_OUT,"index", &index) &&
 	    !pin(HAL_OUT,"index2", &index2) &&
 	    !pin(HAL_OUT,"Irotor-0", &Irotor[0]) &&
 	    !pin(HAL_OUT,"Irotor-1", &Irotor[1]) &&
@@ -135,6 +137,7 @@ struct comp_state {
 	   offset[1]=buffer.position2;
 	}
 	*position=buffer.position-offset[0];
+	*index=buffer.index-offset[0];
 	*position2=buffer.position2-offset[1];
 	*index2=buffer.index2-offset[1];
 	*Irotor[0]=buffer.Irotor[0];
