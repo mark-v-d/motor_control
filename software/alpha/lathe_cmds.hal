@@ -61,8 +61,8 @@ setp servo-thread.tmax              0
 #
 # scale is used to convert from encoder units to mm. mm=encoder/scale
 #
-setp statespace_3.0.scale-0		-2.1845333333e+04
-setp statespace_3.0.scale-1		1.0000000000e+00
+setp statespace_3.0.scale-0		-21845.333333333333
+setp statespace_3.0.scale-1		1
 setp statespace_3.0.A-0-0		0.0000000000e+00
 setp statespace_3.0.A-0-1		0.0000000000e+00
 setp statespace_3.0.A-0-2		-7.2145650766e-03
@@ -86,7 +86,7 @@ setp statespace_3.0.D-0-1		0.0000000000e+00
 setp statespace_3.0.K-0-0		-1.6470556386e-04
 setp statespace_3.0.K-1-0		5.3908674005e-04
 setp statespace_3.0.K-2-0		3.1895139001e-03
-setp statespace_3.0.limit-0		6.5000000000e+00
+setp statespace_3.0.limit-0		6.5
 
 setp etherdrive.0.angle_offset		0
 setp etherdrive.0.limit-0		0.44
@@ -101,8 +101,8 @@ setp etherdrive.0.encoder		0
 #
 # Z
 #
-setp statespace_3.1.scale-0		-3.2768000000e+04
-setp statespace_3.1.scale-1		1.0000000000e+00
+setp statespace_3.1.scale-0		-32768
+setp statespace_3.1.scale-1		1
 setp statespace_3.1.A-0-0		0.0000000000e+00
 setp statespace_3.1.A-0-1		0.0000000000e+00
 setp statespace_3.1.A-0-2		-2.8200014652e-02
@@ -126,7 +126,7 @@ setp statespace_3.1.D-0-1		0.0000000000e+00
 setp statespace_3.1.K-0-0		-2.6983626313e-03
 setp statespace_3.1.K-1-0		-1.1854009756e-02
 setp statespace_3.1.K-2-0		1.3721326716e-01
-setp statespace_3.1.limit-0		3
+setp statespace_3.1.limit-0		6.5
 
 setp etherdrive.1.angle_offset		0
 setp etherdrive.1.limit-0		0.44

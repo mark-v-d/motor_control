@@ -128,18 +128,11 @@ struct comp_state {
 	    *unconfigured=1;
     }
 
-
-    int offset[2];
-
     void update(motion_ns::to_host &buffer){
-	if(offset[0]==0 && offset[1]==0) {
-	   offset[0]=buffer.position;
-	   offset[1]=buffer.position2;
-	}
-	*position=buffer.position-offset[0];
-	*index=buffer.index-offset[0];
-	*position2=buffer.position2-offset[1];
-	*index2=buffer.index2-offset[1];
+	*position=buffer.position;
+	*index=buffer.index;
+	*position2=buffer.position2;
+	*index2=buffer.index2;
 	*Irotor[0]=buffer.Irotor[0];
 	*Irotor[1]=buffer.Irotor[1];
 	*Vrotor[0]=buffer.Vrotor[0];
