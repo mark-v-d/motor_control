@@ -1,8 +1,8 @@
 .PHONY: link
 
-link: etherdrive.so statespace_3.so speed_controller.so partial_absolute.so
+link: etherdrive.so statespace_3.so speed_controller.so absolute_index.so
 
-obj-m += etherdrive.o statespace_3.o speed_controller.o partial_absolute.o
+obj-m += etherdrive.o statespace_3.o speed_controller.o absolute_index.o
 
 LDFLAGS+=-L $(EMC2_HOME)/lib
 CXXFLAGS+=-Wno-ignored-attributes
@@ -20,7 +20,7 @@ link:
 	cp etherdrive.so $(EMC2_HOME)/rtlib/etherdrive.so
 	cp statespace_3.so $(EMC2_HOME)/rtlib/statespace_3.so
 	cp speed_controller.so $(EMC2_HOME)/rtlib/speed_controller.so
-	cp partial_absolute.so $(EMC2_HOME)/rtlib/partial_absolute.so
+	cp absolute_index.so $(EMC2_HOME)/rtlib/absolute_index.so
 
 etherdrive.o: drive_io.h drive_packet.h packet.h raw_socket.h
 
