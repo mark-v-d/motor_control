@@ -1,1 +1,2 @@
 loadusr hal_input +001
+loadusr -W thermistor count=2

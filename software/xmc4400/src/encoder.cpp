@@ -1,5 +1,6 @@
 /* AKM63 a.angle_offset=2*pi*20/360
 */
+// emc/task/taskintf.cc
 #include <atomic>
 #include <math.h>
 #include <array>
@@ -576,7 +577,6 @@ void fanuc_beta32b::trigger()
     hd->TRBSCR=USIC_CH_TRBSCR_FLUSHRB_Msk;
     putp=0;
     trigger_count++;
-    itm.PORT[0].u32=trigger_count;
 }
 
 void fanuc_beta32b::rx_handler() {
@@ -586,8 +586,6 @@ void fanuc_beta32b::rx_handler() {
 	fd->TRBSCR=USIC_CH_TRBSCR_CSRBI_Msk;
 	int32_t d;
 	while((d=fd.rx_fifo())>=0) {
-	    itm.PORT[putp].u16=d;
-	    itm.PORT[1].u8=putp;
 	    rx_buffer[putp++]=d;
 	}
 	if(putp<5)
@@ -601,24 +599,18 @@ void fanuc_beta32b::rx_handler() {
 	}
 	for(int i=1; i<6; i++)
 	    crc.add_bit(rx_buffer[4]>>i);
-	itm.PORT[3].u8=crc;
 	if(crc!=0)
 	    invalidate();
-	else if(rx_buffer[0]&0x100) {
+	else {
 	    trigger_count--;
-	    itm.PORT[0].u32=trigger_count;
-	    // index not yet seen
-	    new_position((rx_buffer[3]&0xfff)<<4,0);
-	} else {
-	    trigger_count--;
-	    itm.PORT[0].u32=trigger_count;
 	    uint32_t p=rx_buffer[1]+(((uint32_t)rx_buffer[2])<<16);
-	    new_position(p,p&0xffff0000);
+	    if(rx_buffer[0]&0x100)
+		new_position(p,0,(rx_buffer[3]&0xfff)<<4);
+	    else
+		new_position(p,1);
 	}
-
     }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 void init_encoder()

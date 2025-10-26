@@ -19,7 +19,6 @@
 # net tooloffset-z  gmoccapy.tooloffset-z  <=  motion.tooloffset.z
 # 
 # ################################################################################
-loadusr -W thermistor count=2
 setp thermistor.0.t0-c 25
 setp thermistor.1.t0-c 25
 setp thermistor.0.r0 47000

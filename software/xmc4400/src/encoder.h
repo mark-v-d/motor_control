@@ -15,15 +15,21 @@ class encoder_t {
     int invalid=0;
     int last=0;
     int32_t mask;
+    int32_t comm;
     float conv;
 protected:
     std::atomic<int> trigger_count=0;
+    static constexpr int32_t COMM=0xBEAD0000;
 public:
     virtual ~encoder_t() {}
     auto get_position_angle() {
 	auto c=float(now-time[0])/(time[1]-time[0]);
 	int32_t p=std::round((position[1]-position[0])*c+position[0]);
-	float a=conv*((p-last_index)&mask);
+	float a;
+	if(comm==COMM)
+	    a=conv*((p-last_index)&mask);
+	else
+	    a=conv*comm;
 	now++;
 	return std::tuple{p,a};
     }
@@ -47,11 +53,12 @@ protected:
 	conv=c;
     }
 
-    void new_position(int32_t p, int32_t i=0) {
+    void new_position(int32_t p, int32_t i=0, int32_t c=COMM) {
 	last^=1;
 	position[last]=p;
 	time[last]=now;
 	last_index=i;
+	comm=c;
     }
 
     void invalidate() { invalid++; }
