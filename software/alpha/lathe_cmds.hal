@@ -153,20 +153,22 @@ addf motion-controller servo-thread
 net J0:pos-cmd joint.0.motor-pos-cmd  	=> statespace_3.0.setpoint
 net J0:pos-dro statespace_3.0.position-0 => joint.0.motor-pos-fb
 net J0:Iset statespace_3.0.out 	=> etherdrive.0.Iset-1
-net J0:enable joint.0.amp-enable-out 	=> etherdrive.0.enable statespace_3.0.enable
+net J0:enable joint.0.amp-enable-out 	=> etherdrive.0.enable statespace_3.0.enable absolute_index.0.enable
 net J0:index etherdrive.0.index	=> absolute_index.0.index
 net J0:pos-drive etherdrive.0.position => absolute_index.0.position-in
 net J0:pos-index absolute_index.0.position-out => statespace_3.0.in-0
 net J0:pos-joint joint.0.pos-fb => absolute_index.0.pos-fb
+net J0:home absolute_index.0.home => halui.joint.0.home
 
 net J1:pos-cmd joint.1.motor-pos-cmd	=> statespace_3.1.setpoint
 net J1:pos-dro statespace_3.1.position-0 => joint.1.motor-pos-fb
 net J1:Iset statespace_3.1.out	=> etherdrive.1.Iset-1
-net J1:enable joint.1.amp-enable-out	=> etherdrive.1.enable statespace_3.1.enable
+net J1:enable joint.1.amp-enable-out	=> etherdrive.1.enable statespace_3.1.enable absolute_index.1.enable
 net J1:index etherdrive.1.index	=> absolute_index.1.index
 net J1:pos-drive etherdrive.1.position => absolute_index.1.position-in
 net J1:pos-index absolute_index.1.position-out => statespace_3.1.in-0
 net J1:pos-joint joint.1.pos-fb => absolute_index.1.pos-fb
+net J1:home absolute_index.1.home => halui.joint.1.home
 
 net coolant iocontrol.0.coolant-mist => etherdrive.0.digout-0 etherdrive.0.digout-1 
 

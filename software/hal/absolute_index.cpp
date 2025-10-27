@@ -33,6 +33,9 @@ class absolute_index_t {
     hal_s32_t	*position_in;	// Encoder
     hal_s32_t	*index;		// 0 -> index not seen, 1 -> index seen
 
+    hal_bit_t	*enable;
+    hal_bit_t	*is_homed;
+
     // Outputs
     hal_u32_t *debug_fb;
     hal_u32_t *debug_pos;
@@ -41,6 +44,7 @@ class absolute_index_t {
     hal_float_t	*offset;
     hal_s32_t	*position_out;
     hal_s32_t	*index_count;
+    hal_bit_t	*home;
 
     int32_t correction;
     int32_t position_d1;
@@ -72,6 +76,9 @@ public:
 	    pin(HAL_IN, "position-in", &position_in) ||
 	    pin(HAL_IN, "index", &index) ||
 
+	    pin(HAL_IN, "enable", &enable) ||
+	    pin(HAL_IN, "is-homed", &is_homed) ||
+
 	    pin(HAL_OUT, "debug_fb", &debug_fb) ||
 	    pin(HAL_OUT, "debug_pos", &debug_pos) ||
 	    pin(HAL_OUT, "debug_out", &debug_out) ||
@@ -79,6 +86,7 @@ public:
 	    pin(HAL_OUT, "offset", &offset) ||
 	    pin(HAL_OUT, "position-out", &position_out) ||
 	    pin(HAL_OUT, "index_count", &index_count) ||
+	    pin(HAL_OUT, "home", &home) ||
 	    0;
     }
 
@@ -101,7 +109,8 @@ public:
 	*debug_real=real_pos;
 
 	if(*index && count<10)
-	    count++;
+	    ++count;
+	*home=!*is_homed && *enable && count>9 && timer==0;
 	*index_count=count;
 
 	if(timer>0) {
