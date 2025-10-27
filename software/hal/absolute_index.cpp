@@ -28,7 +28,7 @@ using namespace std::string_literals;
 class absolute_index_t {
     // Inputs
     hal_float_t *pos_fb;	// Position as measured
-    hal_float_t *motor_offset;	// Offset between what we should give and the actual position
+    hal_float_t *motor_offset;	// Position as measured
     hal_float_t *scale;		// Factor to scale to encoder units
 
     hal_s32_t	*position_in;	// Encoder
@@ -41,10 +41,17 @@ class absolute_index_t {
     hal_u32_t *debug_pos;
     hal_u32_t *debug_out;
     hal_u32_t *debug_real;
+    hal_u32_t *debug_motor;
     hal_float_t	*offset;
     hal_s32_t	*position_out;
+    hal_s32_t	*index_count;
 
-    int32_t diff;
+    int32_t correction;
+    int32_t position_d1;
+    int32_t position_d2;
+    int32_t timer;
+    int32_t count;
+    int32_t out_d1;
 public:
     bool init(int i) {
 	std::string prefix="absolute_index."+std::to_string(i)+".";
@@ -62,6 +69,7 @@ public:
 	    else
 		return 1;
 	};
+	timer=10000;
 	return
 	    pin(HAL_IN, "pos-fb", &pos_fb) ||
 	    pin(HAL_IN, "motor-offset", &motor_offset) ||
@@ -76,8 +84,10 @@ public:
 	    pin(HAL_OUT, "debug_pos", &debug_pos) ||
 	    pin(HAL_OUT, "debug_out", &debug_out) ||
 	    pin(HAL_OUT, "debug_real", &debug_real) ||
+	    pin(HAL_OUT, "debug_motor", &debug_motor) ||
 	    pin(HAL_OUT, "offset", &offset) ||
 	    pin(HAL_OUT, "position-out", &position_out) ||
+	    pin(HAL_OUT, "index_count", &index_count) ||
 	    0;
     }
 
@@ -85,28 +95,48 @@ public:
 	double SCALE=*scale;
 	*debug_fb=int(*pos_fb*SCALE);
 	*debug_pos=*position_in;
+	int32_t moffset=*motor_offset*SCALE;
+	*debug_motor=moffset;
 
-	if(!*enable) {
-	    int32_t o=*position_in-*pos_fb*SCALE;
-	    int32_t real_pos=*position_in-(o&0xffff0000);
-	    diff=real_pos-*pos_fb*SCALE;
-	    if(diff>32767) {
-		diff-=65535;
-		real_pos-=65535;
-	    } else if(diff<-32767) {
-		diff+=65535;
-		real_pos+=65535;
-	    }
+	int32_t pfb=round(*pos_fb*SCALE);
+	int32_t o=position_d1-pfb;
+	int32_t real_pos=position_d1-(o&0xffff0000);
+	int32_t diff=real_pos-pfb;
+	if(diff>32767) {
+	    diff-=65536;
+	    real_pos-=65536;
+	} else if(diff<-32767) {
+	    diff+=65536;
+	    real_pos+=65536;
+	}
+	*debug_real=real_pos;
+
+	if(*index && count<10)
+	    count++;
+	*index_count=count;
+
+	if(timer>0) {
+	    timer--;
 	    *offset=diff/SCALE;
-	    diff-=*position_in;
-
-	    *debug_real=real_pos;
-	    *debug_out=diff;
+	    correction=diff-position_d1;
+	    *debug_out=correction;
 	    *position_out=0;
-	} else if(*index) {
-	    *position_out=*position_in+diff;
-	} else
+	} else if(count<=1) {
+	    /*  position_in is not yet reset */
 	    *position_out=*position_in;
+	} else if(count<=2) {
+	    /* The LSB of position_in are now correct */
+	    *position_out=out_d1+*position_in;
+	} else if(count==3) {
+	    *offset=diff/SCALE;
+	    correction=diff-position_d1+position_d2;
+	    *debug_out=correction;
+	    *position_out=*position_in+correction;
+	} else
+	    *position_out=*position_in+correction;
+	out_d1=*position_out;
+	position_d2=position_d1;
+	position_d1=*position_in;
     }
 };
 
