@@ -3,8 +3,8 @@
 #include "rtapi_app.h"
 #endif
 #include "hal.h"
-
-#include "ss.h"
+#include <vector>
+#include <cmath>
 
 static int comp_id;
 
@@ -28,20 +28,16 @@ using namespace std::string_literals;
 class absolute_index_t {
     // Inputs
     hal_float_t *pos_fb;	// Position as measured
-    hal_float_t *motor_offset;	// Position as measured
     hal_float_t *scale;		// Factor to scale to encoder units
 
     hal_s32_t	*position_in;	// Encoder
     hal_s32_t	*index;		// 0 -> index not seen, 1 -> index seen
-
-    hal_s32_t	*enable;
 
     // Outputs
     hal_u32_t *debug_fb;
     hal_u32_t *debug_pos;
     hal_u32_t *debug_out;
     hal_u32_t *debug_real;
-    hal_u32_t *debug_motor;
     hal_float_t	*offset;
     hal_s32_t	*position_out;
     hal_s32_t	*index_count;
@@ -51,7 +47,6 @@ class absolute_index_t {
     int32_t position_d2;
     int32_t timer;
     int32_t count;
-    int32_t out_d1;
 public:
     bool init(int i) {
 	std::string prefix="absolute_index."+std::to_string(i)+".";
@@ -72,19 +67,15 @@ public:
 	timer=10000;
 	return
 	    pin(HAL_IN, "pos-fb", &pos_fb) ||
-	    pin(HAL_IN, "motor-offset", &motor_offset) ||
 	    pin(HAL_IN, "scale", &scale) ||
 
 	    pin(HAL_IN, "position-in", &position_in) ||
 	    pin(HAL_IN, "index", &index) ||
 
-	    pin(HAL_IN, "enable", &enable) ||
-
 	    pin(HAL_OUT, "debug_fb", &debug_fb) ||
 	    pin(HAL_OUT, "debug_pos", &debug_pos) ||
 	    pin(HAL_OUT, "debug_out", &debug_out) ||
 	    pin(HAL_OUT, "debug_real", &debug_real) ||
-	    pin(HAL_OUT, "debug_motor", &debug_motor) ||
 	    pin(HAL_OUT, "offset", &offset) ||
 	    pin(HAL_OUT, "position-out", &position_out) ||
 	    pin(HAL_OUT, "index_count", &index_count) ||
@@ -95,8 +86,6 @@ public:
 	double SCALE=*scale;
 	*debug_fb=int(*pos_fb*SCALE);
 	*debug_pos=*position_in;
-	int32_t moffset=*motor_offset*SCALE;
-	*debug_motor=moffset;
 
 	int32_t pfb=round(*pos_fb*SCALE);
 	int32_t o=position_d1-pfb;
@@ -126,15 +115,14 @@ public:
 	    *position_out=*position_in;
 	} else if(count<=2) {
 	    /* The LSB of position_in are now correct */
-	    *position_out=out_d1+*position_in;
+	    *position_out=position_d1+*position_in;
 	} else if(count==3) {
 	    *offset=diff/SCALE;
-	    correction=diff-position_d1+position_d2;
-	    *debug_out=correction;
+	    correction=diff+position_d2;
+	    *debug_out=position_d1;
 	    *position_out=*position_in+correction;
 	} else
 	    *position_out=*position_in+correction;
-	out_d1=*position_out;
 	position_d2=position_d1;
 	position_d1=*position_in;
     }
