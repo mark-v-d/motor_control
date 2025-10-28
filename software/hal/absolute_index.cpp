@@ -49,6 +49,7 @@ class absolute_index_t {
     int32_t position_d2;
     int32_t timer;
     int32_t count;
+    uint32_t was_homed;
 public:
     bool init(int i) {
 	std::string prefix="absolute_index."+std::to_string(i)+".";
@@ -67,6 +68,7 @@ public:
 		return 1;
 	};
 	timer=10000;
+	was_homed=0;
 	return
 	    pin(HAL_IN, "pos-fb", &pos_fb) ||
 	    pin(HAL_IN, "scale", &scale) ||
@@ -105,7 +107,9 @@ public:
 
 	if(*index && count<10)
 	    ++count;
-	*home=!*is_homed && *enable && count>9 && timer==0;
+	*home=!*is_homed && *enable && count>9 && timer==0 && !was_homed;
+	if(*is_homed)
+	    was_homed=1;
 	*index_count=count;
 
 	if(timer>0) {
