@@ -12,39 +12,37 @@ static int comp_id;
 */
 
 #ifdef MODULE_INFO
-MODULE_INFO(linuxcnc, const_cast<char*>("component:absolute_index:"));
-//MODULE_INFO(linuxcnc, const_cast<char*>("pin:out:float:0:out::None:None"));
-MODULE_INFO(linuxcnc, const_cast<char*>("param:value:float:0:r::1.0:None"));
-MODULE_INFO(linuxcnc, const_cast<char*>("funct:sync:1:"));
-MODULE_INFO(linuxcnc, const_cast<char*>("license:GPL"));
+MODULE_DESCRIPTION("Pseudo absolute encoder using POSITION_FILE and the encoder index")
 MODULE_LICENSE("GPL");
 #endif // MODULE_INFO
 
 #include <string>
 using namespace std::string_literals;
 
-
 /******************************************************************************/
 class absolute_index_t {
     // Inputs
-    hal_float_t *pos_fb;	// Position as measured
-    hal_float_t *scale;		// Factor to scale to encoder units
+    hal_float_t *pos_fb;	// Position from joint.?.pos-fb
+    hal_float_t *scale;		// Factor to scale mm to encoder units
 
-    hal_s32_t	*position_in;	// Encoder
+    hal_s32_t	*position_in;	// Encoder counter
     hal_s32_t	*index;		// 0 -> index not seen, 1 -> index seen
+    hal_s32_t	*counts_per_index; // counts per index (only 0x10000 is tested)
 
-    hal_bit_t	*enable;
-    hal_bit_t	*is_homed;
+    hal_bit_t	*enable;	// joint.?.amp-enable-out
+    hal_bit_t	*is_homed;	// joint.?.is-homed
 
     // Outputs
     hal_u32_t *debug_fb;
-    hal_u32_t *debug_pos;
     hal_u32_t *debug_out;
     hal_u32_t *debug_real;
-    hal_float_t	*offset;
-    hal_s32_t	*position_out;
-    hal_s32_t	*index_count;
-    hal_bit_t	*home;
+    hal_float_t	*offset;	// Measured distance between POSITION_FILE
+				// and the actual position from the encoder
+    hal_s32_t	*position_out;	// encoder counter corrected to absolute
+				// position
+    hal_s32_t	*index_count;	// Used to trigger halscope
+    hal_bit_t	*home;		// joint.?.home Used to home the joint
+				// when the index has been passed
 
     int32_t correction;
     int32_t position_d1;
@@ -75,12 +73,12 @@ public:
 
 	    pin(HAL_IN, "position-in", &position_in) ||
 	    pin(HAL_IN, "index", &index) ||
+	    pin(HAL_IN, "counts_per_index", &counts_per_index) ||
 
 	    pin(HAL_IN, "enable", &enable) ||
 	    pin(HAL_IN, "is-homed", &is_homed) ||
 
 	    pin(HAL_OUT, "debug_fb", &debug_fb) ||
-	    pin(HAL_OUT, "debug_pos", &debug_pos) ||
 	    pin(HAL_OUT, "debug_out", &debug_out) ||
 	    pin(HAL_OUT, "debug_real", &debug_real) ||
 	    pin(HAL_OUT, "offset", &offset) ||
@@ -92,21 +90,18 @@ public:
 
     auto compute(long period) {
 	double SCALE=*scale;
-	*debug_fb=int(*pos_fb*SCALE);
-	*debug_pos=*position_in;
+	int32_t pos_fb_i=int32_t(*pos_fb*SCALE);
+	*debug_fb=pos_fb_i;
 
-	int32_t pfb=round(*pos_fb*SCALE);
-	int32_t o=position_d1-pfb;
-	int32_t real_pos=position_d1-(o&0xffff0000);
-	int32_t diff=real_pos-pfb;
-	if(diff>32767) {
-	    diff-=65536;
-	    real_pos-=65536;
-	} else if(diff<-32767) {
-	    diff+=65536;
-	    real_pos+=65536;
-	}
-	*debug_real=real_pos;
+	int32_t cpi=*counts_per_index;
+	if(!cpi)
+	    return;
+	int32_t diff=position_d1%cpi-pos_fb_i%cpi;
+	if(diff>cpi/2)
+	    diff-=cpi;
+	else if(diff<-cpi/2)
+	    diff+=cpi;
+	*debug_real=pos_fb_i+diff;
 
 	if(*index && count<10)
 	    ++count;

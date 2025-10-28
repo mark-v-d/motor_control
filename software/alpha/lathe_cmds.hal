@@ -61,8 +61,9 @@ setp servo-thread.tmax              0
 #
 # scale is used to convert from encoder units to mm. mm=encoder/scale
 #
-setp statespace_3.0.scale-0		-21845.333333333333
+setp absolute_index.0.counts_per_index	65536
 setp absolute_index.0.scale		-21845.333333333333
+setp statespace_3.0.scale-0		-21845.333333333333
 setp statespace_3.0.scale-1		1
 setp statespace_3.0.A-0-0		0.0000000000e+00
 setp statespace_3.0.A-0-1		0.0000000000e+00
@@ -102,8 +103,9 @@ setp etherdrive.0.encoder		0
 #
 # Z
 #
-setp statespace_3.1.scale-0		-32768
+setp absolute_index.1.counts_per_index	65536
 setp absolute_index.1.scale		-32768
+setp statespace_3.1.scale-0		-32768
 setp statespace_3.1.scale-1		1
 setp statespace_3.1.A-0-0		0.0000000000e+00
 setp statespace_3.1.A-0-1		0.0000000000e+00
@@ -159,6 +161,7 @@ net J0:pos-drive etherdrive.0.position => absolute_index.0.position-in
 net J0:pos-index absolute_index.0.position-out => statespace_3.0.in-0
 net J0:pos-joint joint.0.pos-fb => absolute_index.0.pos-fb
 net J0:home absolute_index.0.home => halui.joint.0.home
+net J0:is-homed halui.joint.0.is-homed => absolute_index.0.is-homed
 
 net J1:pos-cmd joint.1.motor-pos-cmd	=> statespace_3.1.setpoint
 net J1:pos-dro statespace_3.1.position-0 => joint.1.motor-pos-fb
@@ -169,6 +172,7 @@ net J1:pos-drive etherdrive.1.position => absolute_index.1.position-in
 net J1:pos-index absolute_index.1.position-out => statespace_3.1.in-0
 net J1:pos-joint joint.1.pos-fb => absolute_index.1.pos-fb
 net J1:home absolute_index.1.home => halui.joint.1.home
+net J1:is-homed halui.joint.1.is-homed => absolute_index.1.is-homed
 
 net coolant iocontrol.0.coolant-mist => etherdrive.0.digout-0 etherdrive.0.digout-1 
 
